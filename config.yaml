@@ -1,0 +1,13 @@
+server:
+  port: "8080"
+database:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "password"
+  dbname: "ktrlplane_db"
+  graphpath: "ktrlplane_graph"
+  sslmode: "disable"
+auth0:
+  domain: "YOUR_AUTH0_DOMAIN.auth0.com"
+  audience: "YOUR_API_AUDIENCE"
