@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { projectSchema, resourceSchema, createProjectSchema, updateProjectSchema, createResourceSchema, updateResourceSchema } from './zodSchemas';
+import { organizationSchema, projectSchema, resourceSchema, createProjectSchema, updateProjectSchema, createResourceSchema, updateResourceSchema } from './zodSchemas';
 
-
+export type Organization = z.infer<typeof organizationSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Resource = z.infer<typeof resourceSchema>;
 

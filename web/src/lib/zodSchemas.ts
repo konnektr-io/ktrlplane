@@ -10,8 +10,16 @@ const jsonString = z.string().refine((val) => {
     }
 }, { message: "Helm values must be valid JSON" }).optional().default("{}");
 
+export const organizationSchema = z.object({
+    org_id: z.string(),
+    name: z.string().min(1, "Name is required"),
+    created_at: z.string().datetime().or(z.date()).transform(val => new Date(val)),
+    updated_at: z.string().datetime().or(z.date()).transform(val => new Date(val)),
+});
+
 export const projectSchema = z.object({
     project_id: z.string(),
+    org_id: z.string().optional(),
     name: z.string().min(1, "Name is required"),
     description: z.string().optional(),
     status: z.string(),
