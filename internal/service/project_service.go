@@ -5,44 +5,56 @@ import (
 	"fmt"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
-
-	"github.com/google/uuid"
 )
 
-type ProjectService struct{}
-
-func NewProjectService() *ProjectService {
-	return &ProjectService{}
+type ProjectService struct{
+	rbacService *RBACService
 }
 
-func (s *ProjectService) CreateProject(ctx context.Context, req models.CreateProjectRequest) (*models.Project, error) {
-	projectID := uuid.New().String() // Generate unique ID
+func NewProjectService() *ProjectService {
+	return &ProjectService{
+		rbacService: NewRBACService(),
+	}
+}
 
-	err := db.ExecQuery(ctx, db.CreateProjectQuery, projectID, req.Name, req.Description)
+// CreateProject with self-service organization creation
+func (s *ProjectService) CreateProject(ctx context.Context, req models.CreateProjectRequest, userID string) (*models.Project, error) {
+	// For self-service, we need to either:
+	// 1. Create a new organization if user doesn't have one
+	// 2. Create project in user's existing organization
+	
+	// First, check if user has any organizations
+	orgs, err := s.rbacService.GetOrganizationsForUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user organizations: %w", err)
+	}
+	
+	var orgID string
+	if len(orgs) == 0 {
+		// Self-service: Create new organization for the user
+		defaultOrgName := fmt.Sprintf("%s's Organization", userID) // TODO: use user's name when available
+		org, err := s.rbacService.CreateOrganization(ctx, defaultOrgName, userID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create organization: %w", err)
+		}
+		orgID = org.OrgID
+	} else {
+		// Use the first organization (in future, we might let user choose)
+		orgID = orgs[0].OrgID
+	}
+	
+	// Create project using RBAC service
+	project, err := s.rbacService.CreateProject(ctx, orgID, req.Name, req.Description, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create project: %w", err)
 	}
-
-	// Fetch the created project to return its full details
-	// Alternatively, modify CreateProjectQuery to return properties(p)
-	createdProject, err := s.GetProjectByID(ctx, projectID)
-	if err != nil {
-		// Log error, but might proceed if creation itself didn't error
-		fmt.Printf("Warning: failed to fetch newly created project %s details: %v\n", projectID, err)
-		// Return a minimal representation if fetch fails
-		return &models.Project{
-			ProjectID:   projectID,
-			Name:        req.Name,
-			Description: req.Description,
-			Status:      "Active", // Assume default status
-		}, nil
-	}
-
-	return createdProject, nil
+	
+	return project, nil
 }
 
 func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (*models.Project, error) {
-	rows, err := db.Query(ctx, db.GetProjectByIDQuery, projectID)
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.GetProjectByIDQuery, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch project: %w", err)
 	}
@@ -50,7 +62,7 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (
 
 	if rows.Next() {
 		var project models.Project
-		if err := rows.Scan(&project.ProjectID, &project.Name, &project.Description, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
+		if err := rows.Scan(&project.ProjectID, &project.OrgID, &project.Name, &project.Description, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
 		}
 		return &project, nil
@@ -60,7 +72,8 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (
 }
 
 func (s *ProjectService) ListProjects(ctx context.Context) ([]models.Project, error) {
-	rows, err := db.Query(ctx, db.ListProjectsQuery)
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.ListProjectsQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list projects: %w", err)
 	}
@@ -69,7 +82,7 @@ func (s *ProjectService) ListProjects(ctx context.Context) ([]models.Project, er
 	projects := make([]models.Project, 0)
 	for rows.Next() {
 		var project models.Project
-		if err := rows.Scan(&project.ProjectID, &project.Name, &project.Description, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
+		if err := rows.Scan(&project.ProjectID, &project.OrgID, &project.Name, &project.Description, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
 		}
 		projects = append(projects, project)

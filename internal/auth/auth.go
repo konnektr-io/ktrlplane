@@ -1,49 +1,126 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"ktrlplane/internal/models"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 
+	"github.com/auth0/go-jwt-middleware/v2/jwks"
+	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/gin-gonic/gin"
-	// Example using auth0 jwtmiddleware
-	// jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
-	// "github.com/auth0/go-jwt-middleware/v2/validator"
-	// Replace with your actual JWT validation library and logic
 )
+
+// CustomClaims contains custom data we want to get from the token.
+type CustomClaims struct {
+	Scope string `json:"scope"`
+}
+
+// Validate does nothing for this example, but we need
+// it to satisfy validator.CustomClaims interface.
+func (c CustomClaims) Validate(ctx context.Context) error {
+	return nil
+}
 
 // Placeholder for Auth0 configuration needed by middleware
 var (
-	// jwtValidator *validator.Validator
-	apiAudience string
-	auth0Domain string
+	jwtValidator *validator.Validator
+	apiAudience  string
+	auth0Domain  string
 )
 
 func SetupAuth(audience, domain string) error {
 	apiAudience = audience
 	auth0Domain = domain
-	// Initialize your actual JWT validator here based on domain/audience
-	// Example:
-	// keyFunc := func(ctx context.Context) (interface{}, error) { ... } // Fetch JWKS
-	// jwtValidator, err := validator.New(keyFunc, validator.RS256, ...)
-	// if err != nil { return fmt.Errorf("failed to set up jwt validator: %w", err) }
-	fmt.Println("Auth placeholder setup complete. Implement actual JWT validation.")
+	
+	issuerURL, err := url.Parse("https://" + domain + "/")
+	if err != nil {
+		return fmt.Errorf("failed to parse the issuer url: %w", err)
+	}
+
+	provider := jwks.NewCachingProvider(issuerURL, 5*time.Minute)
+
+	jwtValidator, err = validator.New(
+		provider.KeyFunc,
+		validator.RS256,
+		issuerURL.String(),
+		[]string{audience},
+		validator.WithCustomClaims(
+			func() validator.CustomClaims {
+				return &CustomClaims{}
+			},
+		),
+		validator.WithAllowedClockSkew(time.Minute),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to set up the jwt validator: %w", err)
+	}
+
+	log.Printf("Auth0 JWT validation configured for domain: %s, audience: %s", domain, audience)
 	return nil
 }
 
-// AuthMiddleware validates the JWT token. Placeholder implementation.
+// AuthMiddleware validates the JWT token.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// TODO: Implement actual JWT validation
-		// For development, we'll create a mock user and skip token validation
-		mockUser := models.User{
-			ID:    "dev-user-123",
-			Email: "dev@ktrlplane.local",
+		// Extract token from Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			c.Abort()
+			return
 		}
-		c.Set("user", mockUser)
+
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == authHeader {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
+			c.Abort()
+			return
+		}
+
+		// Validate the token
+		token, err := jwtValidator.ValidateToken(c.Request.Context(), tokenString)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "details": err.Error()})
+			c.Abort()
+			return
+		}
+
+		// Extract claims
+		claims := token.(*validator.ValidatedClaims)
+		
+		// Create user from token claims
+		user := models.User{
+			ID:    claims.RegisteredClaims.Subject,
+			Email: extractEmailFromClaims(claims),
+		}
+
+		// Store user in context
+		c.Set("user", user)
 		c.Next()
 	}
+}
+
+// extractEmailFromClaims extracts email from JWT claims
+func extractEmailFromClaims(claims *validator.ValidatedClaims) string {
+	// Try to get email from subject if it looks like an email
+	if claims.RegisteredClaims.Subject != "" && strings.Contains(claims.RegisteredClaims.Subject, "@") {
+		return claims.RegisteredClaims.Subject
+	}
+	
+	// Try to get email from custom claims (Auth0 typically puts it here)
+	if claims.CustomClaims != nil {
+		if customClaims, ok := claims.CustomClaims.(*CustomClaims); ok {
+			// You might need to adjust this based on how Auth0 structures your claims
+			_ = customClaims // placeholder for now
+		}
+	}
+	
+	return "" // Return empty if email not found
 }
 
 // RBACMiddleware checks if the user in context has the required role for the project. Placeholder.

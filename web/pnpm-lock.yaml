@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@auth0/auth0-react':
+        specifier: ^2.4.0
+        version: 2.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.0.1(react-hook-form@7.56.2(react@19.1.0))
@@ -131,6 +134,15 @@ importers:
         version: 6.3.4(@types/node@22.15.3)(jiti@2.4.2)(lightningcss@1.29.2)
 
 packages:
+
+  '@auth0/auth0-react@2.4.0':
+    resolution: {integrity: sha512-5bt3sO9FVupNM15IpqyYu/2OPHpLI5El7RgWLQXZOPbnCBbtl+VgdHR+H2NfhNQ4SqQtC/5uKbHWafcVcsxkiw==}
+    peerDependencies:
+      react: ^16.11.0 || ^17 || ^18 || ^19
+      react-dom: ^16.11.0 || ^17 || ^18 || ^19
+
+  '@auth0/auth0-spa-js@2.3.0':
+    resolution: {integrity: sha512-zAW6w79UO+G1+3AxboVQIUIZy05xluSOb1ymGg2dqG0pIi0JxEtZGec05BOf2LJ9SehzW4WeCYUQsYD9BjrVpQ==}
 
   '@esbuild/aix-ppc64@0.25.3':
     resolution: {integrity: sha512-W8bFfPA8DowP8l//sxjJLSLkD8iEjMc7cBVyP+u4cEv9sM7mdUCkgsj+t0n/BWPFtv7WWCN5Yzj0N6FJNUUqBQ==}
@@ -2161,6 +2173,14 @@ packages:
         optional: true
 
 snapshots:
+
+  '@auth0/auth0-react@2.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@auth0/auth0-spa-js': 2.3.0
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
+  '@auth0/auth0-spa-js@2.3.0': {}
 
   '@esbuild/aix-ppc64@0.25.3':
     optional: true

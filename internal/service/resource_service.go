@@ -35,7 +35,7 @@ func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string,
 
 	if rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.HelmValues, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.HelmValues, &resource.ErrorMessage, &resource.AccessURL, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		return &resource, nil
@@ -54,7 +54,7 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string) (
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.HelmValues, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.HelmValues, &resource.ErrorMessage, &resource.AccessURL, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		resources = append(resources, resource)

@@ -10,12 +10,12 @@ import (
 
 type Project struct {
 	ProjectID   string    `json:"project_id" agtype:"project_id"`
+	OrgID       *string   `json:"org_id" agtype:"org_id" db:"org_id"`
 	Name        string    `json:"name" agtype:"name"`
 	Description string    `json:"description,omitempty" agtype:"description"`
 	Status      string    `json:"status" agtype:"status"`
 	CreatedAt   time.Time `json:"created_at" agtype:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" agtype:"updated_at"`
-	// Add OrgID, BillingID if linking relationships
 }
 
 type Resource struct {
@@ -27,9 +27,9 @@ type Resource struct {
 	HelmValues   json.RawMessage `json:"helm_values" agtype:"helm_values"` // Store as raw JSON
 	CreatedAt    time.Time       `json:"created_at" agtype:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at" agtype:"updated_at"`
-	ErrorMessage string          `json:"error_message,omitempty" agtype:"error_message"`
+	ErrorMessage *string         `json:"error_message,omitempty" agtype:"error_message"`
 	// Specific fields for resource types might be present but accessed via HelmValues
-	AccessURL string `json:"access_url,omitempty" agtype:"access_url"` // Example specific field
+	AccessURL *string `json:"access_url,omitempty" agtype:"access_url"` // Example specific field
 }
 
 // --- API Request/Response Payloads ---
@@ -62,4 +62,52 @@ type User struct {
 	ID    string   // Subject from JWT
 	Email string   // Email from JWT
 	Roles []string // Roles derived from JWT or DB lookup (placeholder)
+}
+
+// RBAC Models
+
+type Organization struct {
+	OrgID     string    `json:"org_id" db:"org_id"`
+	Name      string    `json:"name" db:"name"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+}
+
+type Role struct {
+	RoleID      string    `json:"role_id" db:"role_id"`
+	Name        string    `json:"name" db:"name"`
+	DisplayName string    `json:"display_name" db:"display_name"`
+	Description string    `json:"description" db:"description"`
+	IsSystem    bool      `json:"is_system" db:"is_system"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+}
+
+type Permission struct {
+	PermissionID string    `json:"permission_id" db:"permission_id"`
+	ResourceType string    `json:"resource_type" db:"resource_type"`
+	Action       string    `json:"action" db:"action"`
+	Description  string    `json:"description" db:"description"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+}
+
+type RoleAssignment struct {
+	AssignmentID string     `json:"assignment_id" db:"assignment_id"`
+	UserID       string     `json:"user_id" db:"user_id"`
+	RoleID       string     `json:"role_id" db:"role_id"`
+	ScopeType    string     `json:"scope_type" db:"scope_type"` // "organization", "project", "resource"
+	ScopeID      string     `json:"scope_id" db:"scope_id"`
+	AssignedBy   string     `json:"assigned_by" db:"assigned_by"`
+	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
+	ExpiresAt    *time.Time `json:"expires_at" db:"expires_at"`
+}
+
+// Permission check result
+type UserPermission struct {
+	UserID       string `json:"user_id"`
+	ResourceType string `json:"resource_type"`
+	Action       string `json:"action"`
+	ScopeType    string `json:"scope_type"`
+	ScopeID      string `json:"scope_id"`
+	HasPermission bool  `json:"has_permission"`
 }

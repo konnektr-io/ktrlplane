@@ -1,5 +1,5 @@
 server:
-  port: "3000"
+  port: "3001"
 database:
   host: "192.168.1.129"
   port: 5432
@@ -9,5 +9,6 @@ database:
   graphpath: "ktrlplane_graph"
   sslmode: "disable"
 auth0:
-  domain: "YOUR_AUTH0_DOMAIN.auth0.com"
-  audience: "YOUR_API_AUDIENCE"
+  domain: "auth.konnektr.io"
+  audience: "https://api.ktrlplane.konnektr.io"
+  client_id: "ObWW1A2syc8tFeYkxTwnRvRdNgbuP9BE"

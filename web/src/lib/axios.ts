@@ -1,41 +1,44 @@
 import axios from 'axios';
-import { useAuthStore } from '@/store/authStore'; // Assuming authStore handles tokens
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1', // Use env var
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add a request interceptor to include the auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = useAuthStore.getState().token; // Get token from Zustand store
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+// Function to setup auth interceptor with Auth0 token
+export const setupAuthInterceptor = (getAccessTokenSilently: () => Promise<string>) => {
+  // Clear any existing auth interceptors
+  apiClient.interceptors.request.clear();
+  
+  // Add new auth interceptor
+  apiClient.interceptors.request.use(
+    async (config) => {
+      try {
+        const token = await getAccessTokenSilently();
+        config.headers.Authorization = `Bearer ${token}`;
+      } catch (error) {
+        console.warn('Failed to get access token:', error);
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+  );
+};
 
-// Optional: Add response interceptor for error handling (e.g., redirect on 401)
+// Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Handle unauthorized access, e.g., clear token, redirect to login
-      useAuthStore.getState().logout(); // Example logout action
-      console.error('Unauthorized access - logging out.');
-      // window.location.href = '/login'; // Or use react-router navigate
+      // Handle unauthorized access - redirect to login
+      window.location.href = '/login';
     }
-    // You might want to show a toast notification here for other errors
     return Promise.reject(error);
   }
 );
-
 
 export default apiClient;

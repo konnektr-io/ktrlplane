@@ -29,7 +29,19 @@ func (h *APIHandler) CreateProject(c *gin.Context) {
 		return
 	}
 
-	project, err := h.ProjectService.CreateProject(c.Request.Context(), req)
+	// Extract user from context (set by auth middleware)
+	userValue, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+	user, ok := userValue.(models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+		return
+	}
+
+	project, err := h.ProjectService.CreateProject(c.Request.Context(), req, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create project", "details": err.Error()})
 		return

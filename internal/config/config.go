@@ -29,6 +29,7 @@ type DatabaseConfig struct {
 type Auth0Config struct {
 	Domain   string `mapstructure:"domain"`
 	Audience string `mapstructure:"audience"`
+	ClientID string `mapstructure:"client_id"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
