@@ -5,7 +5,8 @@ This structure uses Gin for routing, separates concerns into handlers, services,
 **Project Structure:**
 
 ```
-ktrlplane-backend/
+ktrlplane/
+├── web/
 ├── cmd/
 │   └── server/
 │       └── main.go

@@ -66,7 +66,7 @@ func (s *ProjectService) ListProjects(ctx context.Context) ([]models.Project, er
 	}
 	defer rows.Close()
 
-	var projects []models.Project
+	projects := make([]models.Project, 0)
 	for rows.Next() {
 		var project models.Project
 		if err := rows.Scan(&project.ProjectID, &project.Name, &project.Description, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {

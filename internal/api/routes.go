@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"ktrlplane/internal/auth" // Import auth package
 
 	"github.com/gin-gonic/gin"
@@ -15,8 +16,10 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 
 	// --- Public Routes (Example: Health Check) ---
 	r.GET("/health", func(c *gin.Context) {
+		fmt.Println("Health endpoint called!")
 		// Placeholder: Check DB connection?
 		c.JSON(200, gin.H{"status": "UP"})
+		fmt.Println("Health endpoint response sent!")
 	})
 
 	// API v1 routes

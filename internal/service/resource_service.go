@@ -51,7 +51,7 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string) (
 	}
 	defer rows.Close()
 
-	var resources []models.Resource
+	resources := make([]models.Resource, 0)
 	for rows.Next() {
 		var resource models.Resource
 		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.HelmValues, &resource.CreatedAt, &resource.UpdatedAt); err != nil {

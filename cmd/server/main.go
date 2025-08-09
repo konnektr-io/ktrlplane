@@ -45,7 +45,7 @@ func main() {
 	router := api.SetupRouter(apiHandler)
 
 	// --- Server Initialization ---
-	serverAddr := ":" + cfg.Server.Port
+	serverAddr := "127.0.0.1:" + cfg.Server.Port
 	srv := &http.Server{
 		Addr:    serverAddr,
 		Handler: router,

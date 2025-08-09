@@ -35,38 +35,13 @@ func SetupAuth(audience, domain string) error {
 // AuthMiddleware validates the JWT token. Placeholder implementation.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := extractToken(c.Request)
-		if token == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization token required"})
-			return
+		// TODO: Implement actual JWT validation
+		// For development, we'll create a mock user and skip token validation
+		mockUser := models.User{
+			ID:    "dev-user-123",
+			Email: "dev@ktrlplane.local",
 		}
-
-		// ---=== Placeholder: Replace with actual JWT Validation ===---
-		// claims, err := jwtValidator.ValidateToken(context.Background(), token)
-		// if err != nil {
-		//   c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "details": err.Error()})
-		//   return
-		// }
-		// validatedClaims := claims.(*validator.ValidatedClaims)
-		// customClaims := validatedClaims.CustomClaims.(*YourCustomClaimsStruct) // If you have custom claims
-
-		// ---=== Mock Validation and User Extraction ===---
-		if !strings.HasPrefix(token, "valid-token-for-") { // Simple mock check
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token (mock)"})
-			return
-		}
-		mockUserID := strings.TrimPrefix(token, "valid-token-for-")
-		// ---============================================---
-
-		// Set user information in the context for downstream handlers
-		user := models.User{
-			ID: mockUserID, // Replace with subject from validatedClaims.RegisteredClaims.Subject
-			// Email: customClaims.Email, // Extract email if available
-			Roles: []string{}, // Placeholder: Roles need to be determined (e.g., from token or DB lookup)
-		}
-		c.Set("user", user)
-
-		fmt.Printf("Mock authentication successful for user: %s\n", user.ID)
+		c.Set("user", mockUser)
 		c.Next()
 	}
 }
