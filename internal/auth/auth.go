@@ -3,11 +3,13 @@ package auth
 import (
 	"context"
 	"fmt"
+	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
@@ -31,6 +33,10 @@ var (
 	jwtValidator *validator.Validator
 	apiAudience  string
 	auth0Domain  string
+	
+	// Cache for processed users to avoid repeated DB checks
+	processedUsers = make(map[string]bool)
+	userCacheMutex sync.RWMutex
 )
 
 func SetupAuth(audience, domain string) error {
@@ -93,10 +99,24 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Extract claims
 		claims := token.(*validator.ValidatedClaims)
 		
-		// Create user from token claims
+		// Extract user information from token
+		userID := claims.RegisteredClaims.Subject
+		email := extractEmailFromClaims(claims)
+		name := extractNameFromClaims(claims)
+		
+		// Ensure user exists in database (create or update)
+		err = ensureUserExists(c.Request.Context(), userID, email, name)
+		if err != nil {
+			log.Printf("Failed to ensure user exists: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user authentication"})
+			c.Abort()
+			return
+		}
+		
+		// Create user object for context
 		user := models.User{
-			ID:    claims.RegisteredClaims.Subject,
-			Email: extractEmailFromClaims(claims),
+			ID:    userID,
+			Email: email,
 		}
 
 		// Store user in context
@@ -162,14 +182,6 @@ func RBACMiddleware(requiredRole string) gin.HandlerFunc {
 	}
 }
 
-// Helper to extract token from Authorization header
-func extractToken(r *http.Request) string {
-	bearerToken := r.Header.Get("Authorization")
-	if parts := strings.Split(bearerToken, " "); len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
-		return parts[1]
-	}
-	return ""
-}
 
 // --- Placeholder for actual DB check ---
 // func checkPermissionInDB(ctx context.Context, userID, projectID, requiredRole string) (bool, error) {
@@ -178,3 +190,55 @@ func extractToken(r *http.Request) string {
 //     fmt.Printf("Placeholder: Checking DB permission for user %s, project %s, role %s\n", userID, projectID, requiredRole)
 //     return true, nil // Mock response
 // }
+
+// extractNameFromClaims extracts name from JWT claims
+func extractNameFromClaims(claims *validator.ValidatedClaims) string {
+	// Auth0 typically puts name in the claims, but the exact field depends on configuration
+	// For now, we'll extract it from email or return a default
+	email := extractEmailFromClaims(claims)
+	if email != "" {
+		// Extract name part from email (before @)
+		parts := strings.Split(email, "@")
+		if len(parts) > 0 {
+			return parts[0]
+		}
+	}
+	return "User" // Default name
+}
+
+// ensureUserExists creates or updates a user in the database
+func ensureUserExists(ctx context.Context, userID, email, name string) error {
+	// Check cache first to avoid repeated DB calls
+	userCacheMutex.RLock()
+	if processedUsers[userID] {
+		userCacheMutex.RUnlock()
+		return nil // User already processed, skip
+	}
+	userCacheMutex.RUnlock()
+
+	// Check if user exists in database
+	rows, err := db.Query(ctx, "SELECT user_id FROM ktrlplane.users WHERE user_id = $1", userID)
+	if err != nil {
+		return fmt.Errorf("failed to check user existence: %w", err)
+	}
+	defer rows.Close()
+
+	userExists := rows.Next()
+	rows.Close()
+
+	if !userExists {
+		// User doesn't exist, create them
+		err = db.ExecQuery(ctx, db.CreateUserQuery, userID, email, name, userID)
+		if err != nil {
+			return fmt.Errorf("failed to create user: %w", err)
+		}
+		log.Printf("Created new user: %s (%s)", email, userID)
+	}
+
+	// Add user to cache to avoid future checks
+	userCacheMutex.Lock()
+	processedUsers[userID] = true
+	userCacheMutex.Unlock()
+
+	return nil
+}

@@ -28,6 +28,20 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 	// Apply Auth middleware to all /api/v1 routes
 	apiV1.Use(auth.AuthMiddleware()) // Enable Auth middleware
 	{
+		// --- Organization Routes ---
+		organizations := apiV1.Group("/organizations")
+		{
+			organizations.POST("", handler.CreateOrganization)   // Create Organization
+			organizations.GET("", handler.ListOrganizations)     // List Organizations user has access to
+
+			organizationDetail := organizations.Group("/:orgId")
+			{
+				organizationDetail.GET("", handler.GetOrganization)       // Get specific organization details
+				organizationDetail.PUT("", handler.UpdateOrganization)    // Update Organization
+				organizationDetail.DELETE("", handler.DeleteOrganization) // Delete Organization
+			}
+		}
+
 		// --- Project Routes ---
 		projects := apiV1.Group("/projects")
 		{

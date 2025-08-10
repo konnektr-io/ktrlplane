@@ -16,85 +16,6 @@ func NewRBACService() *RBACService {
 	return &RBACService{}
 }
 
-// CreateOrganization creates a new organization
-func (s *RBACService) CreateOrganization(ctx context.Context, name, ownerUserID string) (*models.Organization, error) {
-	pool := db.GetDB()
-
-	orgID := uuid.New().String()
-
-	tx, err := pool.Begin(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	// Insert organization
-	org := &models.Organization{
-		OrgID: orgID,
-		Name:  name,
-	}
-
-	err = tx.QueryRow(ctx, db.CreateOrganizationWithTimestampsQuery,
-		org.OrgID, org.Name).Scan(&org.CreatedAt, &org.UpdatedAt)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create organization: %w", err)
-	}
-
-	// Assign owner role to the user
-	err = s.assignRoleInTx(ctx, tx, ownerUserID, "Owner", "organization", orgID, ownerUserID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to assign owner role: %w", err)
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return org, nil
-}
-
-// CreateProject creates a new project within an organization
-func (s *RBACService) CreateProject(ctx context.Context, orgID, name, description, ownerUserID string) (*models.Project, error) {
-	pool := db.GetDB()
-
-	projectID := uuid.New().String()
-
-	tx, err := pool.Begin(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	// Insert project
-	project := &models.Project{
-		ProjectID:   projectID,
-		OrgID:       &orgID,
-		Name:        name,
-		Description: description,
-		Status:      "Active",
-	}
-
-	err = tx.QueryRow(ctx, db.CreateProjectWithTimestampsQuery,
-		project.ProjectID, project.OrgID, project.Name, project.Description, project.Status).Scan(&project.CreatedAt, &project.UpdatedAt)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create project: %w", err)
-	}
-
-	// Assign project owner role to the user
-	err = s.assignRoleInTx(ctx, tx, ownerUserID, "Owner", "project", projectID, ownerUserID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to assign project owner role: %w", err)
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return project, nil
-}
-
 // AssignRole assigns a role to a user for a specific scope
 func (s *RBACService) AssignRole(ctx context.Context, userID, roleName, scopeType, scopeID, assignedBy string) error {
 	pool := db.GetDB()
@@ -105,7 +26,7 @@ func (s *RBACService) AssignRole(ctx context.Context, userID, roleName, scopeTyp
 	}
 	defer tx.Rollback(ctx)
 
-	err = s.assignRoleInTx(ctx, tx, userID, roleName, scopeType, scopeID, assignedBy)
+	err = s.AssignRoleInTx(ctx, tx, userID, roleName, scopeType, scopeID, assignedBy)
 	if err != nil {
 		return err
 	}
@@ -113,8 +34,8 @@ func (s *RBACService) AssignRole(ctx context.Context, userID, roleName, scopeTyp
 	return tx.Commit(ctx)
 }
 
-// assignRoleInTx assigns a role within a transaction
-func (s *RBACService) assignRoleInTx(ctx context.Context, tx pgx.Tx, userID, roleName, scopeType, scopeID, assignedBy string) error {
+// AssignRoleInTx assigns a role within a transaction (exported for use by other services)
+func (s *RBACService) AssignRoleInTx(ctx context.Context, tx pgx.Tx, userID, roleName, scopeType, scopeID, assignedBy string) error {
 	// Get role ID
 	var roleID string
 	err := tx.QueryRow(ctx, db.GetRoleIDByNameQuery, roleName).Scan(&roleID)

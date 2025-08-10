@@ -34,6 +34,14 @@ type Resource struct {
 
 // --- API Request/Response Payloads ---
 
+type CreateOrganizationRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+type UpdateOrganizationRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
 type CreateProjectRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
