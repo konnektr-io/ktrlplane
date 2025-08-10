@@ -35,9 +35,8 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	
 	var orgID string
 	if len(orgs) == 0 {
-		// Self-service: Create new organization for the user
-		defaultOrgName := fmt.Sprintf("%s's Organization", userID) // TODO: use user's name when available
-		org, err := s.orgService.CreateOrganization(ctx, defaultOrgName, userID)
+		// Self-service: Create new organization for the user using the project name
+		org, err := s.orgService.CreateOrganization(ctx, req.Name, userID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create organization: %w", err)
 		}

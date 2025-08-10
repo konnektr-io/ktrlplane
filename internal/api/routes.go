@@ -28,6 +28,10 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 	// Apply Auth middleware to all /api/v1 routes
 	apiV1.Use(auth.AuthMiddleware()) // Enable Auth middleware
 	{
+		// --- Global RBAC Routes ---
+		apiV1.GET("/roles", handler.ListRoles)                    // List all available roles
+		apiV1.GET("/users/search", handler.SearchUsers)           // Search users
+
 		// --- Organization Routes ---
 		organizations := apiV1.Group("/organizations")
 		{
@@ -39,6 +43,15 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 				organizationDetail.GET("", handler.GetOrganization)       // Get specific organization details
 				organizationDetail.PUT("", handler.UpdateOrganization)    // Update Organization
 				organizationDetail.DELETE("", handler.DeleteOrganization) // Delete Organization
+				
+				// Organization RBAC routes
+				orgRBAC := organizationDetail.Group("/rbac")
+				{
+					orgRBAC.GET("", handler.ListOrganizationRoleAssignments)       // List role assignments
+					orgRBAC.POST("", handler.CreateOrganizationRoleAssignment)    // Assign role
+					orgRBAC.PUT("/:assignmentId", handler.UpdateOrganizationRoleAssignment) // Update role assignment
+					orgRBAC.DELETE("/:assignmentId", handler.DeleteOrganizationRoleAssignment) // Remove role assignment
+				}
 			}
 		}
 
@@ -54,6 +67,15 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 				projectDetail.PUT("", handler.UpdateProject)   // Update Project
 				projectDetail.DELETE("", handler.DeleteProject) // Delete Project (Requires owner role)
 
+				// Project RBAC routes
+				projectRBAC := projectDetail.Group("/rbac")
+				{
+					projectRBAC.GET("", handler.ListProjectRoleAssignments)       // List role assignments
+					projectRBAC.POST("", handler.CreateProjectRoleAssignment)    // Assign role
+					projectRBAC.PUT("/:assignmentId", handler.UpdateProjectRoleAssignment) // Update role assignment
+					projectRBAC.DELETE("/:assignmentId", handler.DeleteProjectRoleAssignment) // Remove role assignment
+				}
+
 				// --- Resource Routes (nested under project) ---
 				resources := projectDetail.Group("/resources")
 				{
@@ -65,6 +87,15 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 						resourceDetail.GET("", handler.GetResource)                                      // Get specific resource details (Viewer role)
 						resourceDetail.PUT("", handler.UpdateResource)    // Update Resource (Editor role)
 						resourceDetail.DELETE("", handler.DeleteResource) // Delete Resource (Editor role) // Or owner?
+						
+						// Resource RBAC routes
+						resourceRBAC := resourceDetail.Group("/rbac")
+						{
+							resourceRBAC.GET("", handler.ListResourceRoleAssignments)       // List role assignments
+							resourceRBAC.POST("", handler.CreateResourceRoleAssignment)    // Assign role
+							resourceRBAC.PUT("/:assignmentId", handler.UpdateResourceRoleAssignment) // Update role assignment
+							resourceRBAC.DELETE("/:assignmentId", handler.DeleteResourceRoleAssignment) // Remove role assignment
+						}
 					}
 				}
 			}

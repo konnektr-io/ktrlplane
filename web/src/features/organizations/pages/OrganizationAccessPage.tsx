@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useOrganizationStore } from '../store/organizationStore';
-import AccessControl from '@/features/access/components/AccessControl';
+import AccessControlSimplified from '@/features/access/components/AccessControlSimplified';
 
 export default function OrganizationAccessPage() {
   const { orgId } = useParams<{ orgId: string }>();
@@ -15,7 +15,7 @@ export default function OrganizationAccessPage() {
   }
 
   return (
-    <AccessControl
+    <AccessControlSimplified
       context={{
         scopeType: 'organization',
         scopeId: orgId,

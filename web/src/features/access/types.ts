@@ -35,6 +35,11 @@ export interface RoleAssignment {
   // Populated fields
   user?: User;
   role?: Role;
+  // Inheritance information
+  inheritance_type: 'direct' | 'inherited';
+  inherited_from_scope_type?: 'organization' | 'project';
+  inherited_from_scope_id?: string;
+  inherited_from_name?: string;
 }
 
 export interface AccessControlContextType {
@@ -46,11 +51,9 @@ export interface AccessControlContextType {
 export interface InviteUserRequest {
   email: string;
   role_name: string;
-  expires_at?: string;
 }
 
 export interface UpdateRoleRequest {
   assignment_id: string;
   role_name: string;
-  expires_at?: string;
 }

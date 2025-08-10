@@ -96,7 +96,7 @@ export default function AccessControl({ context }: AccessControlProps) {
     }
 
     try {
-      await inviteUser(inviteEmail, inviteRole, inviteExpiry || undefined);
+      await inviteUser(inviteEmail, inviteRole);
       toast.success('User invited successfully');
       setIsInviteDialogOpen(false);
       setInviteEmail('');
@@ -114,7 +114,7 @@ export default function AccessControl({ context }: AccessControlProps) {
     }
 
     try {
-      await updateUserRole(editingAssignment.assignment_id, editRole, editExpiry || undefined);
+      await updateUserRole(editingAssignment.assignment_id, editRole);
       toast.success('User role updated successfully');
       setEditingAssignment(null);
       setEditRole('');
@@ -324,9 +324,21 @@ export default function AccessControl({ context }: AccessControlProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getRoleColor(assignment.role?.name || '')}>
-                        {assignment.role?.display_name}
-                      </Badge>
+                      <div className="space-y-1">
+                        <Badge className={getRoleColor(assignment.role?.name || '')}>
+                          {assignment.role?.display_name}
+                        </Badge>
+                        {assignment.inheritance_type === 'inherited' && (
+                          <div className="text-xs text-muted-foreground flex items-center space-x-1">
+                            <span className="text-blue-600 font-medium">
+                              Inherited from {assignment.inherited_from_scope_type}
+                            </span>
+                            {assignment.inherited_from_name && (
+                              <span>({assignment.inherited_from_name})</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm text-muted-foreground">
@@ -373,17 +385,27 @@ export default function AccessControl({ context }: AccessControlProps) {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => openEditDialog(assignment)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Role
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleRemoveUser(assignment)}
-                            className="text-red-600"
-                          >
-                            <UserX className="h-4 w-4 mr-2" />
-                            Remove Access
-                          </DropdownMenuItem>
+                          {assignment.inheritance_type === 'direct' ? (
+                            <>
+                              <DropdownMenuItem onClick={() => openEditDialog(assignment)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Role
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleRemoveUser(assignment)}
+                                className="text-red-600"
+                              >
+                                <UserX className="h-4 w-4 mr-2" />
+                                Remove Access
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <DropdownMenuItem disabled>
+                              <div className="text-sm text-muted-foreground">
+                                Inherited permissions can only be managed from {assignment.inherited_from_scope_type}
+                              </div>
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

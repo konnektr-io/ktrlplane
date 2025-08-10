@@ -19,7 +19,8 @@ import (
 
 // CustomClaims contains custom data we want to get from the token.
 type CustomClaims struct {
-	Scope string `json:"scope"`
+	Email string `json:"https://konnektr.io/email"`
+	Name string `json:"https://konnektr.io/name"`
 }
 
 // Validate does nothing for this example, but we need
@@ -125,24 +126,6 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// extractEmailFromClaims extracts email from JWT claims
-func extractEmailFromClaims(claims *validator.ValidatedClaims) string {
-	// Try to get email from subject if it looks like an email
-	if claims.RegisteredClaims.Subject != "" && strings.Contains(claims.RegisteredClaims.Subject, "@") {
-		return claims.RegisteredClaims.Subject
-	}
-	
-	// Try to get email from custom claims (Auth0 typically puts it here)
-	if claims.CustomClaims != nil {
-		if customClaims, ok := claims.CustomClaims.(*CustomClaims); ok {
-			// You might need to adjust this based on how Auth0 structures your claims
-			_ = customClaims // placeholder for now
-		}
-	}
-	
-	return "" // Return empty if email not found
-}
-
 // RBACMiddleware checks if the user in context has the required role for the project. Placeholder.
 func RBACMiddleware(requiredRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -182,19 +165,37 @@ func RBACMiddleware(requiredRole string) gin.HandlerFunc {
 	}
 }
 
-
-// --- Placeholder for actual DB check ---
-// func checkPermissionInDB(ctx context.Context, userID, projectID, requiredRole string) (bool, error) {
-//     // Use db.QueryCypher with db.CheckProjectPermissionQuery
-//     // Process the result (e.g., count > 0)
-//     fmt.Printf("Placeholder: Checking DB permission for user %s, project %s, role %s\n", userID, projectID, requiredRole)
-//     return true, nil // Mock response
-// }
+// extractEmailFromClaims extracts email from JWT claims
+func extractEmailFromClaims(claims *validator.ValidatedClaims) string {
+	// First try to get email from custom claims (Auth0 email claim)
+	if claims.CustomClaims != nil {
+		if customClaims, ok := claims.CustomClaims.(*CustomClaims); ok {
+			if customClaims.Email != "" {
+				return customClaims.Email
+			}
+		}
+	}
+	
+	// Fallback: Try to get email from subject if it looks like an email
+	if claims.RegisteredClaims.Subject != "" && strings.Contains(claims.RegisteredClaims.Subject, "@") {
+		return claims.RegisteredClaims.Subject
+	}
+	
+	return "" // Return empty if email not found
+}
 
 // extractNameFromClaims extracts name from JWT claims
 func extractNameFromClaims(claims *validator.ValidatedClaims) string {
-	// Auth0 typically puts name in the claims, but the exact field depends on configuration
-	// For now, we'll extract it from email or return a default
+	// First try to get name from custom claims (Auth0 name claim)
+	if claims.CustomClaims != nil {
+		if customClaims, ok := claims.CustomClaims.(*CustomClaims); ok {
+			if customClaims.Name != "" {
+				return customClaims.Name
+			}
+		}
+	}
+	
+	// Fallback: extract name from email if available
 	email := extractEmailFromClaims(claims)
 	if email != "" {
 		// Extract name part from email (before @)
@@ -216,14 +217,22 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 	}
 	userCacheMutex.RUnlock()
 
-	// Check if user exists in database
-	rows, err := db.Query(ctx, db.CheckUserExistsQuery, userID)
+	// Check if user exists and get their current email in one query
+	var existingUserID, existingEmail, existingName string
+	rows, err := db.Query(ctx, db.GetUserByIDQuery, userID)
 	if err != nil {
 		return fmt.Errorf("failed to check user existence: %w", err)
 	}
 	defer rows.Close()
 
-	userExists := rows.Next()
+	userExists := false
+	if rows.Next() {
+		err = rows.Scan(&existingUserID, &existingEmail, &existingName)
+		if err != nil {
+			return fmt.Errorf("failed to scan user data: %w", err)
+		}
+		userExists = true
+	}
 	rows.Close()
 
 	if !userExists {
@@ -233,6 +242,32 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 			return fmt.Errorf("failed to create user: %w", err)
 		}
 		log.Printf("Created new user: %s (%s)", email, userID)
+	} else {
+		// User exists, check if we need to update email or name
+		needsUpdate := false
+		updateFields := []string{}
+		
+		if email != "" && (existingEmail == "" || existingEmail != email) {
+			err = db.ExecQuery(ctx, db.UpdateUserEmailQuery, userID, email)
+			if err != nil {
+				return fmt.Errorf("failed to update user email: %w", err)
+			}
+			updateFields = append(updateFields, "email")
+			needsUpdate = true
+		}
+		
+		if name != "" && (existingName == "" || existingName != name) {
+			err = db.ExecQuery(ctx, db.UpdateUserNameQuery, userID, name)
+			if err != nil {
+				return fmt.Errorf("failed to update user name: %w", err)
+			}
+			updateFields = append(updateFields, "name")
+			needsUpdate = true
+		}
+		
+		if needsUpdate {
+			log.Printf("Updated user %s: %v", userID, updateFields)
+		}
 	}
 
 	// Add user to cache to avoid future checks

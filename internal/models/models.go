@@ -67,9 +67,10 @@ type UpdateResourceRequest struct {
 
 // User model (simplified for identifying user from token)
 type User struct {
-	ID    string   // Subject from JWT
-	Email string   // Email from JWT
-	Roles []string // Roles derived from JWT or DB lookup (placeholder)
+	ID    string   `json:"id"`    // Subject from JWT
+	Email string   `json:"email"` // Email from JWT
+	Name  string   `json:"name"`  // Name from JWT
+	Roles []string `json:"roles"` // Roles derived from JWT or DB lookup (placeholder)
 }
 
 // RBAC Models
@@ -108,6 +109,28 @@ type RoleAssignment struct {
 	AssignedBy   string     `json:"assigned_by" db:"assigned_by"`
 	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
 	ExpiresAt    *time.Time `json:"expires_at" db:"expires_at"`
+}
+
+// RoleAssignmentWithDetails includes populated user and role information
+type RoleAssignmentWithDetails struct {
+	AssignmentID string     `json:"assignment_id"`
+	UserID       string     `json:"user_id"`
+	RoleID       string     `json:"role_id"`
+	ScopeType    string     `json:"scope_type"`
+	ScopeID      string     `json:"scope_id"`
+	AssignedBy   string     `json:"assigned_by"`
+	CreatedAt    time.Time  `json:"created_at"`
+	ExpiresAt    *time.Time `json:"expires_at"`
+	
+	// Populated fields
+	User User `json:"user"`
+	Role Role `json:"role"`
+	
+	// Inheritance information
+	InheritanceType        string `json:"inheritance_type"`         // "direct" or "inherited"
+	InheritedFromScopeType string `json:"inherited_from_scope_type,omitempty"` // "organization" or "project"
+	InheritedFromScopeID   string `json:"inherited_from_scope_id,omitempty"`   // ID of the parent scope
+	InheritedFromName      string `json:"inherited_from_name,omitempty"`       // Name of the parent scope
 }
 
 // Permission check result

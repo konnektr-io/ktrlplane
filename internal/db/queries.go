@@ -191,4 +191,112 @@ const (
 		SELECT user_id 
 		FROM ktrlplane.users 
 		WHERE user_id = $1`
+
+	GetUserByIDQuery = `
+		SELECT user_id, email, name
+		FROM ktrlplane.users 
+		WHERE user_id = $1`
+
+	UpdateUserEmailQuery = `
+		UPDATE ktrlplane.users 
+		SET email = $2 
+		WHERE user_id = $1`
+
+	UpdateUserNameQuery = `
+		UPDATE ktrlplane.users 
+		SET name = $2 
+		WHERE user_id = $1`
+
+	GetRoleAssignmentsWithDetailsQuery = `
+		SELECT 
+			ra.assignment_id, ra.user_id, ra.role_id, ra.scope_type, ra.scope_id, ra.assigned_by, ra.created_at, ra.expires_at,
+			r.name as role_name, r.display_name as role_display_name, r.description as role_description, r.is_system,
+			u.email, u.name
+		FROM ktrlplane.role_assignments ra
+		JOIN ktrlplane.roles r ON ra.role_id = r.role_id
+		JOIN ktrlplane.users u ON ra.user_id = u.user_id
+		WHERE ra.scope_type = $1 AND ra.scope_id = $2
+		  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+		ORDER BY ra.created_at DESC`
+
+	GetRoleAssignmentsWithInheritanceQuery = `
+		WITH role_assignments_with_inheritance AS (
+			-- Direct assignments to the specified scope
+			SELECT 
+				ra.assignment_id, ra.user_id, ra.role_id, ra.scope_type, ra.scope_id, ra.assigned_by, ra.created_at, ra.expires_at,
+				r.name as role_name, r.display_name as role_display_name, r.description as role_description, r.is_system,
+				u.email, u.name,
+				'direct' as inheritance_type,
+				'' as inherited_from_scope_type,
+				'' as inherited_from_scope_id,
+				'' as inherited_from_name
+			FROM ktrlplane.role_assignments ra
+			JOIN ktrlplane.roles r ON ra.role_id = r.role_id
+			JOIN ktrlplane.users u ON ra.user_id = u.user_id
+			WHERE ra.scope_type = $1 AND ra.scope_id = $2
+			  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+			
+			UNION ALL
+			
+			-- Inherited assignments from project (when viewing resource)
+			SELECT 
+				ra.assignment_id, ra.user_id, ra.role_id, ra.scope_type, ra.scope_id, ra.assigned_by, ra.created_at, ra.expires_at,
+				r.name as role_name, r.display_name as role_display_name, r.description as role_description, r.is_system,
+				u.email, u.name,
+				'inherited' as inheritance_type,
+				'project' as inherited_from_scope_type,
+				res.project_id as inherited_from_scope_id,
+				p.name as inherited_from_name
+			FROM ktrlplane.role_assignments ra
+			JOIN ktrlplane.roles r ON ra.role_id = r.role_id
+			JOIN ktrlplane.users u ON ra.user_id = u.user_id
+			JOIN ktrlplane.resources res ON res.resource_id = $2
+			JOIN ktrlplane.projects p ON p.project_id = res.project_id
+			WHERE ra.scope_type = 'project' AND ra.scope_id = res.project_id
+			  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+			  AND $1 = 'resource'
+			
+			UNION ALL
+			
+			-- Inherited assignments from organization (when viewing resource)
+			SELECT 
+				ra.assignment_id, ra.user_id, ra.role_id, ra.scope_type, ra.scope_id, ra.assigned_by, ra.created_at, ra.expires_at,
+				r.name as role_name, r.display_name as role_display_name, r.description as role_description, r.is_system,
+				u.email, u.name,
+				'inherited' as inheritance_type,
+				'organization' as inherited_from_scope_type,
+				p.org_id as inherited_from_scope_id,
+				o.name as inherited_from_name
+			FROM ktrlplane.role_assignments ra
+			JOIN ktrlplane.roles r ON ra.role_id = r.role_id
+			JOIN ktrlplane.users u ON ra.user_id = u.user_id
+			JOIN ktrlplane.resources res ON res.resource_id = $2
+			JOIN ktrlplane.projects p ON p.project_id = res.project_id
+			JOIN ktrlplane.organizations o ON o.org_id = p.org_id
+			WHERE ra.scope_type = 'organization' AND ra.scope_id = p.org_id
+			  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+			  AND $1 = 'resource'
+			
+			UNION ALL
+			
+			-- Inherited assignments from organization (when viewing project)
+			SELECT 
+				ra.assignment_id, ra.user_id, ra.role_id, ra.scope_type, ra.scope_id, ra.assigned_by, ra.created_at, ra.expires_at,
+				r.name as role_name, r.display_name as role_display_name, r.description as role_description, r.is_system,
+				u.email, u.name,
+				'inherited' as inheritance_type,
+				'organization' as inherited_from_scope_type,
+				p.org_id as inherited_from_scope_id,
+				o.name as inherited_from_name
+			FROM ktrlplane.role_assignments ra
+			JOIN ktrlplane.roles r ON ra.role_id = r.role_id
+			JOIN ktrlplane.users u ON ra.user_id = u.user_id
+			JOIN ktrlplane.projects p ON p.project_id = $2
+			JOIN ktrlplane.organizations o ON o.org_id = p.org_id
+			WHERE ra.scope_type = 'organization' AND ra.scope_id = p.org_id
+			  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+			  AND $1 = 'project'
+		)
+		SELECT * FROM role_assignments_with_inheritance
+		ORDER BY inheritance_type ASC, created_at DESC`
 )

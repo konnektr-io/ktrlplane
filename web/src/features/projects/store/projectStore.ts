@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Project } from '../types/project.types';
-import apiClient from '../../../lib/axios';
+import apiClient from '@/lib/axios';
 import { toast } from "sonner";
 import axios from 'axios';
 

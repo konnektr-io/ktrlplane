@@ -38,9 +38,10 @@ func main() {
 	projectService := service.NewProjectService()
 	resourceService := service.NewResourceService()
 	organizationService := service.NewOrganizationService()
+	rbacService := service.NewRBACService()
 
 	// --- API Handler Initialization ---
-	apiHandler := api.NewAPIHandler(projectService, resourceService, organizationService)
+	apiHandler := api.NewAPIHandler(projectService, resourceService, organizationService, rbacService)
 
 	// --- Router Setup ---
 	router := api.SetupRouter(apiHandler)

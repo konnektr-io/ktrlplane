@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useOrganizationStore } from '../features/organizations/store/organizationStore';
+import Breadcrumbs from './Breadcrumbs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +54,7 @@ export default function AppHeader() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-semibold">ktrlplane</h1>
+            <Breadcrumbs />
           </div>
           
           <div className="flex items-center gap-4">
@@ -91,6 +93,7 @@ export default function AppHeader() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
+          <Breadcrumbs />
         </div>
         
         <div className="flex items-center gap-4">

@@ -94,3 +94,84 @@ func (s *RBACService) GetUserRoles(ctx context.Context, userID string) ([]models
 
 	return assignments, nil
 }
+
+// GetRoleAssignmentsForScope returns all role assignments for a specific scope (with user and role data populated)
+func (s *RBACService) GetRoleAssignmentsForScope(ctx context.Context, scopeType, scopeID string) ([]models.RoleAssignmentWithDetails, error) {
+	pool := db.GetDB()
+
+	rows, err := pool.Query(ctx, db.GetRoleAssignmentsWithDetailsQuery, scopeType, scopeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get role assignments for scope: %w", err)
+	}
+	defer rows.Close()
+
+	var assignments []models.RoleAssignmentWithDetails
+	for rows.Next() {
+		var assignment models.RoleAssignmentWithDetails
+		var userEmail, userName string
+		err := rows.Scan(
+			&assignment.AssignmentID, &assignment.UserID, &assignment.RoleID, &assignment.ScopeType, &assignment.ScopeID, 
+			&assignment.AssignedBy, &assignment.CreatedAt, &assignment.ExpiresAt,
+			&assignment.Role.Name, &assignment.Role.DisplayName, &assignment.Role.Description, &assignment.Role.IsSystem,
+			&userEmail, &userName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan role assignment: %w", err)
+		}
+		
+		// Set role ID for the embedded role
+		assignment.Role.RoleID = assignment.RoleID
+		assignment.Role.CreatedAt = assignment.CreatedAt // Approximate
+		assignment.Role.UpdatedAt = assignment.CreatedAt // Approximate
+		
+		// Populate user details with real data from database
+		assignment.User.ID = assignment.UserID
+		assignment.User.Email = userEmail
+		assignment.User.Name = userName
+		
+		assignments = append(assignments, assignment)
+	}
+
+	return assignments, nil
+}
+
+// GetRoleAssignmentsWithInheritance returns all role assignments for a specific scope including inherited assignments from parent scopes
+func (s *RBACService) GetRoleAssignmentsWithInheritance(ctx context.Context, scopeType, scopeID string) ([]models.RoleAssignmentWithDetails, error) {
+	pool := db.GetDB()
+
+	rows, err := pool.Query(ctx, db.GetRoleAssignmentsWithInheritanceQuery, scopeType, scopeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get role assignments with inheritance for scope: %w", err)
+	}
+	defer rows.Close()
+
+	var assignments []models.RoleAssignmentWithDetails
+	for rows.Next() {
+		var assignment models.RoleAssignmentWithDetails
+		var userEmail, userName string
+		err := rows.Scan(
+			&assignment.AssignmentID, &assignment.UserID, &assignment.RoleID, &assignment.ScopeType, &assignment.ScopeID, 
+			&assignment.AssignedBy, &assignment.CreatedAt, &assignment.ExpiresAt,
+			&assignment.Role.Name, &assignment.Role.DisplayName, &assignment.Role.Description, &assignment.Role.IsSystem,
+			&userEmail, &userName,
+			&assignment.InheritanceType, &assignment.InheritedFromScopeType, &assignment.InheritedFromScopeID, &assignment.InheritedFromName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan role assignment with inheritance: %w", err)
+		}
+		
+		// Set role ID for the embedded role
+		assignment.Role.RoleID = assignment.RoleID
+		assignment.Role.CreatedAt = assignment.CreatedAt // Approximate
+		assignment.Role.UpdatedAt = assignment.CreatedAt // Approximate
+		
+		// Populate user details with real data from database
+		assignment.User.ID = assignment.UserID
+		assignment.User.Email = userEmail
+		assignment.User.Name = userName
+		
+		assignments = append(assignments, assignment)
+	}
+
+	return assignments, nil
+}
