@@ -28,7 +28,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	// 2. Create project in user's existing organization with write access
 	
 	// First, check if user has any organizations
-	orgs, err := s.rbacService.GetOrganizationsForUser(ctx, userID)
+	orgs, err := s.orgService.ListOrganizations(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user organizations: %w", err)
 	}
@@ -128,37 +128,36 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, projectID, userID s
 	return nil, fmt.Errorf("project not found: %s", projectID)
 }
 
-// ListProjects returns projects the user has read access to
+// ListProjects returns projects the user has access to (either directly or through organization access)
 func (s *ProjectService) ListProjects(ctx context.Context, userID string) ([]models.Project, error) {
 	pool := db.GetDB()
-	rows, err := pool.Query(ctx, db.ListProjectsQuery)
+
+	// Query projects where user has any role (either directly or through organization access)
+	// This is much more efficient than fetching all projects and checking permissions one by one
+	query := `
+		SELECT DISTINCT p.project_id, p.org_id, p.name, p.description, p.status, p.created_at, p.updated_at
+		FROM ktrlplane.projects p
+		LEFT JOIN ktrlplane.rbac_assignments ra_proj ON ra_proj.scope_id = p.project_id AND ra_proj.scope_type = 'project'
+		LEFT JOIN ktrlplane.rbac_assignments ra_org ON ra_org.scope_id = p.org_id AND ra_org.scope_type = 'organization'
+		WHERE (ra_proj.user_id = $1 OR ra_org.user_id = $1)
+		ORDER BY p.name`
+
+	rows, err := pool.Query(ctx, query, userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list projects: %w", err)
+		return nil, fmt.Errorf("failed to query projects: %w", err)
 	}
 	defer rows.Close()
 
-	var allProjects []models.Project
+	var projects []models.Project
 	for rows.Next() {
 		var project models.Project
 		if err := rows.Scan(&project.ProjectID, &project.OrgID, &project.Name, &project.Description, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
 		}
-		allProjects = append(allProjects, project)
+		projects = append(projects, project)
 	}
 
-	// Filter projects based on user permissions
-	var filteredProjects []models.Project
-	for _, project := range allProjects {
-		hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "read", "project", project.ProjectID)
-		if err != nil {
-			continue // Skip on error, could log this
-		}
-		if hasPermission {
-			filteredProjects = append(filteredProjects, project)
-		}
-	}
-
-	return filteredProjects, nil
+	return projects, nil
 }
 
 // UpdateProject updates a project if user has write access

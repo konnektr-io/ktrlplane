@@ -230,8 +230,18 @@ func (h *APIHandler) CreateResource(c *gin.Context) {
 		return
 	}
 
-	resource, err := h.ResourceService.CreateResource(c.Request.Context(), projectID, req)
+	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	resource, err := h.ResourceService.CreateResource(c.Request.Context(), projectID, req, user.ID)
+	if err != nil {
+		if err.Error() == "insufficient permissions to create resource" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to create resource"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create resource", "details": err.Error()})
 		return
 	}
@@ -242,9 +252,16 @@ func (h *APIHandler) GetResource(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
 
-	resource, err := h.ResourceService.GetResourceByID(c.Request.Context(), projectID, resourceID)
+	user, err := h.getUserFromContext(c)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Resource not found", "details": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	resource, err := h.ResourceService.GetResourceByID(c.Request.Context(), projectID, resourceID, user.ID)
+	if err != nil {
+		// Always return 404 for security - don't reveal if resource exists but user lacks access
+		c.JSON(http.StatusNotFound, gin.H{"error": "Resource not found"})
 		return
 	}
 	c.JSON(http.StatusOK, resource)
@@ -253,7 +270,13 @@ func (h *APIHandler) GetResource(c *gin.Context) {
 func (h *APIHandler) ListResources(c *gin.Context) {
 	projectID := c.Param("projectId")
 
-	resources, err := h.ResourceService.ListResources(c.Request.Context(), projectID)
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	resources, err := h.ResourceService.ListResources(c.Request.Context(), projectID, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list resources", "details": err.Error()})
 		return
@@ -270,8 +293,18 @@ func (h *APIHandler) UpdateResource(c *gin.Context) {
 		return
 	}
 
-	resource, err := h.ResourceService.UpdateResource(c.Request.Context(), projectID, resourceID, req)
+	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	resource, err := h.ResourceService.UpdateResource(c.Request.Context(), projectID, resourceID, req, user.ID)
+	if err != nil {
+		if err.Error() == "insufficient permissions to update resource" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to update resource"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update resource", "details": err.Error()})
 		return
 	}
@@ -282,8 +315,18 @@ func (h *APIHandler) DeleteResource(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
 
-	err := h.ResourceService.DeleteResource(c.Request.Context(), projectID, resourceID)
+	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	err = h.ResourceService.DeleteResource(c.Request.Context(), projectID, resourceID, user.ID)
+	if err != nil {
+		if err.Error() == "insufficient permissions to delete resource" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to delete resource"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete resource", "details": err.Error()})
 		return
 	}

@@ -57,27 +57,35 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, name, owne
 	return org, nil
 }
 
-// ListOrganizations returns organizations the user has read access to
+// ListOrganizations returns organizations where the user has any permission
 func (s *OrganizationService) ListOrganizations(ctx context.Context, userID string) ([]models.Organization, error) {
-	// Check if user has any organization access
-	orgs, err := s.rbacService.GetOrganizationsForUser(ctx, userID)
+	pool := db.GetDB()
+
+	// Query organizations where user has any role - this is much more efficient
+	// than fetching all organizations and checking permissions one by one
+	query := `
+		SELECT DISTINCT o.org_id, o.name, o.created_at, o.updated_at
+		FROM ktrlplane.organizations o
+		JOIN ktrlplane.rbac_assignments ra ON ra.scope_id = o.org_id
+		WHERE ra.user_id = $1 AND ra.scope_type = 'organization'
+		ORDER BY o.name`
+
+	rows, err := pool.Query(ctx, query, userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get organizations for user: %w", err)
+		return nil, fmt.Errorf("failed to query organizations: %w", err)
+	}
+	defer rows.Close()
+
+	var organizations []models.Organization
+	for rows.Next() {
+		var org models.Organization
+		if err := rows.Scan(&org.OrgID, &org.Name, &org.CreatedAt, &org.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan organization: %w", err)
+		}
+		organizations = append(organizations, org)
 	}
 
-	// Filter organizations where user has at least read permission
-	var filteredOrgs []models.Organization
-	for _, org := range orgs {
-		hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "read", "organization", org.OrgID)
-		if err != nil {
-			continue // Skip on error, could log this
-		}
-		if hasPermission {
-			filteredOrgs = append(filteredOrgs, org)
-		}
-	}
-
-	return filteredOrgs, nil
+	return organizations, nil
 }
 
 // GetOrganization returns a specific organization if user has read access

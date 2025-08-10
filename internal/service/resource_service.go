@@ -9,24 +9,49 @@ import (
 	"github.com/google/uuid"
 )
 
-type ResourceService struct{}
-
-func NewResourceService() *ResourceService {
-	return &ResourceService{}
+type ResourceService struct {
+	rbacService *RBACService
 }
 
-func (s *ResourceService) CreateResource(ctx context.Context, projectID string, req models.CreateResourceRequest) (*models.Resource, error) {
+func NewResourceService() *ResourceService {
+	return &ResourceService{
+		rbacService: NewRBACService(),
+	}
+}
+
+// CreateResource creates a new resource if user has write access to the project
+func (s *ResourceService) CreateResource(ctx context.Context, projectID string, req models.CreateResourceRequest, userID string) (*models.Resource, error) {
+	// Check write permission on project (resources inherit from project permissions)
+	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "write", "project", projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check permissions: %w", err)
+	}
+	if !hasPermission {
+		return nil, fmt.Errorf("insufficient permissions to create resource")
+	}
+
 	resourceID := uuid.New().String()
 
-	err := db.ExecQuery(ctx, db.CreateResourceQuery, resourceID, projectID, req.Name, req.Type, req.HelmValues)
+	err = db.ExecQuery(ctx, db.CreateResourceQuery, resourceID, projectID, req.Name, req.Type, req.HelmValues)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	return s.GetResourceByID(ctx, projectID, resourceID)
+	return s.GetResourceByID(ctx, projectID, resourceID, userID)
 }
 
-func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string, resourceID string) (*models.Resource, error) {
+// GetResourceByID returns a resource if user has read access to the project
+func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string, resourceID string, userID string) (*models.Resource, error) {
+	// Check read permission on project (resources inherit from project permissions)
+	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "read", "project", projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check permissions: %w", err)
+	}
+	if !hasPermission {
+		// Return "not found" instead of "forbidden" for security (don't reveal existence)
+		return nil, fmt.Errorf("resource not found: %s", resourceID)
+	}
+
 	rows, err := db.Query(ctx, db.GetResourceByIDQuery, projectID, resourceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch resource: %w", err)
@@ -44,7 +69,18 @@ func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string,
 	return nil, fmt.Errorf("resource not found: %s", resourceID)
 }
 
-func (s *ResourceService) ListResources(ctx context.Context, projectID string) ([]models.Resource, error) {
+// ListResources returns resources in a project using permission-aware query
+func (s *ResourceService) ListResources(ctx context.Context, projectID string, userID string) ([]models.Resource, error) {
+	// Check read permission on project (resources inherit from project permissions)
+	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "read", "project", projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check permissions: %w", err)
+	}
+	if !hasPermission {
+		// Return empty list instead of error for security
+		return []models.Resource{}, nil
+	}
+
 	rows, err := db.Query(ctx, db.ListResourcesQuery, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list resources: %w", err)
@@ -63,15 +99,35 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string) (
 	return resources, nil
 }
 
-func (s *ResourceService) UpdateResource(ctx context.Context, projectID string, resourceID string, req models.UpdateResourceRequest) (*models.Resource, error) {
-	err := db.ExecQuery(ctx, db.UpdateResourceQuery, projectID, resourceID, req.Name, req.HelmValues)
+// UpdateResource updates a resource if user has write access to the project
+func (s *ResourceService) UpdateResource(ctx context.Context, projectID string, resourceID string, req models.UpdateResourceRequest, userID string) (*models.Resource, error) {
+	// Check write permission on project (resources inherit from project permissions)
+	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "write", "project", projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check permissions: %w", err)
+	}
+	if !hasPermission {
+		return nil, fmt.Errorf("insufficient permissions to update resource")
+	}
+
+	err = db.ExecQuery(ctx, db.UpdateResourceQuery, projectID, resourceID, req.Name, req.HelmValues)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update resource: %w", err)
 	}
 
-	return s.GetResourceByID(ctx, projectID, resourceID)
+	return s.GetResourceByID(ctx, projectID, resourceID, userID)
 }
 
-func (s *ResourceService) DeleteResource(ctx context.Context, projectID string, resourceID string) error {
+// DeleteResource deletes a resource if user has delete access to the project
+func (s *ResourceService) DeleteResource(ctx context.Context, projectID string, resourceID string, userID string) error {
+	// Check delete permission on project (resources inherit from project permissions)
+	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "delete", "project", projectID)
+	if err != nil {
+		return fmt.Errorf("failed to check permissions: %w", err)
+	}
+	if !hasPermission {
+		return fmt.Errorf("insufficient permissions to delete resource")
+	}
+
 	return db.ExecQuery(ctx, db.DeleteResourceQuery, projectID, resourceID)
 }

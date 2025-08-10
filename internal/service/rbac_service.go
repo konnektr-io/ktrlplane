@@ -94,26 +94,3 @@ func (s *RBACService) GetUserRoles(ctx context.Context, userID string) ([]models
 
 	return assignments, nil
 }
-
-// GetOrganizationsForUser returns organizations where user has any role
-func (s *RBACService) GetOrganizationsForUser(ctx context.Context, userID string) ([]models.Organization, error) {
-	pool := db.GetDB()
-
-	rows, err := pool.Query(ctx, db.GetOrganizationsForUserAdvancedQuery, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user organizations: %w", err)
-	}
-	defer rows.Close()
-
-	var organizations []models.Organization
-	for rows.Next() {
-		var org models.Organization
-		err := rows.Scan(&org.OrgID, &org.Name, &org.CreatedAt, &org.UpdatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan organization: %w", err)
-		}
-		organizations = append(organizations, org)
-	}
-
-	return organizations, nil
-}
