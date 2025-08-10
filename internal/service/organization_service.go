@@ -61,16 +61,7 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, name, owne
 func (s *OrganizationService) ListOrganizations(ctx context.Context, userID string) ([]models.Organization, error) {
 	pool := db.GetDB()
 
-	// Query organizations where user has any role - this is much more efficient
-	// than fetching all organizations and checking permissions one by one
-	query := `
-		SELECT DISTINCT o.org_id, o.name, o.created_at, o.updated_at
-		FROM ktrlplane.organizations o
-		JOIN ktrlplane.rbac_assignments ra ON ra.scope_id = o.org_id
-		WHERE ra.user_id = $1 AND ra.scope_type = 'organization'
-		ORDER BY o.name`
-
-	rows, err := pool.Query(ctx, query, userID)
+	rows, err := pool.Query(ctx, db.GetOrganizationsForUserAdvancedQuery, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query organizations: %w", err)
 	}
@@ -101,7 +92,7 @@ func (s *OrganizationService) GetOrganization(ctx context.Context, orgID, userID
 
 	// Get organization details
 	pool := db.GetDB()
-	rows, err := pool.Query(ctx, "SELECT org_id, name, created_at, updated_at FROM ktrlplane.organizations WHERE org_id = $1", orgID)
+	rows, err := pool.Query(ctx, db.GetOrganizationByIDQuery, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch organization: %w", err)
 	}

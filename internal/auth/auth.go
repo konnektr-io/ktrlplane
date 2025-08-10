@@ -217,7 +217,7 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 	userCacheMutex.RUnlock()
 
 	// Check if user exists in database
-	rows, err := db.Query(ctx, "SELECT user_id FROM ktrlplane.users WHERE user_id = $1", userID)
+	rows, err := db.Query(ctx, db.CheckUserExistsQuery, userID)
 	if err != nil {
 		return fmt.Errorf("failed to check user existence: %w", err)
 	}

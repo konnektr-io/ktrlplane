@@ -132,17 +132,7 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, projectID, userID s
 func (s *ProjectService) ListProjects(ctx context.Context, userID string) ([]models.Project, error) {
 	pool := db.GetDB()
 
-	// Query projects where user has any role (either directly or through organization access)
-	// This is much more efficient than fetching all projects and checking permissions one by one
-	query := `
-		SELECT DISTINCT p.project_id, p.org_id, p.name, p.description, p.status, p.created_at, p.updated_at
-		FROM ktrlplane.projects p
-		LEFT JOIN ktrlplane.rbac_assignments ra_proj ON ra_proj.scope_id = p.project_id AND ra_proj.scope_type = 'project'
-		LEFT JOIN ktrlplane.rbac_assignments ra_org ON ra_org.scope_id = p.org_id AND ra_org.scope_type = 'organization'
-		WHERE (ra_proj.user_id = $1 OR ra_org.user_id = $1)
-		ORDER BY p.name`
-
-	rows, err := pool.Query(ctx, query, userID)
+	rows, err := pool.Query(ctx, db.ListProjectsForUserQuery, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query projects: %w", err)
 	}

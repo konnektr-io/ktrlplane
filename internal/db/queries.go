@@ -172,4 +172,23 @@ const (
 		WHERE ra.user_id = $1
 		  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
 		ORDER BY o.name`
+
+	// Additional queries from service files
+	GetOrganizationByIDQuery = `
+		SELECT org_id, name, created_at, updated_at 
+		FROM ktrlplane.organizations 
+		WHERE org_id = $1`
+
+	ListProjectsForUserQuery = `
+		SELECT DISTINCT p.project_id, p.org_id, p.name, p.description, p.status, p.created_at, p.updated_at
+		FROM ktrlplane.projects p
+		LEFT JOIN ktrlplane.role_assignments ra_proj ON ra_proj.scope_id = p.project_id AND ra_proj.scope_type = 'project'
+		LEFT JOIN ktrlplane.role_assignments ra_org ON ra_org.scope_id = p.org_id AND ra_org.scope_type = 'organization'
+		WHERE (ra_proj.user_id = $1 OR ra_org.user_id = $1)
+		ORDER BY p.name`
+
+	CheckUserExistsQuery = `
+		SELECT user_id 
+		FROM ktrlplane.users 
+		WHERE user_id = $1`
 )
