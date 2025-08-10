@@ -1,0 +1,56 @@
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  avatar?: string;
+}
+
+export interface Role {
+  role_id: string;
+  name: string;
+  display_name: string;
+  description: string;
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Permission {
+  permission_id: string;
+  resource_type: string;
+  action: string;
+  description: string;
+  created_at: string;
+}
+
+export interface RoleAssignment {
+  assignment_id: string;
+  user_id: string;
+  role_id: string;
+  scope_type: 'organization' | 'project' | 'resource';
+  scope_id: string;
+  assigned_by: string;
+  created_at: string;
+  expires_at?: string;
+  // Populated fields
+  user?: User;
+  role?: Role;
+}
+
+export interface AccessControlContextType {
+  scopeType: 'organization' | 'project' | 'resource';
+  scopeId: string;
+  scopeName: string;
+}
+
+export interface InviteUserRequest {
+  email: string;
+  role_name: string;
+  expires_at?: string;
+}
+
+export interface UpdateRoleRequest {
+  assignment_id: string;
+  role_name: string;
+  expires_at?: string;
+}

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { Resource, CreateResourceData, UpdateResourceData } from '@/lib/types';
-import apiClient from '@/lib/axios';
+import { Resource, CreateResourceData, UpdateResourceData } from '../types/resource.types';
+import apiClient from '../../../lib/axios';
 import { toast } from "sonner";
 import axios from 'axios';
 
@@ -95,7 +95,7 @@ export const useResourceStore = create<ResourceState>((set) => ({
     if (!projectId || !resourceId) return null;
     set({ error: null });
      try {
-         const payload = { ...data };
+         const payload: any = { ...data };
          if (typeof payload.helm_values === 'object') {
             payload.helm_values = JSON.stringify(payload.helm_values);
          }

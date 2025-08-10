@@ -1,14 +1,6 @@
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useProjectStore } from '@/store/projectStore';
-import { useOrganizationStore } from '@/store/organizationStore';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useOrganizationStore } from '../features/organizations/store/organizationStore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,16 +22,9 @@ import {
 
 export default function AppHeader() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
   const { user, logout } = useAuth0();
-  const { currentProject, projects } = useProjectStore();
   const { currentOrganization } = useOrganizationStore();
-
-  const handleProjectChange = (newProjectId: string) => {
-    const currentPath = location.pathname.split('/').slice(3).join('/') || 'resources';
-    navigate(`/project/${newProjectId}/${currentPath}`);
-  };
 
   const handleLogout = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
@@ -106,40 +91,6 @@ export default function AppHeader() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
-          
-          {/* Project Selector */}
-          <div className="flex items-center gap-2">
-            <Select value={projectId} onValueChange={handleProjectChange}>
-              <SelectTrigger className="w-[250px]">
-                <SelectValue>
-                  <div className="flex flex-col items-start">
-                    <span className="truncate font-medium">
-                      {currentProject?.name || 'Select Project'}
-                    </span>
-                    {currentOrganization && (
-                      <span className="text-xs text-muted-foreground">
-                        {currentOrganization.name}
-                      </span>
-                    )}
-                  </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.project_id} value={project.project_id}>
-                    <div className="flex flex-col">
-                      <span>{project.name}</span>
-                      {project.description && (
-                        <span className="text-xs text-muted-foreground">
-                          {project.description}
-                        </span>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         
         <div className="flex items-center gap-4">
@@ -156,10 +107,12 @@ export default function AppHeader() {
                 All Projects
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleNavigateToProjectSettings}>
-                <Settings className="mr-2 h-4 w-4" />
-                Project Settings
-              </DropdownMenuItem>
+              {projectId && (
+                <DropdownMenuItem onClick={handleNavigateToProjectSettings}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Project Settings
+                </DropdownMenuItem>
+              )}
               {currentOrganization && (
                 <DropdownMenuItem onClick={handleNavigateToOrgSettings}>
                   <Building2 className="mr-2 h-4 w-4" />

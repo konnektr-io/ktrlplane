@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useResourceStore } from '@/store/resourceStore';
+import { useResourceStore } from '../store/resourceStore';
 import AppLayout from '@/components/AppLayout';
-import ResourceSidebarNav from '@/components/sidebars/ResourceSidebarNav';
+import ResourceSidebarNav from '../components/sidebars/ResourceSidebarNav';
 
 export default function ResourceLayout() {
   const { projectId, resourceId } = useParams<{ projectId: string; resourceId: string }>();

@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useProjectStore } from '@/store/projectStore';
+import { useProjectStore } from '../store/projectStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ProjectSettingsPage() {

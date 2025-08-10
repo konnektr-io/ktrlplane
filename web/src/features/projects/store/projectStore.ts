@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Project } from '@/lib/types';
-import apiClient from '@/lib/axios';
+import { Project } from '../types/project.types';
+import apiClient from '../../../lib/axios';
 import { toast } from "sonner";
 import axios from 'axios';
 
@@ -35,7 +35,7 @@ export const useProjectStore = create<ProjectState>()(
         set({ isLoadingList: true, error: null });
         try {
             const response = await apiClient.get<Project[]>('/projects');
-            const projectsWithDates = response.data.map(p => ({
+            const projectsWithDates = response.data.map((p: any) => ({
                 ...p,
                 created_at: new Date(p.created_at),
                 updated_at: new Date(p.updated_at),

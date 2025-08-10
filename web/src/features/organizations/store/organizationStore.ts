@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Organization } from '@/lib/types';
-import apiClient from '@/lib/axios';
+import { Organization } from '../types/organization.types';
+import { apiClient } from '../../../lib/axios';
 import { toast } from "sonner";
 import axios from 'axios';
 
@@ -27,7 +27,7 @@ export const useOrganizationStore = create<OrganizationState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await apiClient.get<Organization[]>('/organizations');
-          const organizationsWithDates = response.data.map(org => ({
+          const organizationsWithDates = response.data.map((org: any) => ({
             ...org,
             created_at: new Date(org.created_at),
             updated_at: new Date(org.updated_at),

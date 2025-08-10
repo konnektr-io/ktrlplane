@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useResourceStore } from '@/store/resourceStore';
+import { useResourceStore } from '../store/resourceStore';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -20,8 +20,8 @@ const resourceTypeIcons = {
 } as const;
 
 const resourceTypes = [
-  { value: 'GraphDatabase', label: 'Graph Database' },
-  { value: 'Flow', label: 'Flow' },
+  { value: 'Konnektr.DigitalTwins', label: 'Digital Twins' },
+  { value: 'Konnektr.Flows', label: 'Flows' },
 ];
 
 export default function ResourcesPage() {
@@ -55,8 +55,8 @@ export default function ResourcesPage() {
     try {
       const newResource = await createResource(projectId, {
         name: formData.name.trim(),
-        type: formData.type as 'GraphDatabase' | 'Flow',
-        helm_values: formData.helm_values,
+        type: formData.type as 'Konnektr.DigitalTwins' | 'Konnektr.Flows',
+        helm_values: JSON.parse(formData.helm_values),
       });
 
       if (newResource) {

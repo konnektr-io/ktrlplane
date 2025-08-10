@@ -1,6 +1,6 @@
 import { ReactNode, useEffect } from 'react';
-import { useProjectStore } from '@/store/projectStore';
-import { useOrganizationStore } from '@/store/organizationStore';
+import { useProjectStore } from '../features/projects/store/projectStore';
+import { useOrganizationStore } from '../features/organizations/store/organizationStore';
 import {
   Sidebar,
   SidebarContent,

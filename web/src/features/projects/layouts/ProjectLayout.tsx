@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useProjectStore } from '@/store/projectStore';
+import { useProjectStore } from '../store/projectStore';
 import AppLayout from '@/components/AppLayout';
-import ProjectSidebarNav from '@/components/sidebars/ProjectSidebarNav';
+import ProjectSidebarNav from '../components/sidebars/ProjectSidebarNav';
 
 export default function ProjectLayout() {
   const { projectId } = useParams<{ projectId: string }>();
