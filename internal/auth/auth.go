@@ -19,8 +19,8 @@ import (
 
 // CustomClaims contains custom data we want to get from the token.
 type CustomClaims struct {
-	Email string `json:"https://konnektr.io/email"`
-	Name string `json:"https://konnektr.io/name"`
+	Email string `json:"email"`
+	Name string `json:"name"`
 }
 
 // Validate does nothing for this example, but we need
