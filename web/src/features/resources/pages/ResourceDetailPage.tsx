@@ -135,7 +135,7 @@ export default function ResourceDetailPage() {
       </div>
 
       {/* Configuration Card */}
-      {currentResource?.helm_values && (
+  {currentResource?.settings_json && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -148,7 +148,7 @@ export default function ResourceDetailPage() {
           </CardHeader>
           <CardContent>
             <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-              {JSON.stringify(currentResource.helm_values, null, 2)}
+              {JSON.stringify(currentResource.settings_json, null, 2)}
             </pre>
           </CardContent>
         </Card>

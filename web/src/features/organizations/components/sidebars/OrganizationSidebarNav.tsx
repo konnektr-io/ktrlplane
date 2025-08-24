@@ -70,15 +70,13 @@ export default function OrganizationSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu>
             {organizationMenuItems.map((item) => {
-              const isActive = item.path === '' 
-                ? location.pathname === `/organization/${orgId}` || location.pathname === `/organization/${orgId}/`
-                : location.pathname.endsWith(item.path);
-              
+              const fullPath = `/organization/${orgId}${item.path ? `/${item.path}` : ''}`;
+              const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/organization/${orgId}` || location.pathname === `/organization/${orgId}/`));
               const menuButton = (
                 <SidebarMenuButton 
                   asChild
                   isActive={isActive}
-                  onClick={() => navigate(`/organization/${orgId}/${item.path}`)}
+                  onClick={() => navigate(fullPath)}
                 >
                   <div className="flex items-center gap-2 cursor-pointer">
                     <item.icon className="h-4 w-4" />

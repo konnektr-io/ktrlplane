@@ -32,7 +32,7 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 
 	resourceID := uuid.New().String()
 
-	err = db.ExecQuery(ctx, db.CreateResourceQuery, resourceID, projectID, req.Name, req.Type, req.HelmValues)
+	err = db.ExecQuery(ctx, db.CreateResourceQuery, resourceID, projectID, req.Name, req.Type, req.SettingsJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
@@ -60,7 +60,7 @@ func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string,
 
 	if rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.HelmValues, &resource.ErrorMessage, &resource.AccessURL, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+	if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.AccessURL, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		return &resource, nil
@@ -90,7 +90,7 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string, u
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.HelmValues, &resource.ErrorMessage, &resource.AccessURL, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+	if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.AccessURL, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		resources = append(resources, resource)
@@ -110,7 +110,7 @@ func (s *ResourceService) UpdateResource(ctx context.Context, projectID string, 
 		return nil, fmt.Errorf("insufficient permissions to update resource")
 	}
 
-	err = db.ExecQuery(ctx, db.UpdateResourceQuery, projectID, resourceID, req.Name, req.HelmValues)
+	err = db.ExecQuery(ctx, db.UpdateResourceQuery, projectID, resourceID, req.Name, req.SettingsJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update resource: %w", err)
 	}

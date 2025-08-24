@@ -59,7 +59,7 @@ const (
 
 	// Resource Queries ---
 	CreateResourceQuery = `
-		INSERT INTO ktrlplane.resources (resource_id, project_id, name, type, status, helm_values, created_at, updated_at)
+		INSERT INTO ktrlplane.resources (resource_id, project_id, name, type, status, settings_json, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, 'Creating', $5, NOW(), NOW())`
 
 	GetResourceByIDQuery = `
@@ -69,7 +69,7 @@ const (
 		SELECT * FROM ktrlplane.resources WHERE project_id = $1`
 
 	UpdateResourceQuery = `
-		UPDATE ktrlplane.resources SET name = $3, helm_values = $4, status = 'Updating', updated_at = NOW() WHERE project_id = $1 AND resource_id = $2`
+		UPDATE ktrlplane.resources SET name = $3, settings_json = $4, status = 'Updating', updated_at = NOW() WHERE project_id = $1 AND resource_id = $2`
 
 	DeleteResourceQuery = `
 		UPDATE ktrlplane.resources SET status = 'Deleting', updated_at = NOW() WHERE project_id = $1 AND resource_id = $2`

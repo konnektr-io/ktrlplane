@@ -23,8 +23,8 @@ const parseResourceDates = (resource: Resource): Resource => ({
     ...resource,
     created_at: new Date(resource.created_at),
     updated_at: new Date(resource.updated_at),
-     // Ensure helm_values is an object after potential string fetch
-    helm_values: typeof resource.helm_values === 'string' ? JSON.parse(resource.helm_values || '{}') : (resource.helm_values ?? {}),
+    // Ensure settings_json is an object after potential string fetch
+    settings_json: typeof resource.settings_json === 'string' ? JSON.parse(resource.settings_json || '{}') : (resource.settings_json ?? {}), // Legacy fallback, should always be object
 });
 
 
@@ -72,11 +72,12 @@ export const useResourceStore = create<ResourceState>((set) => ({
      if (!projectId) return null;
       set({ error: null });
       try {
-          const payload = {
-                ...data,
-                helm_values: typeof data.helm_values === 'object' ? JSON.stringify(data.helm_values) : data.helm_values,
-            };
-          const response = await apiClient.post<Resource>(`/projects/${projectId}/resources`, payload);
+                    const payload = {
+                                ...data,
+                                // Always send as object
+                                settings_json: data.settings_json ?? {},
+                        };
+                    const response = await apiClient.post<Resource>(`/projects/${projectId}/resources`, payload);
           const newResource = parseResourceDates(response.data);
           set((state) => ({ resources: [...state.resources, newResource] }));
           toast.success(`Resource "${newResource.name}" created successfully.`);
@@ -96,10 +97,8 @@ export const useResourceStore = create<ResourceState>((set) => ({
     set({ error: null });
      try {
          const payload: any = { ...data };
-         if (typeof payload.helm_values === 'object') {
-            payload.helm_values = JSON.stringify(payload.helm_values);
-         }
-
+         // Always send as object
+         if (payload.settings_json === undefined) payload.settings_json = {};
          const response = await apiClient.put<Resource>(`/projects/${projectId}/resources/${resourceId}`, payload);
          const updatedResource = parseResourceDates(response.data);
          set((state) => ({

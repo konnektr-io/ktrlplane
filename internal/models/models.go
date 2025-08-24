@@ -24,12 +24,31 @@ type Resource struct {
 	Name         string          `json:"name" agtype:"name"`
 	Type         string          `json:"type" agtype:"type"` // e.g., "GraphDatabase", "Flow"
 	Status       string          `json:"status" agtype:"status"`
-	HelmValues   json.RawMessage `json:"helm_values" agtype:"helm_values"` // Store as raw JSON
+	SettingsJSON json.RawMessage `json:"settings_json" agtype:"settings_json"` // Store as raw JSON
 	CreatedAt    time.Time       `json:"created_at" agtype:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at" agtype:"updated_at"`
 	ErrorMessage *string         `json:"error_message,omitempty" agtype:"error_message"`
 	// Specific fields for resource types might be present but accessed via HelmValues
 	AccessURL *string `json:"access_url,omitempty" agtype:"access_url"` // Example specific field
+}
+
+// Custom MarshalJSON to ensure settings_json is always a JSON object (never a string/null)
+func (r Resource) MarshalJSON() ([]byte, error) {
+	type Alias Resource
+	tmp := struct {
+		Alias
+		SettingsJSON json.RawMessage `json:"settings_json"`
+	}{
+		Alias:       (Alias)(r),
+		SettingsJSON: r.SettingsJSON,
+	}
+
+	// If SettingsJSON is nil or empty, marshal as {}
+	if len(r.SettingsJSON) == 0 || string(r.SettingsJSON) == "null" || string(r.SettingsJSON) == "" {
+		tmp.SettingsJSON = []byte("{}")
+	}
+
+	return json.Marshal(tmp)
 }
 
 // --- API Request/Response Payloads ---
@@ -57,12 +76,12 @@ type UpdateProjectRequest struct {
 type CreateResourceRequest struct {
 	Name       string          `json:"name" binding:"required"`
 	Type       string          `json:"type" binding:"required"` // e.g., "GraphDatabase"
-	HelmValues json.RawMessage `json:"helm_values"`             // Initial Helm values as JSON
+	SettingsJSON json.RawMessage `json:"settings_json"`             // Initial settings as JSON
 }
 
 type UpdateResourceRequest struct {
 	Name       *string         `json:"name"`
-	HelmValues json.RawMessage `json:"helm_values"` // Send full JSON structure to update
+	SettingsJSON json.RawMessage `json:"settings_json"` // Send full JSON structure to update
 }
 
 // User model (simplified for identifying user from token)

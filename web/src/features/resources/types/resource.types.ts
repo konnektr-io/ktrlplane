@@ -4,7 +4,7 @@ export interface Resource {
   name: string;
   type: string;
   status: string;
-  helm_values: Record<string, any> | string; // Can be object or JSON string
+  settings_json: Record<string, any>; // Always an object
   created_at: Date;
   updated_at: Date;
   error_message?: string;
@@ -14,10 +14,10 @@ export interface Resource {
 export interface CreateResourceData {
   name: string;
   type: string;
-  helm_values?: Record<string, any>;
+  settings_json?: Record<string, any>;
 }
 
 export interface UpdateResourceData {
   name?: string;
-  helm_values?: Record<string, any>;
+  settings_json?: Record<string, any>;
 }

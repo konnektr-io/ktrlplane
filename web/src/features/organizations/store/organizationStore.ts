@@ -13,11 +13,31 @@ interface OrganizationState {
   fetchOrganizations: () => Promise<void>;
   fetchOrganizationById: (orgId: string) => Promise<void>;
   setCurrentOrganization: (org: Organization | null) => void;
+  updateOrganization: (orgId: string, data: Partial<Organization>) => Promise<void>;
 }
 
 export const useOrganizationStore = create<OrganizationState>()(
   persist(
-    (set, get) => ({
+  (set, get) => ({
+      updateOrganization: async (orgId: string, data: Partial<Organization>) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await apiClient.put<Organization>(`/organizations/${orgId}`, data);
+          const updatedOrg = {
+            ...response.data,
+            created_at: new Date(response.data.created_at),
+            updated_at: new Date(response.data.updated_at),
+          };
+          set({ currentOrganization: updatedOrg, isLoading: false });
+          toast.success('Organization updated');
+        } catch (err: unknown) {
+          const errorMsg = axios.isAxiosError(err)
+            ? err.response?.data?.error || err.message
+            : (err instanceof Error ? err.message : 'Failed to update organization');
+          toast.error(errorMsg);
+          set({ error: errorMsg, isLoading: false });
+        }
+      },
       organizations: [],
       currentOrganization: null,
       isLoading: false,

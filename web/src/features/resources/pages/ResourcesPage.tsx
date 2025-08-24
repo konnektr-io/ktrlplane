@@ -32,7 +32,7 @@ export default function ResourcesPage() {
   const [formData, setFormData] = useState({ 
     name: '', 
     type: '', 
-    helm_values: '{}' 
+  settings_json: '{}' 
   });
   const [isCreating, setIsCreating] = useState(false);
 
@@ -56,13 +56,13 @@ export default function ResourcesPage() {
       const newResource = await createResource(projectId, {
         name: formData.name.trim(),
         type: formData.type as 'Konnektr.DigitalTwins' | 'Konnektr.Flows',
-        helm_values: JSON.parse(formData.helm_values),
+  settings_json: JSON.parse(formData.settings_json),
       });
 
       if (newResource) {
         toast.success('Resource created successfully!');
         setIsDialogOpen(false);
-        setFormData({ name: '', type: '', helm_values: '{}' });
+  setFormData({ name: '', type: '', settings_json: '{}' });
         fetchResources(projectId);
       }
     } catch (error) {

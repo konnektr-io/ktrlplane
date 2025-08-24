@@ -17,20 +17,20 @@ func TestResourceService_Initialization(t *testing.T) {
 
 func TestCreateResourceRequest_Validation(t *testing.T) {
 	// Test that we can create valid resource requests
-	helmValues := json.RawMessage(`{"test": "values"}`)
+	settingsJSON := json.RawMessage(`{"test": "values"}`)
 	req := models.CreateResourceRequest{
 		Name:       "Test Resource",
 		Type:       "kubernetes",
-		HelmValues: helmValues,
+		SettingsJSON: settingsJSON,
 	}
 
 	assert.Equal(t, "Test Resource", req.Name, "Resource name should match")
 	assert.Equal(t, "kubernetes", req.Type, "Resource type should match")
-	assert.Equal(t, helmValues, req.HelmValues, "Resource helm values should match")
+	assert.Equal(t, settingsJSON, req.SettingsJSON, "Resource helm values should match")
 }
 
 func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
-	helmValues := json.RawMessage(`{"test": "values"}`)
+	settingsJSON := json.RawMessage(`{"test": "values"}`)
 
 	tests := []struct {
 		name            string
@@ -45,7 +45,7 @@ func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
 			resourceRequest: models.CreateResourceRequest{
 				Name:       "Test Resource",
 				Type:       "kubernetes",
-				HelmValues: helmValues,
+				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
 			validInput: true,
@@ -56,7 +56,7 @@ func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
 			resourceRequest: models.CreateResourceRequest{
 				Name:       "Test Resource",
 				Type:       "kubernetes",
-				HelmValues: helmValues,
+				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
 			validInput: false,
@@ -67,7 +67,7 @@ func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
 			resourceRequest: models.CreateResourceRequest{
 				Name:       "",
 				Type:       "kubernetes",
-				HelmValues: helmValues,
+				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
 			validInput: false,
@@ -78,7 +78,7 @@ func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
 			resourceRequest: models.CreateResourceRequest{
 				Name:       "Test Resource",
 				Type:       "kubernetes",
-				HelmValues: helmValues,
+				SettingsJSON: settingsJSON,
 			},
 			userID:     "",
 			validInput: false,
@@ -144,7 +144,7 @@ func TestResourceService_ListResources_Validation(t *testing.T) {
 func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 	// Helper function to create string pointer
 	strPtr := func(s string) *string { return &s }
-	helmValues := json.RawMessage(`{"updated": "values"}`)
+	settingsJSON := json.RawMessage(`{"updated": "values"}`)
 
 	tests := []struct {
 		name          string
@@ -160,7 +160,7 @@ func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 			resourceID: "resource123",
 			updateRequest: models.UpdateResourceRequest{
 				Name:       strPtr("Updated Resource"),
-				HelmValues: helmValues,
+				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
 			validInput: true,
@@ -171,7 +171,7 @@ func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 			resourceID: "resource123",
 			updateRequest: models.UpdateResourceRequest{
 				Name:       strPtr("Updated Resource"),
-				HelmValues: helmValues,
+				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
 			validInput: false,
@@ -182,7 +182,7 @@ func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 			resourceID: "",
 			updateRequest: models.UpdateResourceRequest{
 				Name:       strPtr("Updated Resource"),
-				HelmValues: helmValues,
+				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
 			validInput: false,
@@ -193,7 +193,7 @@ func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 			resourceID: "resource123",
 			updateRequest: models.UpdateResourceRequest{
 				Name:       strPtr("Updated Resource"),
-				HelmValues: helmValues,
+				SettingsJSON: settingsJSON,
 			},
 			userID:     "",
 			validInput: false,

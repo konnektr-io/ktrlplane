@@ -126,15 +126,13 @@ export default function ProjectSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu>
             {projectMenuItems.map((item) => {
-              const isActive = item.path === '' 
-                ? location.pathname === `/project/${projectId}` || location.pathname === `/project/${projectId}/`
-                : location.pathname.endsWith(item.path);
-              
+              const fullPath = `/project/${projectId}${item.path ? `/${item.path}` : ''}`;
+              const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/project/${projectId}` || location.pathname === `/project/${projectId}/`));
               const menuButton = (
                 <SidebarMenuButton 
                   asChild
                   isActive={isActive}
-                  onClick={() => navigate(`/project/${projectId}/${item.path}`)}
+                  onClick={() => navigate(fullPath)}
                 >
                   <div className="flex items-center gap-2 cursor-pointer">
                     <item.icon className="h-4 w-4" />

@@ -11,12 +11,16 @@ import ResourcesPage from '@/features/resources/pages/ResourcesPage';
 import ResourceDetailPage from '@/features/resources/pages/ResourceDetailPage';
 import ResourceAccessPage from '@/features/resources/pages/ResourceAccessPage';
 import ProjectSettingsPage from '@/features/projects/pages/ProjectSettingsPage';
+import ProjectDetailPage from '@/features/projects/pages/ProjectDetailPage';
 import ProjectAccessPage from '@/features/projects/pages/ProjectAccessPage';
 import OrganizationAccessPage from '@/features/organizations/pages/OrganizationAccessPage';
 import CreateRoleAssignmentPage from '@/features/access/pages/CreateRoleAssignmentPage';
 import LoginPage from '@/features/auth/LoginPage';
 import AuthCallbackPage from '@/features/auth/callback';
 import NotFoundPage from '@/pages/NotFoundPage';
+import OrganizationOverviewPage from '@/features/organizations/pages/OrganizationOverviewPage';
+import OrganizationSettingsPage from '@/features/organizations/pages/OrganizationSettingsPage';
+import ResourceSettingsPage from '@/features/resources/pages/ResourceSettingsPage';
 // import { Toaster } from "@/components/ui/sonner";
 
 function App() {
@@ -45,7 +49,7 @@ function App() {
 
             {/* Project-based Routes */}
             <Route path="/project/:projectId" element={<ProtectedRoute><ProjectLayout /></ProtectedRoute>}>
-              <Route index element={<Navigate to="resources" replace />} />
+              <Route index element={<ProjectDetailPage />} />
               <Route path="resources" element={<ResourcesPage />} />
               <Route path="access" element={<ProjectAccessPage />} />
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
@@ -59,20 +63,19 @@ function App() {
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
               <Route path="logs" element={<div>Resource Logs Page</div>} />
               <Route path="monitoring" element={<div>Resource Monitoring Page</div>} />
-              <Route path="settings" element={<div>Resource Settings Page</div>} />
+              <Route path="settings" element={<ResourceSettingsPage />} />
             </Route>
 
             {/* Organization-based Routes */}
             <Route path="/organization/:orgId" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
-              <Route index element={<div>Organization Overview Page</div>} />
+              <Route index element={<OrganizationOverviewPage />} />
               <Route path="members" element={<div>Organization Members Page</div>} />
               <Route path="access" element={<OrganizationAccessPage />} />
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
               <Route path="billing" element={<div>Organization Billing Page</div>} />
-              <Route path="settings" element={<div>Organization Settings Page</div>} />
+              <Route path="settings" element={<OrganizationSettingsPage />} />
             </Route>
 
-            {/* Not Found */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Router>
