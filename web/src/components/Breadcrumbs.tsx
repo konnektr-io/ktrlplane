@@ -33,7 +33,7 @@ export default function Breadcrumbs() {
       const org = organizations.find(o => o.org_id === params.orgId);
       breadcrumbs.push({
         label: org?.name || 'Organization',
-        href: `/organization/${params.orgId}`
+        href: `/organizations/${params.orgId}`
       });
 
       if (pathSegments[2] === 'access') {
@@ -57,13 +57,13 @@ export default function Breadcrumbs() {
         const org = organizations.find(o => o.org_id === project.org_id);
         breadcrumbs.push({
           label: org?.name || 'Organization',
-          href: `/organization/${project.org_id}`
+          href: `/organizations/${project.org_id}`
         });
       }
 
       breadcrumbs.push({
         label: project?.name || 'Project',
-        href: `/project/${params.projectId}`
+        href: `/projects/${params.projectId}`
       });
 
       if (pathSegments[2] === 'resources') {
@@ -71,11 +71,11 @@ export default function Breadcrumbs() {
           const resource = resources.find(r => r.resource_id === params.resourceId);
           breadcrumbs.push({
             label: 'Resources',
-            href: `/project/${params.projectId}/resources`
+            href: `/projects/${params.projectId}/resources`
           });
           breadcrumbs.push({
             label: resource?.name || 'Resource',
-            href: `/project/${params.projectId}/resources/${params.resourceId}`
+            href: `/projects/${params.projectId}/resources/${params.resourceId}`
           });
 
           if (pathSegments[4] === 'access') {

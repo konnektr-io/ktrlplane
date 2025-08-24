@@ -66,13 +66,13 @@ const CreateRoleAssignmentPage: React.FC = () => {
       if (context) {
         switch (context.scopeType) {
           case 'project':
-            navigate(`/project/${context.scopeId}/access`);
+            navigate(`/projects/${context.scopeId}/access`);
             break;
           case 'resource':
-            navigate(`/project/${params.projectId}/resources/${context.scopeId}/access`);
+            navigate(`/projects/${params.projectId}/resources/${context.scopeId}/access`);
             break;
           case 'organization':
-            navigate(`/organization/${context.scopeId}/access`);
+            navigate(`/organizations/${context.scopeId}/access`);
             break;
         }
       }

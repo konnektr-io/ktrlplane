@@ -82,15 +82,15 @@ export default function AccessControl({ context }: AccessControlProps) {
   const getCreateAccessUrl = () => {
     switch (context.scopeType) {
       case 'organization':
-        return `/organization/${context.scopeId}/access/grant`;
+        return `/organizations/${context.scopeId}/access/grant`;
       case 'project':
-        return `/project/${context.scopeId}/access/grant`;
+        return `/projects/${context.scopeId}/access/grant`;
       case 'resource':
         // Need to extract project ID for resource routes
         const currentPath = window.location.pathname;
         const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
         const projectId = projectMatch ? projectMatch[1] : '';
-        return `/project/${projectId}/resources/${context.scopeId}/access/grant`;
+        return `/projects/${projectId}/resources/${context.scopeId}/access/grant`;
       default:
         return '#';
     }
@@ -99,14 +99,14 @@ export default function AccessControl({ context }: AccessControlProps) {
   const getEditAccessUrl = (assignment: RoleAssignment) => {
     switch (context.scopeType) {
       case 'organization':
-        return `/organization/${context.scopeId}/access/edit/${assignment.assignment_id}`;
+        return `/organizations/${context.scopeId}/access/edit/${assignment.assignment_id}`;
       case 'project':
-        return `/project/${context.scopeId}/access/edit/${assignment.assignment_id}`;
+        return `/projects/${context.scopeId}/access/edit/${assignment.assignment_id}`;
       case 'resource':
         const currentPath = window.location.pathname;
         const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
         const projectId = projectMatch ? projectMatch[1] : '';
-        return `/project/${projectId}/resources/${context.scopeId}/access/edit/${assignment.assignment_id}`;
+        return `/projects/${projectId}/resources/${context.scopeId}/access/edit/${assignment.assignment_id}`;
       default:
         return '#';
     }

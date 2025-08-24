@@ -37,13 +37,13 @@ export default function AppHeader() {
 
   const handleNavigateToOrgSettings = () => {
     if (currentOrganization) {
-      navigate(`/organization/${currentOrganization.org_id}/settings`);
+      navigate(`/organizations/${currentOrganization.org_id}/settings`);
     }
   };
 
   const handleNavigateToProjectSettings = () => {
     if (projectId) {
-      navigate(`/project/${projectId}/settings`);
+      navigate(`/projects/${projectId}/settings`);
     }
   };
 

@@ -127,7 +127,7 @@ export default function ProjectListPage() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => navigate(`/project/${project.project_id}`)}
+                  onClick={() => navigate(`/projects/${project.project_id}`)}
                 >
                   View
                 </Button>

@@ -63,7 +63,7 @@ export default function ProjectSidebarNav() {
 
   const handleProjectChange = (newProjectId: string) => {
     const currentPath = location.pathname.split('/').slice(3).join('/') || '';
-    navigate(`/project/${newProjectId}/${currentPath}`);
+  navigate(`/projects/${newProjectId}/${currentPath}`);
   };
 
   const isCollapsed = state === 'collapsed';
@@ -126,8 +126,8 @@ export default function ProjectSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu>
             {projectMenuItems.map((item) => {
-              const fullPath = `/project/${projectId}${item.path ? `/${item.path}` : ''}`;
-              const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/project/${projectId}` || location.pathname === `/project/${projectId}/`));
+              const fullPath = `/projects/${projectId}${item.path ? `/${item.path}` : ''}`;
+              const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/projects/${projectId}` || location.pathname === `/projects/${projectId}/`));
               const menuButton = (
                 <SidebarMenuButton 
                   asChild

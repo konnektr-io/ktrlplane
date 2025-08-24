@@ -54,9 +54,9 @@ export default function ResourceSidebarNav() {
       <SidebarGroupContent>
         <SidebarMenu>
           {resourceMenuItems.map((item) => {
-            const fullPath = `/project/${projectId}/resources/${resourceId}${item.path ? `/${item.path}` : ''}`;
-            // Allow /project/:projectId/resources/:resourceId and /project/:projectId/resources/:resourceId/ to both match Overview
-            const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/project/${projectId}/resources/${resourceId}` || location.pathname === `/project/${projectId}/resources/${resourceId}/`));
+            const fullPath = `/projects/${projectId}/resources/${resourceId}${item.path ? `/${item.path}` : ''}`;
+            // Allow /projects/:projectId/resources/:resourceId and /projects/:projectId/resources/:resourceId/ to both match Overview
+            const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/projects/${projectId}/resources/${resourceId}` || location.pathname === `/projects/${projectId}/resources/${resourceId}/`));
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton 

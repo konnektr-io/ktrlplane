@@ -169,7 +169,7 @@ export default function ResourcesPage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => navigate(`/project/${projectId}/resources/${resource.resource_id}`)}
+                      onClick={() => navigate(`/projects/${projectId}/resources/${resource.resource_id}`)}
                     >
                       Configure
                     </Button>

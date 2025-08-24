@@ -14,7 +14,7 @@ export default function ProjectLayout() {
       fetchProjectById(projectId);
     } else if (lastProjectId && !projectId) {
       // Auto-navigate to last project if no project is selected
-      navigate(`/project/${lastProjectId}/resources`);
+  navigate(`/projects/${lastProjectId}/resources`);
       return;
     }
   }, [projectId, fetchProjectById, lastProjectId, navigate]);
@@ -25,7 +25,7 @@ export default function ProjectLayout() {
       const lastProject = projects.find(p => p.project_id === lastProjectId);
       if (lastProject) {
         setCurrentProject(lastProject);
-        navigate(`/project/${lastProjectId}/resources`);
+  navigate(`/projects/${lastProjectId}/resources`);
       }
     }
   }, [projects, lastProjectId, projectId, navigate, setCurrentProject]);

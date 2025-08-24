@@ -65,8 +65,8 @@ export default function OrganizationSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu>
             {organizationMenuItems.map((item) => {
-              const fullPath = `/organization/${orgId}${item.path ? `/${item.path}` : ''}`;
-              const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/organization/${orgId}` || location.pathname === `/organization/${orgId}/`));
+              const fullPath = `/organizations/${orgId}${item.path ? `/${item.path}` : ''}`;
+              const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/organizations/${orgId}` || location.pathname === `/organizations/${orgId}/`));
               const menuButton = (
                 <SidebarMenuButton 
                   asChild
@@ -110,7 +110,7 @@ export default function OrganizationSidebarNav() {
               const menuButton = (
                 <SidebarMenuButton 
                   asChild
-                  onClick={() => navigate(`/project/${project.project_id}`)}
+                  onClick={() => navigate(`/projects/${project.project_id}`)}
                 >
                   <div className="flex items-center gap-2 cursor-pointer">
                     <FolderOpen className="h-4 w-4" />
