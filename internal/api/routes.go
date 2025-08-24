@@ -9,7 +9,11 @@ import (
 
 // SetupRouter configures the Gin router with all routes and middleware.
 func SetupRouter(handler *APIHandler) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	// Apply error handling middleware globally
+	r.Use(ErrorHandlingMiddleware())
 
 	// Apply CORS middleware globally
 	r.Use(CORSMiddleware())

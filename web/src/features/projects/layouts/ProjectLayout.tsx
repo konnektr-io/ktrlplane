@@ -12,23 +12,8 @@ export default function ProjectLayout() {
   useEffect(() => {
     if (projectId) {
       fetchProjectById(projectId);
-    } else if (lastProjectId && !projectId) {
-      // Auto-navigate to last project if no project is selected
-  navigate(`/projects/${lastProjectId}/resources`);
-      return;
     }
-  }, [projectId, fetchProjectById, lastProjectId, navigate]);
-
-  // Auto-redirect to last project on login
-  useEffect(() => {
-    if (!projectId && lastProjectId && projects.length > 0) {
-      const lastProject = projects.find(p => p.project_id === lastProjectId);
-      if (lastProject) {
-        setCurrentProject(lastProject);
-  navigate(`/projects/${lastProjectId}/resources`);
-      }
-    }
-  }, [projects, lastProjectId, projectId, navigate, setCurrentProject]);
+  }, [projectId, fetchProjectById]);
 
   return (
     <AppLayout 
