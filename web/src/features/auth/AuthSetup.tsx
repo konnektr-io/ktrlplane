@@ -3,13 +3,11 @@ import { useEffect } from 'react';
 import { setupAuthInterceptor } from '../../lib/axios';
 
 export default function AuthSetup({ children }: { children: React.ReactNode }) {
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setupAuthInterceptor(getAccessTokenSilently);
-    }
-  }, [isAuthenticated, getAccessTokenSilently]);
+    setupAuthInterceptor(getAccessTokenSilently);
+  }, [getAccessTokenSilently]);
 
   return <>{children}</>;
 }

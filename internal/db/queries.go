@@ -301,11 +301,11 @@ const (
 		ORDER BY inheritance_type ASC, created_at DESC`
 
 	SearchUsersQuery = `
-			  SELECT user_id, email, name
-			  FROM ktrlplane.users
-			  WHERE LOWER(email) LIKE LOWER($1)
-				  OR LOWER(name) LIKE LOWER($1)
-				  OR LOWER(user_id) LIKE LOWER($1)
-			  ORDER BY email
-			  LIMIT 10`
+		SELECT user_id, email, name
+		FROM ktrlplane.users
+		WHERE LOWER(email) LIKE LOWER($1)
+			OR LOWER(name) LIKE LOWER($1)
+			OR LOWER(user_id) LIKE LOWER($1)
+		ORDER BY email
+		LIMIT 10`
 )

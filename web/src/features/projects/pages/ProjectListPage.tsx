@@ -1,4 +1,3 @@
-import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
@@ -11,21 +10,9 @@ import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProjectListPage() {
-  const location = useLocation();
-  const { lastProjectId, projects: allProjects, isLoadingList, fetchProjects, createProject, error } = useProjectStore();
+  const { projects: allProjects, isLoadingList, fetchProjects, createProject, error } = useProjectStore();
   const navigate = useNavigate();
 
-  // Redirect to last project if on /projects and lastProjectId exists
-  useEffect(() => {
-    if (
-      location.pathname === '/projects' &&
-      lastProjectId &&
-      allProjects.length > 0 &&
-      allProjects.find(p => p.project_id === lastProjectId)
-    ) {
-      navigate(`/projects/${lastProjectId}/resources`);
-    }
-  }, [location.pathname, lastProjectId, allProjects, navigate]);
   const projects = allProjects;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', description: '' });

@@ -17,6 +17,9 @@ export const setupAuthInterceptor = (getAccessTokenSilently: () => Promise<strin
     async (config) => {
       try {
         const token = await getAccessTokenSilently();
+        if (!token) {
+          throw new Error('Could not retrieve token')
+        }
         config.headers.Authorization = `Bearer ${token}`;
       } catch (error) {
         console.warn('Failed to get access token:', error);

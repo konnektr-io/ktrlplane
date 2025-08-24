@@ -19,7 +19,6 @@ import {
 import { 
   Settings,
   Shield,
-  Users,
   Building2,
   CreditCard,
   FolderOpen

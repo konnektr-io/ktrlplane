@@ -1,5 +1,5 @@
 import { useAuth0 } from '@auth0/auth0-react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { ReactNode } from 'react';
 
 interface ProtectedRouteProps {
@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth0();
 
+  // Show loading spinner while Auth0 is loading
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -20,6 +21,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
+  // Do not redirect to /login if on /callback route
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
