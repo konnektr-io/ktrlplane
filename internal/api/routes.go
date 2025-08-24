@@ -11,7 +11,7 @@ import (
 func SetupRouter(handler *APIHandler) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	r.Use(CustomRecoveryMiddleWare())
 	r.Use(CORSMiddleware())
 
 	// --- Public Routes (Example: Health Check) ---
