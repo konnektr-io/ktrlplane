@@ -21,7 +21,6 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import OrganizationOverviewPage from '@/features/organizations/pages/OrganizationOverviewPage';
 import OrganizationSettingsPage from '@/features/organizations/pages/OrganizationSettingsPage';
 import ResourceSettingsPage from '@/features/resources/pages/ResourceSettingsPage';
-// import { Toaster } from "@/components/ui/sonner";
 
 function App() {
   return (

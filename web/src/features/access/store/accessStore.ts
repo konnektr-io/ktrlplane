@@ -134,10 +134,10 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
 
   searchUsers: async (query: string): Promise<User[]> => {
     if (!query || query.length < 2) return [];
-    
     try {
       // Try to search users in the backend
       const response = await apiClient.get(`/users/search?q=${encodeURIComponent(query)}`);
+      // Map user_id to id for compatibility with UserSelector
       return response.data;
     } catch (error) {
       console.error('Failed to search users:', error);

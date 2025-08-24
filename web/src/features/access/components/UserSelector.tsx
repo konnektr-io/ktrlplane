@@ -31,7 +31,6 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Use real searchUsers API from accessStore
   const searchUsers = useAccessStore((state) => state.searchUsers);
 
   useEffect(() => {
@@ -41,7 +40,6 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
         setIsLoading(true);
         try {
           const results = await searchUsers(searchTerm);
-          console.log(results)
           if (!cancelled) setUsers(results || []);
         } finally {
           if (!cancelled) setIsLoading(false);
@@ -54,7 +52,8 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
     return () => { cancelled = true; };
   }, [searchTerm, searchUsers]);
 
-  const selectedUser = users.find(user => user.email === value);
+  // Match selected user strictly by id
+  const selectedUser = users.find(user => user.id === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -68,7 +67,7 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
         >
           {selectedUser ? (
             <div className="flex items-center gap-2">
-              <span>{selectedUser.name || selectedUser.email}</span>
+              <span>{selectedUser.name || selectedUser.email || selectedUser.id}</span>
             </div>
           ) : value ? (
             <div className="flex items-center gap-2">
@@ -91,51 +90,57 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
           <CommandList>
             {isLoading ? (
               <CommandEmpty>Searching...</CommandEmpty>
-            ) : users.length > 0 ? (
-              <CommandGroup>
-                {users.map((user) => (
-                  <CommandItem
-                    key={user.id}
-                    value={user.id}
-                    onSelect={(currentValue: string) => {
-                      onValueChange(currentValue === value ? "" : currentValue);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === user.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                        <div className="text-xs text-muted-foreground">{user.id}</div>
-                      </div>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ) : searchTerm.length >= 2 ? (
-              <CommandGroup>
-                <CommandItem
-                  value={searchTerm}
-                  onSelect={() => {
-                    onValueChange(searchTerm);
-                    setOpen(false);
-                  }}
-                >
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  <div>
-                    <div className="font-medium">Invite {searchTerm}</div>
-                    <div className="text-sm text-muted-foreground">Send invitation to new user</div>
-                  </div>
-                </CommandItem>
-              </CommandGroup>
             ) : (
-              <CommandEmpty>Type at least 2 characters to search...</CommandEmpty>
+              <>
+                {users.length > 0 && (
+                  <CommandGroup>
+                    {users.map((user, uIdx) => (
+                      <CommandItem
+                        key={user.id}
+                        value={`${user.email}${uIdx}`}
+                        onSelect={() => {
+                          onValueChange(user.id);
+                          setOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            value === `${user.email}${uIdx}` ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <div className="font-medium">{user.name}</div>
+                            <div className="text-sm text-muted-foreground">{user.email}</div>
+                            <div className="text-xs text-muted-foreground">{user.id}</div>
+                          </div>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+                {searchTerm.length >= 2 && users.length === 0 && (
+                  <CommandGroup>
+                    <CommandItem
+                      value={searchTerm}
+                      onSelect={() => {
+                        onValueChange(searchTerm);
+                        setOpen(false);
+                      }}
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      <div>
+                        <div className="font-medium">Invite {searchTerm}</div>
+                        <div className="text-sm text-muted-foreground">Send invitation to new user</div>
+                      </div>
+                    </CommandItem>
+                  </CommandGroup>
+                )}
+                {searchTerm.length < 2 && users.length === 0 && (
+                  <CommandEmpty>Type at least 2 characters to search...</CommandEmpty>
+                )}
+              </>
             )}
           </CommandList>
         </Command>
