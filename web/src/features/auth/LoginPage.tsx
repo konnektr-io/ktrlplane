@@ -61,7 +61,7 @@ export default function LoginPage() {
               className="w-full"
               size="lg"
             >
-              Sign in with Auth0
+              Sign in
             </Button>
           </CardContent>
         </Card>

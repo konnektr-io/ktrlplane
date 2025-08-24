@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAccessStore } from '../store/accessStore';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -30,54 +31,28 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock function to search users - replace with actual API call
-  const searchUsers = async (query: string): Promise<User[]> => {
-    if (!query || query.length < 2) return [];
-    
-    setIsLoading(true);
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Mock users data - replace with actual API call
-      const mockUsers: User[] = [
-        {
-          id: 'user1',
-          email: 'john.doe@example.com',
-          name: 'John Doe',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john'
-        },
-        {
-          id: 'user2',
-          email: 'jane.smith@example.com',
-          name: 'Jane Smith',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jane'
-        },
-        {
-          id: 'user3',
-          email: 'bob.wilson@example.com',
-          name: 'Bob Wilson',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bob'
-        },
-      ];
-      
-      // Filter users based on search term
-      return mockUsers.filter(user =>
-        user.email.toLowerCase().includes(query.toLowerCase()) ||
-        user.name?.toLowerCase().includes(query.toLowerCase())
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Use real searchUsers API from accessStore
+  const searchUsers = useAccessStore((state) => state.searchUsers);
 
   useEffect(() => {
-    if (searchTerm.length >= 2) {
-      searchUsers(searchTerm).then(setUsers);
-    } else {
-      setUsers([]);
-    }
-  }, [searchTerm]);
+    let cancelled = false;
+    const doSearch = async () => {
+      if (searchTerm.length >= 2) {
+        setIsLoading(true);
+        try {
+          const results = await searchUsers(searchTerm);
+          console.log(results)
+          if (!cancelled) setUsers(results || []);
+        } finally {
+          if (!cancelled) setIsLoading(false);
+        }
+      } else {
+        setUsers([]);
+      }
+    };
+    doSearch();
+    return () => { cancelled = true; };
+  }, [searchTerm, searchUsers]);
 
   const selectedUser = users.find(user => user.email === value);
 
@@ -93,13 +68,6 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
         >
           {selectedUser ? (
             <div className="flex items-center gap-2">
-              {selectedUser.avatar && (
-                <img 
-                  src={selectedUser.avatar} 
-                  alt={selectedUser.name} 
-                  className="h-5 w-5 rounded-full"
-                />
-              )}
               <span>{selectedUser.name || selectedUser.email}</span>
             </div>
           ) : value ? (
@@ -128,7 +96,7 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
                 {users.map((user) => (
                   <CommandItem
                     key={user.id}
-                    value={user.email}
+                    value={user.id}
                     onSelect={(currentValue: string) => {
                       onValueChange(currentValue === value ? "" : currentValue);
                       setOpen(false);
@@ -137,20 +105,14 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        value === user.email ? "opacity-100" : "opacity-0"
+                        value === user.id ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div className="flex items-center gap-2">
-                      {user.avatar && (
-                        <img 
-                          src={user.avatar} 
-                          alt={user.name} 
-                          className="h-5 w-5 rounded-full"
-                        />
-                      )}
                       <div>
                         <div className="font-medium">{user.name}</div>
                         <div className="text-sm text-muted-foreground">{user.email}</div>
+                        <div className="text-xs text-muted-foreground">{user.id}</div>
                       </div>
                     </div>
                   </CommandItem>

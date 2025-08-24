@@ -89,7 +89,7 @@ type User struct {
 	ID    string   `json:"id"`    // Subject from JWT
 	Email string   `json:"email"` // Email from JWT
 	Name  string   `json:"name"`  // Name from JWT
-	Roles []string `json:"roles"` // Roles derived from JWT or DB lookup (placeholder)
+	Roles []string `json:"roles,omitempty"` // Roles derived from JWT or DB lookup (placeholder)
 }
 
 // RBAC Models

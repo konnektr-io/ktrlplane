@@ -67,7 +67,7 @@ func (s *OrganizationService) ListOrganizations(ctx context.Context, userID stri
 	}
 	defer rows.Close()
 
-	var organizations []models.Organization
+	organizations := make([]models.Organization,0)
 	for rows.Next() {
 		var org models.Organization
 		if err := rows.Scan(&org.OrgID, &org.Name, &org.CreatedAt, &org.UpdatedAt); err != nil {

@@ -375,43 +375,13 @@ func (h *APIHandler) SearchUsers(c *gin.Context) {
 		c.JSON(http.StatusOK, []models.User{})
 		return
 	}
-	
-	// For now, return mock users for development
-	// In a real implementation, you'd search in your user database
-	mockUsers := []models.User{
-		{
-			ID:    "user-1",
-			Email: "john.doe@example.com",
-		},
-		{
-			ID:    "user-2", 
-			Email: "jane.smith@example.com",
-		},
-		{
-			ID:    "user-3",
-			Email: "bob.wilson@example.com", 
-		},
-	}
-	
-	// Filter users by query
-	var filteredUsers []models.User
-	for _, user := range mockUsers {
-		if containsIgnoreCase(user.Email, query) {
-			filteredUsers = append(filteredUsers, user)
-		}
-	}
-	
-	c.JSON(http.StatusOK, filteredUsers)
-}
 
-// Helper function for case-insensitive string matching
-func containsIgnoreCase(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		   (s == substr || 
-		    (len(s) > len(substr) && 
-		     (s[:len(substr)] == substr || 
-		      s[len(s)-len(substr):] == substr ||
-		      containsIgnoreCase(s[1:], substr))))
+	users, err := h.RBACService.SearchUsers(c.Request.Context(), query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search users"})
+		return
+	}
+	c.JSON(http.StatusOK, users)
 }
 
 // --- Project RBAC Handlers ---
@@ -432,29 +402,41 @@ func (h *APIHandler) CreateProjectRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	
 	var req struct {
-		Email    string `json:"email" binding:"required"`
+		UserID   string `json:"user_id" binding:"required"`
 		RoleName string `json:"role_name" binding:"required"`
 	}
-	
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	
-	// For now, just return success
-	// In real implementation: 
-	// 1. Find user by email or create invitation
-	// 2. Call h.RBACService.AssignRole
+
+	// Validate user exists and is unique
+	users, err := h.RBACService.SearchUsers(c.Request.Context(), req.UserID)
+	if err != nil || len(users) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found for given user_id"})
+		return
+	}
+	if len(users) > 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ambiguous user_id, multiple users found"})
+		return
+	}
+
+	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleName, "project", projectID, user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Role assignment created",
 		"project_id": projectID,
-		"email": req.Email,
+		"user_id": req.UserID,
 		"role": req.RoleName,
 		"assigned_by": user.ID,
 	})
@@ -514,26 +496,41 @@ func (h *APIHandler) CreateResourceRoleAssignment(c *gin.Context) {
 	resourceID := c.Param("resourceId")
 	
 	var req struct {
-		Email    string `json:"email" binding:"required"`
+		UserID   string `json:"user_id" binding:"required"`
 		RoleName string `json:"role_name" binding:"required"`
 	}
-	
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	
+
+	users, err := h.RBACService.SearchUsers(c.Request.Context(), req.UserID)
+	if err != nil || len(users) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found for given user_id"})
+		return
+	}
+	if len(users) > 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ambiguous user_id, multiple users found"})
+		return
+	}
+
+	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleName, "resource", resourceID, user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Role assignment created",
 		"project_id": projectID,
 		"resource_id": resourceID,
-		"email": req.Email,
+		"user_id": req.UserID,
 		"role": req.RoleName,
 		"assigned_by": user.ID,
 	})
@@ -593,25 +590,40 @@ func (h *APIHandler) CreateOrganizationRoleAssignment(c *gin.Context) {
 	orgID := c.Param("orgId")
 	
 	var req struct {
-		Email    string `json:"email" binding:"required"`
+		UserID   string `json:"user_id" binding:"required"`
 		RoleName string `json:"role_name" binding:"required"`
 	}
-	
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	
+
+	users, err := h.RBACService.SearchUsers(c.Request.Context(), req.UserID)
+	if err != nil || len(users) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found for given user_id"})
+		return
+	}
+	if len(users) > 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ambiguous user_id, multiple users found"})
+		return
+	}
+
+	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleName, "organization", orgID, user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Role assignment created",
 		"organization_id": orgID,
-		"email": req.Email,
+		"user_id": req.UserID,
 		"role": req.RoleName,
 		"assigned_by": user.ID,
 	})

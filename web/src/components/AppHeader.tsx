@@ -53,7 +53,6 @@ export default function AppHeader() {
       <header className="border-b bg-background px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold">ktrlplane</h1>
             <Breadcrumbs />
           </div>
           

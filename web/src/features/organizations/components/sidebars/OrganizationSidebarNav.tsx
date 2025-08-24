@@ -32,11 +32,6 @@ const organizationMenuItems = [
     path: '',
   },
   {
-    title: 'Members',
-    icon: Users,
-    path: 'members',
-  },
-  {
     title: 'Access & Permissions', 
     icon: Shield,
     path: 'access',

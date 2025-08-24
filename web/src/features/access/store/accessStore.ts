@@ -21,7 +21,7 @@ interface AccessStore {
   fetchRoleAssignments: () => Promise<void>;
   fetchRoles: () => Promise<void>;
   searchUsers: (query: string) => Promise<User[]>;
-  inviteUser: (email: string, roleName: string) => Promise<void>;
+  inviteUser: (userId: string, roleName: string) => Promise<void>;
   updateUserRole: (assignmentId: string, roleName: string) => Promise<void>;
   removeUser: (assignmentId: string) => Promise<void>;
   
@@ -141,12 +141,11 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
       return response.data;
     } catch (error) {
       console.error('Failed to search users:', error);
-      // Return empty array instead of mock data
       return [];
     }
   },
 
-  inviteUser: async (email: string, roleName: string) => {
+  inviteUser: async (userId: string, roleName: string) => {
     const { context } = get();
     if (!context) return;
 
@@ -168,10 +167,10 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
           break;
       }
 
-      await apiClient.post(url, {
-        email,
-        role_name: roleName,
-      });
+        await apiClient.post(url, {
+          user_id: userId,
+          role_name: roleName,
+        });
       
       // Refresh data after successful invite
       await get().fetchRoleAssignments();

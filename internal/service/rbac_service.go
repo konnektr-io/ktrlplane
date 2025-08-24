@@ -11,7 +11,6 @@ import (
 )
 
 type RBACService struct{}
-
 func NewRBACService() *RBACService {
 	return &RBACService{}
 }
@@ -80,7 +79,7 @@ func (s *RBACService) GetUserRoles(ctx context.Context, userID string) ([]models
 	}
 	defer rows.Close()
 
-	var assignments []models.RoleAssignment
+	assignments := make([]models.RoleAssignment,0)
 	for rows.Next() {
 		var assignment models.RoleAssignment
 		err := rows.Scan(&assignment.AssignmentID, &assignment.UserID, &assignment.RoleID,
@@ -105,7 +104,7 @@ func (s *RBACService) GetRoleAssignmentsForScope(ctx context.Context, scopeType,
 	}
 	defer rows.Close()
 
-	var assignments []models.RoleAssignmentWithDetails
+	assignments := make([]models.RoleAssignmentWithDetails,0)
 	for rows.Next() {
 		var assignment models.RoleAssignmentWithDetails
 		var userEmail, userName string
@@ -145,7 +144,7 @@ func (s *RBACService) GetRoleAssignmentsWithInheritance(ctx context.Context, sco
 	}
 	defer rows.Close()
 
-	var assignments []models.RoleAssignmentWithDetails
+	assignments := make([]models.RoleAssignmentWithDetails,0)
 	for rows.Next() {
 		var assignment models.RoleAssignmentWithDetails
 		var userEmail, userName string
@@ -174,4 +173,25 @@ func (s *RBACService) GetRoleAssignmentsWithInheritance(ctx context.Context, sco
 	}
 
 	return assignments, nil
+}
+
+
+// SearchUsers returns users matching the query string (by email or name)
+func (s *RBACService) SearchUsers(ctx context.Context, query string) ([]models.User, error) {
+	pool := db.GetDB()
+	likeQuery := "%" + query + "%"
+	rows, err := pool.Query(ctx, db.SearchUsersQuery, likeQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := make([]models.User,0)
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Email, &user.Name); err == nil {
+			users = append(users, user)
+		}
+	}
+	return users, nil
 }
