@@ -1,0 +1,37 @@
+{
+    // Tasks for frontend (Vite) and backend (Go)
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "vite: dev",
+            "type": "shell",
+            "command": "pnpm dev",
+            "options": {
+                "cwd": "${workspaceFolder}/web"
+            },
+            "isBackground": true,
+            "problemMatcher": [
+                {
+                    "pattern": {
+                        "regexp": ".*",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    },
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".*",
+                        "endsPattern": "ready in"
+                    }
+                }
+            ]
+        },
+        {
+            "label": "go: run backend",
+            "type": "shell",
+            "command": "go run ./cmd/server/main.go",
+            "isBackground": false,
+            "problemMatcher": "$go"
+        }
+    ]
+}

@@ -46,8 +46,8 @@ function App() {
               <Route path="/projects" element={<ProjectListPage />} />
             </Route>
 
-            {/* Project-based Routes */}
-            <Route path="/project/:projectId" element={<ProtectedRoute><ProjectLayout /></ProtectedRoute>}>
+            {/* Project-based Routes (plural) */}
+            <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectLayout /></ProtectedRoute>}>
               <Route index element={<ProjectDetailPage />} />
               <Route path="resources" element={<ResourcesPage />} />
               <Route path="access" element={<ProjectAccessPage />} />
@@ -55,8 +55,8 @@ function App() {
               <Route path="settings" element={<ProjectSettingsPage />} />
             </Route>
 
-            {/* Resource-based Routes */}
-            <Route path="/project/:projectId/resources/:resourceId" element={<ProtectedRoute><ResourceLayout /></ProtectedRoute>}>
+            {/* Resource-based Routes (plural) */}
+            <Route path="/projects/:projectId/resources/:resourceId" element={<ProtectedRoute><ResourceLayout /></ProtectedRoute>}>
               <Route index element={<ResourceDetailPage />} />
               <Route path="access" element={<ResourceAccessPage />} />
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
@@ -65,8 +65,8 @@ function App() {
               <Route path="settings" element={<ResourceSettingsPage />} />
             </Route>
 
-            {/* Organization-based Routes */}
-            <Route path="/organization/:orgId" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
+            {/* Organization-based Routes (plural) */}
+            <Route path="/organizations/:orgId" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
               <Route index element={<OrganizationOverviewPage />} />
               <Route path="access" element={<OrganizationAccessPage />} />
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
