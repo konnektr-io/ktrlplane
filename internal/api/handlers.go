@@ -467,13 +467,35 @@ func (h *APIHandler) UpdateProjectRoleAssignment(c *gin.Context) {
 func (h *APIHandler) DeleteProjectRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	assignmentID := c.Param("assignmentId")
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	hasPermission, err := h.RBACService.CheckPermission(c,user.ID,"manage_access","project",projectID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
+		return
+	}
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to delete role assignment"})
+		return
+	}
+
+	err = h.RBACService.DeleteRoleAssignment(c,assignmentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role assignment", "details": err.Error()})
+		return
+	}
 	
 	// For now, just return success
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Role assignment deleted",
 		"project_id": projectID,
 		"assignment_id": assignmentID,
-	})
+	});
 }
 
 // --- Resource RBAC Handlers ---
@@ -564,6 +586,28 @@ func (h *APIHandler) DeleteResourceRoleAssignment(c *gin.Context) {
 	resourceID := c.Param("resourceId")
 	assignmentID := c.Param("assignmentId")
 	
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	hasPermission, err := h.RBACService.CheckPermission(c,user.ID,"manage_access","resource",resourceID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
+		return
+	}
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to delete role assignment"})
+		return
+	}
+
+	err = h.RBACService.DeleteRoleAssignment(c,assignmentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role assignment", "details": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Role assignment deleted",
 		"project_id": projectID,
@@ -654,6 +698,29 @@ func (h *APIHandler) DeleteOrganizationRoleAssignment(c *gin.Context) {
 	orgID := c.Param("orgId")
 	assignmentID := c.Param("assignmentId")
 	
+	
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	hasPermission, err := h.RBACService.CheckPermission(c,user.ID,"manage_access","organization",orgID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
+		return
+	}
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to delete role assignment"})
+		return
+	}
+
+	err = h.RBACService.DeleteRoleAssignment(c,assignmentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role assignment", "details": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Role assignment deleted",
 		"organization_id": orgID,

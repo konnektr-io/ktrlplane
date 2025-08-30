@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useResourceStore } from '../store/resourceStore';
-import AccessControlSimplified from '@/features/access/components/AccessControlSimplified';
+import AccessControl from '@/features/access/components/AccessControl';
 
 export default function ResourceAccessPage() {
   const { resourceId } = useParams<{ resourceId: string }>();
@@ -15,7 +15,7 @@ export default function ResourceAccessPage() {
   }
 
   return (
-    <AccessControlSimplified
+    <AccessControl
       context={{
         scopeType: 'resource',
         scopeId: resourceId,

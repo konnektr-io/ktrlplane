@@ -309,18 +309,8 @@ const (
 		ORDER BY email
 		LIMIT 10`
 
-	// DeleteProjectRoleAssignmentQuery deletes a project role assignment by assignment ID and project ID
-	DeleteProjectRoleAssignmentQuery = `
-	DELETE FROM role_assignments
-	WHERE assignment_id = $1 AND scope_type = 'project' AND scope_id = $2`
-	
-	// DeleteResourceRoleAssignmentQuery deletes a resource role assignment by assignment ID and resource ID
-	DeleteResourceRoleAssignmentQuery = `
-	DELETE FROM role_assignments
-	WHERE assignment_id = $1 AND scope_type = 'resource' AND scope_id = $2`
-
-	// DeleteOrganizationRoleAssignmentQuery deletes an organization role assignment by assignment ID and org ID
-	DeleteOrganizationRoleAssignmentQuery = `
-	DELETE FROM role_assignments
-	WHERE assignment_id = $1 AND scope_type = 'organization' AND scope_id = $2`
+	// DeleteRoleAssignmentQuery deletes a role assignment by assignment ID, scope type, and scope ID
+	DeleteRoleAssignmentQuery = `
+		DELETE FROM role_assignments
+		WHERE assignment_id = $1`
 )

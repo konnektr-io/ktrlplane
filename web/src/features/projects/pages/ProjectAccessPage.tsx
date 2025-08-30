@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
-import AccessControlSimplified from '@/features/access/components/AccessControlSimplified';
+import AccessControl from '@/features/access/components/AccessControl';
 
 export default function ProjectAccessPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -15,7 +15,7 @@ export default function ProjectAccessPage() {
   }
 
   return (
-    <AccessControlSimplified
+    <AccessControl
       context={{
         scopeType: 'project',
         scopeId: projectId,
