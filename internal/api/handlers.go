@@ -442,28 +442,6 @@ func (h *APIHandler) CreateProjectRoleAssignment(c *gin.Context) {
 	})
 }
 
-func (h *APIHandler) UpdateProjectRoleAssignment(c *gin.Context) {
-	projectID := c.Param("projectId")
-	assignmentID := c.Param("assignmentId")
-	
-	var req struct {
-		RoleName string `json:"role_name" binding:"required"`
-	}
-	
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	
-	// For now, just return success
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Role assignment updated",
-		"project_id": projectID,
-		"assignment_id": assignmentID,
-		"new_role": req.RoleName,
-	})
-}
-
 func (h *APIHandler) DeleteProjectRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	assignmentID := c.Param("assignmentId")
@@ -558,29 +536,6 @@ func (h *APIHandler) CreateResourceRoleAssignment(c *gin.Context) {
 	})
 }
 
-func (h *APIHandler) UpdateResourceRoleAssignment(c *gin.Context) {
-	projectID := c.Param("projectId")
-	resourceID := c.Param("resourceId")
-	assignmentID := c.Param("assignmentId")
-	
-	var req struct {
-		RoleName string `json:"role_name" binding:"required"`
-	}
-	
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Role assignment updated",
-		"project_id": projectID,
-		"resource_id": resourceID,
-		"assignment_id": assignmentID,
-		"new_role": req.RoleName,
-	})
-}
-
 func (h *APIHandler) DeleteResourceRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
@@ -670,27 +625,6 @@ func (h *APIHandler) CreateOrganizationRoleAssignment(c *gin.Context) {
 		"user_id": req.UserID,
 		"role": req.RoleName,
 		"assigned_by": user.ID,
-	})
-}
-
-func (h *APIHandler) UpdateOrganizationRoleAssignment(c *gin.Context) {
-	orgID := c.Param("orgId")
-	assignmentID := c.Param("assignmentId")
-	
-	var req struct {
-		RoleName string `json:"role_name" binding:"required"`
-	}
-	
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Role assignment updated",
-		"organization_id": orgID,
-		"assignment_id": assignmentID,
-		"new_role": req.RoleName,
 	})
 }
 

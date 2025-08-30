@@ -50,7 +50,6 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 				{
 					orgRBAC.GET("", handler.ListOrganizationRoleAssignments)       // List role assignments
 					orgRBAC.POST("", handler.CreateOrganizationRoleAssignment)    // Assign role
-					orgRBAC.PUT("/:assignmentId", handler.UpdateOrganizationRoleAssignment) // Update role assignment
 					orgRBAC.DELETE("/:assignmentId", handler.DeleteOrganizationRoleAssignment) // Remove role assignment
 				}
 			}
@@ -73,7 +72,6 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 				{
 					projectRBAC.GET("", handler.ListProjectRoleAssignments)       // List role assignments
 					projectRBAC.POST("", handler.CreateProjectRoleAssignment)    // Assign role
-					projectRBAC.PUT("/:assignmentId", handler.UpdateProjectRoleAssignment) // Update role assignment
 					projectRBAC.DELETE("/:assignmentId", handler.DeleteProjectRoleAssignment) // Remove role assignment
 				}
 
@@ -94,7 +92,6 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 						{
 							resourceRBAC.GET("", handler.ListResourceRoleAssignments)       // List role assignments
 							resourceRBAC.POST("", handler.CreateResourceRoleAssignment)    // Assign role
-							resourceRBAC.PUT("/:assignmentId", handler.UpdateResourceRoleAssignment) // Update role assignment
 							resourceRBAC.DELETE("/:assignmentId", handler.DeleteResourceRoleAssignment) // Remove role assignment
 						}
 					}

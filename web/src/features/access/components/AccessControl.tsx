@@ -42,7 +42,6 @@ import {
   Users, 
   UserPlus, 
   MoreVertical, 
-  Edit, 
   UserX,
   Calendar,
   Mail
@@ -91,22 +90,6 @@ export default function AccessControl({ context }: AccessControlProps) {
         const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
         const projectId = projectMatch ? projectMatch[1] : '';
         return `/projects/${projectId}/resources/${context.scopeId}/access/grant`;
-      default:
-        return '#';
-    }
-  };
-
-  const getEditAccessUrl = (assignment: RoleAssignment) => {
-    switch (context.scopeType) {
-      case 'organization':
-        return `/organizations/${context.scopeId}/access/edit/${assignment.assignment_id}`;
-      case 'project':
-        return `/projects/${context.scopeId}/access/edit/${assignment.assignment_id}`;
-      case 'resource':
-        const currentPath = window.location.pathname;
-        const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
-        const projectId = projectMatch ? projectMatch[1] : '';
-        return `/projects/${projectId}/resources/${context.scopeId}/access/edit/${assignment.assignment_id}`;
       default:
         return '#';
     }
@@ -233,12 +216,6 @@ export default function AccessControl({ context }: AccessControlProps) {
                           <DropdownMenuSeparator />
                           {assignment.inheritance_type === 'direct' ? (
                             <>
-                              <DropdownMenuItem 
-                                onClick={() => navigate(getEditAccessUrl(assignment))}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Access
-                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => setRemoveConfirmation(assignment)}
                                 className="text-red-600 focus:text-red-600"
