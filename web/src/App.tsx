@@ -68,6 +68,7 @@ function App() {
             {/* Organization-based Routes (plural) */}
             <Route path="/organizations/:orgId" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
               <Route index element={<OrganizationOverviewPage />} />
+              <Route path="projects" element={<ProjectListPage />} />
               <Route path="access" element={<OrganizationAccessPage />} />
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
               <Route path="billing" element={<div>Organization Billing Page</div>} />

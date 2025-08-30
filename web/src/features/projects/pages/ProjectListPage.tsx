@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -9,11 +9,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function ProjectListPage() {
+
+// Accept optional organizationId prop (for direct usage or from route params)
+type ProjectListPageProps = {
+  organizationId?: string;
+};
+
+export default function ProjectListPage(props: ProjectListPageProps = {}) {
+  const { orgId } = useParams<{ orgId?: string }>();
+  const organizationId = props.organizationId || orgId;
   const { projects: allProjects, isLoadingList, fetchProjects, createProject, error } = useProjectStore();
   const navigate = useNavigate();
 
-  const projects = allProjects;
+  // Filter projects by organization if organizationId is present
+  const projects = organizationId
+    ? allProjects.filter((p) => p.org_id === organizationId)
+    : allProjects;
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', description: '' });
   const [isCreating, setIsCreating] = useState(false);

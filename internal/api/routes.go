@@ -12,6 +12,7 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(CustomRecoveryMiddleWare())
+	r.Use(ErrorLoggerMiddleware())
 	r.Use(CORSMiddleware())
 
 	// --- Public Routes (Example: Health Check) ---

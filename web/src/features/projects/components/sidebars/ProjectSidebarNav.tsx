@@ -57,13 +57,14 @@ export default function ProjectSidebarNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
-  const { currentProject, projects } = useProjectStore();
-  const { currentOrganization } = useOrganizationStore();
+  const { currentProject, projects, setCurrentProject } = useProjectStore();
   const { state } = useSidebar();
 
   const handleProjectChange = (newProjectId: string) => {
+    const selected = projects.find((p) => p.project_id === newProjectId) || null;
+    setCurrentProject(selected);
     const currentPath = location.pathname.split('/').slice(3).join('/') || '';
-  navigate(`/projects/${newProjectId}/${currentPath}`);
+    navigate(`/projects/${newProjectId}/${currentPath}`);
   };
 
   const isCollapsed = state === 'collapsed';
@@ -93,9 +94,9 @@ export default function ProjectSidebarNav() {
                     <span className="truncate font-medium text-sm">
                       {currentProject?.name || 'Select Project'}
                     </span>
-                    {currentOrganization && (
+                    {currentProject?.description && (
                       <span className="text-xs text-muted-foreground">
-                        {currentOrganization.name}
+                        {currentProject.description}
                       </span>
                     )}
                   </div>

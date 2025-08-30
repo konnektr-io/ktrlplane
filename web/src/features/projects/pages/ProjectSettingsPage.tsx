@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -14,6 +14,12 @@ export default function ProjectSettingsPage() {
   const [name, setName] = useState(currentProject?.name || '');
   const [description, setDescription] = useState(currentProject?.description || '');
   const [saving, setSaving] = useState(false);
+
+  // Sync name/description state with currentProject when it changes
+  useEffect(() => {
+    setName(currentProject?.name || '');
+    setDescription(currentProject?.description || '');
+  }, [currentProject?.name, currentProject?.description, currentProject?.project_id]);
 
   const handleSave = async () => {
     setSaving(true);

@@ -8,6 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ErrorLoggerMiddleware logs all errors attached to the Gin context (not just panics)
+func ErrorLoggerMiddleware() gin.HandlerFunc {
+  return func(c *gin.Context) {
+    c.Next()
+    // Log all errors that occurred during the request
+    for _, err := range c.Errors {
+      fmt.Printf("[GIN][ERROR] %v\n", err.Err)
+    }
+  }
+}
+
 func CustomRecoveryMiddleWare() gin.HandlerFunc {
   return func(c *gin.Context) {
     defer func() {

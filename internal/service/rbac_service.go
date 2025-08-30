@@ -195,3 +195,42 @@ func (s *RBACService) SearchUsers(ctx context.Context, query string) ([]models.U
 	}
 	return users, nil
 }
+
+// DeleteProjectRoleAssignment deletes a project role assignment by assignment ID and project ID
+func (s *RBACService) DeleteProjectRoleAssignment(ctx context.Context, projectID, assignmentID string) error {
+	pool := db.GetDB()
+	cmdTag, err := pool.Exec(ctx, db.DeleteProjectRoleAssignmentQuery, assignmentID, projectID)
+	if err != nil {
+		return fmt.Errorf("failed to delete project role assignment: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no project role assignment found to delete")
+	}
+	return nil
+}
+
+// DeleteResourceRoleAssignment deletes a resource role assignment by assignment ID and resource ID
+func (s *RBACService) DeleteResourceRoleAssignment(ctx context.Context, resourceID, assignmentID string) error {
+	pool := db.GetDB()
+	cmdTag, err := pool.Exec(ctx, db.DeleteResourceRoleAssignmentQuery, assignmentID, resourceID)
+	if err != nil {
+		return fmt.Errorf("failed to delete resource role assignment: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no resource role assignment found to delete")
+	}
+	return nil
+}
+
+// DeleteOrganizationRoleAssignment deletes an organization role assignment by assignment ID and org ID
+func (s *RBACService) DeleteOrganizationRoleAssignment(ctx context.Context, orgID, assignmentID string) error {
+	pool := db.GetDB()
+	cmdTag, err := pool.Exec(ctx, db.DeleteOrganizationRoleAssignmentQuery, assignmentID, orgID)
+	if err != nil {
+		return fmt.Errorf("failed to delete organization role assignment: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no organization role assignment found to delete")
+	}
+	return nil
+}

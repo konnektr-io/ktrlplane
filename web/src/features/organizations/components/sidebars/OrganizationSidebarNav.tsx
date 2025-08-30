@@ -1,6 +1,4 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useProjectStore } from '../../../projects/store/projectStore';
-import { Project } from '../../../projects/types/project.types';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -31,6 +29,11 @@ const organizationMenuItems = [
     path: '',
   },
   {
+    title: 'Projects',
+    icon: FolderOpen,
+    path: 'projects'
+  },
+  {
     title: 'Access & Permissions', 
     icon: Shield,
     path: 'access',
@@ -51,7 +54,6 @@ export default function OrganizationSidebarNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { orgId } = useParams<{ orgId: string }>();
-  const { projects } = useProjectStore();
   const { state } = useSidebar();
 
   const isCollapsed = state === 'collapsed';
@@ -60,7 +62,7 @@ export default function OrganizationSidebarNav() {
     <TooltipProvider>
       {/* Organization Navigation */}
       <SidebarGroup>
-        <SidebarGroupLabel>Organization</SidebarGroupLabel>
+        <SidebarGroupLabel>Navigation</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {organizationMenuItems.map((item) => {
@@ -88,52 +90,6 @@ export default function OrganizationSidebarNav() {
                       </TooltipTrigger>
                       <TooltipContent side="right">
                         <p>{item.title}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    menuButton
-                  )}
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      {/* Projects Section */}
-      <SidebarGroup>
-        <SidebarGroupLabel>Projects</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {projects.map((project: Project) => {
-              const menuButton = (
-                <SidebarMenuButton 
-                  asChild
-                  onClick={() => navigate(`/projects/${project.project_id}`)}
-                >
-                  <div className="flex items-center gap-2 cursor-pointer">
-                    <FolderOpen className="h-4 w-4" />
-                    {!isCollapsed && <span className="truncate">{project.name}</span>}
-                  </div>
-                </SidebarMenuButton>
-              );
-
-              return (
-                <SidebarMenuItem key={project.project_id}>
-                  {isCollapsed ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        {menuButton}
-                      </TooltipTrigger>
-                      <TooltipContent side="right">
-                        <div className="flex flex-col">
-                          <p className="font-medium">{project.name}</p>
-                          {project.description && (
-                            <p className="text-xs text-muted-foreground">
-                              {project.description}
-                            </p>
-                          )}
-                        </div>
                       </TooltipContent>
                     </Tooltip>
                   ) : (
