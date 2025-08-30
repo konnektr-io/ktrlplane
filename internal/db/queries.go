@@ -1,7 +1,3 @@
-
-package db
-
-// ...existing code...
 package db
 
 const (
