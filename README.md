@@ -14,7 +14,7 @@ A cloud platform control plane for managing projects, resources, and RBAC with P
 
 ### Prerequisites
 
-- Go 1.23+
+- Go 1.24+
 - Node.js 18+
 - PostgreSQL 14+
 - pnpm (for frontend)
@@ -98,19 +98,11 @@ The frontend will be available at http://localhost:5173 (or next available port)
 ✅ CRUD operations for projects and resources  
 ✅ React frontend with routing  
 ✅ Basic UI components
-
-🚧 Authentication (Auth0 integration)  
-🚧 RBAC implementation  
-🚧 Frontend forms and data management  
+✅ Authentication (Auth0 integration)  
+✅ RBAC implementation  
+✅ Frontend forms and data management  
 🚧 Resource type definitions  
 🚧 Integration with db-query-operator
-
-## Development Notes
-
-- Authentication is currently mocked for development
-- The frontend uses mock data and simplified routing
-- Database uses regular PostgreSQL (not Apache AGE as originally planned)
-- Integration with db-query-operator is planned for resource deployment
 
 ## Next Steps
 
