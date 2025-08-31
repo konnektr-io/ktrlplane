@@ -33,8 +33,8 @@ export default function AppLayout({ sidebarContent, showProjectSelector = false 
     <SidebarProvider>
       <div className="flex h-screen w-full">
         <Sidebar>
-          <SidebarHeader className="border-b p-4">
-            <div className="flex items-center gap-2">
+          <SidebarHeader className="border-b bg-background px-6 py-4">
+            <div className="flex items-center gap-2 h-10">
               <span className="font-semibold">ktrlplane</span>
             </div>
           </SidebarHeader>

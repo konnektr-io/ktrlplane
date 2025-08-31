@@ -51,11 +51,10 @@ export default function AppHeader() {
   if (!projectId) {
     return (
       <header className="border-b bg-background px-6 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between h-10">
           <div className="flex items-center gap-4">
             <Breadcrumbs />
           </div>
-          
           <div className="flex items-center gap-4">
             {/* User Menu */}
             <DropdownMenu>
@@ -89,12 +88,11 @@ export default function AppHeader() {
 
   return (
     <header className="border-b bg-background px-6 py-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between h-10">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <Breadcrumbs />
         </div>
-        
         <div className="flex items-center gap-4">
           {/* Settings Menu */}
           <DropdownMenu>

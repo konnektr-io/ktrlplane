@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Auth0Provider } from '@auth0/auth0-react';
 import AuthSetup from '@/features/auth/AuthSetup';
-import ProjectSelectorLayout from '@/components/ProjectSelectorLayout';
+import ProjectSelectorLayout from '@/features/projects/layouts/ProjectSelectorLayout';
 import ProjectLayout from '@/features/projects/layouts/ProjectLayout';
 import ResourceLayout from '@/features/resources/layouts/ResourceLayout';
 import OrganizationLayout from '@/features/organizations/layouts/OrganizationLayout';

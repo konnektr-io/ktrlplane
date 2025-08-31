@@ -52,6 +52,7 @@ interface AccessControlProps {
   context: AccessControlContextType;
 }
 
+
 export default function AccessControl({ context }: AccessControlProps) {
   const navigate = useNavigate();
   const {
@@ -67,6 +68,15 @@ export default function AccessControl({ context }: AccessControlProps) {
   useEffect(() => {
     setContext(context);
   }, [context, setContext]);
+  
+  // Filter state for members
+  const [filter, setFilter] = useState("");
+  const filteredAssignments = filter
+    ? roleAssignments.filter(a =>
+        (a.user?.name || "").toLowerCase().includes(filter.toLowerCase()) ||
+        (a.user?.email || "").toLowerCase().includes(filter.toLowerCase())
+      )
+    : roleAssignments;
 
   const handleRemoveUser = async (assignment: RoleAssignment) => {
     try {
@@ -119,21 +129,32 @@ export default function AccessControl({ context }: AccessControlProps) {
       {/* Members Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Users className="h-5 w-5" />
-            <span>Members ({roleAssignments.length})</span>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <Users className="h-5 w-5" />
+              <span>Role assignments ({roleAssignments.length})</span>
+            </CardTitle>
+            {/* Filter input */}
+            <input
+              type="text"
+              placeholder="Filter members..."
+              className="input input-sm border rounded px-2 py-1 text-sm w-48"
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+              style={{ minWidth: 0 }}
+            />
+          </div>
           <CardDescription>
-            Users with access to this {context.scopeType}
+            Users with role assignments for this {context.scopeType}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">Loading...</div>
-          ) : roleAssignments.length === 0 ? (
+          ) : filteredAssignments.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No members yet</h3>
+              <h3 className="text-lg font-semibold mb-2">No role assignments yet</h3>
               <p className="text-muted-foreground mb-4">
                 Start by granting access to users for this {context.scopeType}
               </p>
@@ -154,7 +175,7 @@ export default function AccessControl({ context }: AccessControlProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {roleAssignments.map((assignment) => (
+                {filteredAssignments.map((assignment) => (
                   <TableRow key={assignment.assignment_id}>
                     <TableCell>
                       <div className="flex items-center space-x-3">

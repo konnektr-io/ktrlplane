@@ -29,7 +29,7 @@ export default function Breadcrumbs() {
     }
 
     // Handle different route patterns
-    if (pathSegments[0] === 'organization' && params.orgId) {
+    if (pathSegments[0] === 'organizations' && params.orgId) {
       const org = organizations.find(o => o.org_id === params.orgId);
       breadcrumbs.push({
         label: org?.name || 'Organization',
@@ -41,6 +41,16 @@ export default function Breadcrumbs() {
           label: 'Access & Permissions',
           isActive: true
         });
+      } else if (pathSegments[2] === 'projects') {
+        breadcrumbs.push({
+          label: 'Projects',
+          isActive: true
+        });
+      } else if (pathSegments[2] === 'billing') {
+        breadcrumbs.push({
+          label: 'Billing',
+          isActive: true
+        });
       } else if (pathSegments[2] === 'settings') {
         breadcrumbs.push({
           label: 'Settings',
@@ -49,17 +59,8 @@ export default function Breadcrumbs() {
       }
     }
 
-    if (pathSegments[0] === 'project' && params.projectId) {
+    if (pathSegments[0] === 'projects' && params.projectId) {
       const project = projects.find(p => p.project_id === params.projectId);
-      
-      // Add organization if project has one
-      if (project?.org_id) {
-        const org = organizations.find(o => o.org_id === project.org_id);
-        breadcrumbs.push({
-          label: org?.name || 'Organization',
-          href: `/organizations/${project.org_id}`
-        });
-      }
 
       breadcrumbs.push({
         label: project?.name || 'Project',
@@ -70,10 +71,6 @@ export default function Breadcrumbs() {
         if (params.resourceId) {
           const resource = resources.find(r => r.resource_id === params.resourceId);
           breadcrumbs.push({
-            label: 'Resources',
-            href: `/projects/${params.projectId}/resources`
-          });
-          breadcrumbs.push({
             label: resource?.name || 'Resource',
             href: `/projects/${params.projectId}/resources/${params.resourceId}`
           });
@@ -81,6 +78,16 @@ export default function Breadcrumbs() {
           if (pathSegments[4] === 'access') {
             breadcrumbs.push({
               label: 'Access & Permissions',
+              isActive: true
+            });
+          } else if (pathSegments[4] === 'logs') {
+            breadcrumbs.push({
+              label: 'Logs',
+              isActive: true
+            });
+          } else if (pathSegments[4] === 'monitoring') {
+            breadcrumbs.push({
+              label: 'Monitoring',
               isActive: true
             });
           } else if (pathSegments[4] === 'settings') {
@@ -98,6 +105,11 @@ export default function Breadcrumbs() {
       } else if (pathSegments[2] === 'access') {
         breadcrumbs.push({
           label: 'Access & Permissions',
+          isActive: true
+        });
+      } else if (pathSegments[2] === 'billing') {
+        breadcrumbs.push({
+          label: 'Billing',
           isActive: true
         });
       } else if (pathSegments[2] === 'settings') {
