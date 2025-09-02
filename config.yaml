@@ -6,7 +6,6 @@ database:
   user: "postgres"
   password: "password"
   dbname: "ktrlplane"
-  graphpath: "ktrlplane_graph"
   sslmode: "disable"
 auth0:
   domain: "auth.konnektr.io"

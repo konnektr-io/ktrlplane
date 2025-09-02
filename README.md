@@ -2,108 +2,77 @@
 
 A cloud platform control plane for managing projects, resources, and RBAC with PostgreSQL backend and React frontend.
 
-## Project Structure
-
-- `cmd/server/` - Go backend HTTP server
-- `cmd/migrate/` - Database migration tool
-- `internal/` - Go backend internal packages
-- `web/` - React frontend application
-- `migrations/` - SQL migration files
-
 ## Quick Start
+
+See the [Getting Started Guide](docs/getting-started.md) for detailed setup instructions.
 
 ### Prerequisites
 
 - Go 1.24+
 - Node.js 18+
 - PostgreSQL 14+
-- pnpm (for frontend)
+- pnpm
 
-### Database Setup
-
-1. Create a PostgreSQL database:
-
-```sql
-CREATE DATABASE ktrlplane_db;
-```
-
-2. Update `config.yaml` with your database connection details
-
-3. Run migrations:
+### Development Setup
 
 ```bash
+# 1. Setup database and configuration
+createdb ktrlplane_db
+cp config.yaml.example config.yaml  # Edit with your settings
+
+# 2. Run migrations
 go run cmd/migrate/main.go
-```
 
-### Backend Setup
-
-1. Install dependencies:
-
-```bash
-go mod tidy
-```
-
-2. Start the server:
-
-```bash
+# 3. Start backend
 go run cmd/server/main.go
-```
 
-The API will be available at http://localhost:8080
-
-### Frontend Setup
-
-1. Navigate to the web directory:
-
-```bash
+# 4. Start frontend (in another terminal)
 cd web
-```
-
-2. Install dependencies:
-
-```bash
 pnpm install
-```
-
-3. Start the development server:
-
-```bash
 pnpm run dev
 ```
 
-The frontend will be available at http://localhost:5173 (or next available port)
+## Documentation
 
-## API Endpoints
+- 📚 [Documentation](docs/) - Complete documentation
+- 🚀 [Getting Started](docs/getting-started.md) - Quick setup guide
+- 🛠️ [Development](docs/development.md) - Development workflow
+- 🚢 [Deployment](docs/deployment.md) - Production deployment
+- 📖 [API Reference](docs/api-reference.md) - REST API documentation
 
-### Projects
+## Deployment
 
-- `GET /api/v1/projects` - List projects
-- `POST /api/v1/projects` - Create project
-- `GET /api/v1/projects/:id` - Get project
-- `PUT /api/v1/projects/:id` - Update project
-- `DELETE /api/v1/projects/:id` - Delete project
+### Production (Helm)
 
-### Resources
+```bash
+helm repo add ktrlplane https://charts.ktrlplane.io
+helm install ktrlplane ktrlplane/ktrlplane
+```
 
-- `GET /api/v1/projects/:projectId/resources` - List resources
-- `POST /api/v1/projects/:projectId/resources` - Create resource
-- `GET /api/v1/projects/:projectId/resources/:id` - Get resource
-- `PUT /api/v1/projects/:projectId/resources/:id` - Update resource
-- `DELETE /api/v1/projects/:projectId/resources/:id` - Delete resource
+### Development (Docker)
 
-## Current Status
+```bash
+cd deployments/docker
+docker-compose up -d
+```
 
-✅ Basic project structure  
-✅ Database schema and migrations  
-✅ CRUD operations for projects and resources  
-✅ React frontend with routing  
-✅ Basic UI components
-✅ Authentication (Auth0 integration)  
-✅ RBAC implementation  
-✅ Frontend forms and data management  
-🚧 Resource type definitions  
-🚧 Integration with db-query-operator
+See [deployment examples](deployments/) for more options.
 
-## Next Steps
+## Project Structure
 
-See the continuation plan in the development documentation for next implementation phases.
+```
+├── cmd/                 # Application entry points
+├── internal/            # Private application code
+├── migrations/          # Database migrations
+├── web/                 # React frontend
+├── deployments/         # Deployment examples
+└── docs/                # Documentation
+```
+
+## Contributing
+
+We welcome contributions! Please see our [development guide](docs/development.md) for details.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
