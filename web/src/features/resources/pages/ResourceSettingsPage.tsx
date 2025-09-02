@@ -68,7 +68,7 @@ export default function ResourceSettingsPage() {
               if (editing && schema && shape && Object.keys(shape).length > 0) {
                 return (
                   <ResourceSettingsForm
-                    schema={schema}
+                    resourceType={type as string}
                     initialValues={currentResource && typeof currentResource.settings_json === 'string' ? JSON.parse(currentResource.settings_json) : (currentResource?.settings_json || {})}
                     onSubmit={async (values) => {
                       setSaving(true);
@@ -101,7 +101,14 @@ export default function ResourceSettingsPage() {
                       return (
                         <div key={field}>
                           <label className="text-sm font-medium">{field}</label>
-                          <p className="text-sm font-mono mt-1">{val && typeof val === 'object' && field in val ? val[field] : '-'}</p>
+                          <p className="text-sm font-mono mt-1">
+                            {val && typeof val === 'object' && field in val 
+                              ? typeof val[field] === 'object' 
+                                ? JSON.stringify(val[field], null, 2)
+                                : String(val[field])
+                              : '-'
+                            }
+                          </p>
                         </div>
                       );
                     })}
@@ -135,14 +142,25 @@ export default function ResourceSettingsPage() {
               return null;
             })()}
             <div className="flex gap-2 mt-2">
-              {editing ? (
-                <>
-                  <Button size="sm" onClick={handleSave} disabled={saving || !!jsonError}>Save</Button>
-                  <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
-                </>
-              ) : (
-                <Button size="sm" onClick={() => setEditing(true)}>Edit</Button>
-              )}
+              {(() => {
+                const type = currentResource?.type;
+                const isKnownType = type && Object.keys(resourceSchemas).includes(type);
+                const schema = isKnownType ? resourceSchemas[type as ResourceType] : undefined;
+                const shape = schema && 'shape' in schema ? (schema as any).shape : undefined;
+                const hasFormSchema = schema && shape && Object.keys(shape).length > 0;
+                
+                if (editing && !hasFormSchema) {
+                  return (
+                    <>
+                      <Button size="sm" onClick={handleSave} disabled={saving || !!jsonError}>Save</Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
+                    </>
+                  );
+                } else if (!editing) {
+                  return <Button size="sm" onClick={() => setEditing(true)}>Edit</Button>;
+                }
+                return null;
+              })()}
             </div>
           </CardContent>
         </Card>

@@ -11,13 +11,11 @@ export type ResourceType = keyof typeof resourceSchemas;
 // Default configurations
 export const defaultConfigurations = {
   'Konnektr.DigitalTwins': {
-    instances: 1,
-    sinks: [],
-    eventRoutes: [],
-    persistence: {
-      enabled: true,
-      storageSize: '10Gi',
+    eventSinks: {
+      kafka: [],
+      kusto: [],
     },
+    eventRoutes: [],
   },
   'Konnektr.Flows': {
     replicas: 1,
