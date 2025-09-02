@@ -1,4 +1,3 @@
-import { ZodTypeAny, ZodObject, ZodNumber } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -11,54 +10,66 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { resourceSchemas, defaultConfigurations } from "@/features/resources/schemas";
 
 interface ResourceSettingsFormProps {
-  schema: ZodTypeAny;
-  initialValues: any;
+  resourceType: string;
+  initialValues?: any;
   onSubmit: (values: any) => void;
   disabled?: boolean;
 }
 
-export function ResourceSettingsForm({ schema, initialValues, onSubmit, disabled }: ResourceSettingsFormProps) {
-  const form = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: initialValues,
-    mode: "onChange",
-  });
+export function ResourceSettingsForm({ resourceType, initialValues, onSubmit, disabled }: ResourceSettingsFormProps) {
+  // Handle different resource types with proper typing
+  if (resourceType === 'Konnektr.DigitalTwins') {
+    return <DigitalTwinsForm initialValues={initialValues} onSubmit={onSubmit} disabled={disabled} />;
+  }
+  
+  if (resourceType === 'Konnektr.Flows') {
+    return <FlowsForm initialValues={initialValues} onSubmit={onSubmit} disabled={disabled} />;
+  }
 
-  // Dynamically render fields based on schema shape (only for ZodObject)
-  const fields = schema instanceof ZodObject ? Object.keys(schema.shape) : [];
+  return (
+    <div className="text-center py-8">
+      <p className="text-muted-foreground">Unknown resource type: {resourceType}</p>
+    </div>
+  );
+}
+
+// Digital Twins Form Component
+function DigitalTwinsForm({ initialValues, onSubmit, disabled }: Omit<ResourceSettingsFormProps, 'resourceType'>) {
+  const schema = resourceSchemas['Konnektr.DigitalTwins'];
+  const defaultValues = initialValues || defaultConfigurations['Konnektr.DigitalTwins'];
+
+  const form = useForm<any>({
+    resolver: zodResolver(schema),
+    defaultValues,
+  });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {fields.map((field) => {
-          // Detect if this field is a ZodNumber
-          let isNumber = false;
-          if (schema instanceof ZodObject) {
-            isNumber = schema.shape[field] instanceof ZodNumber;
-          }
-          return (
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Instances Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Digital Twins Configuration</CardTitle>
+            <CardDescription>Configure your Age Graph Database instances</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <FormField
-              key={field}
               control={form.control}
-              name={field}
-              render={({ field: rhfField }) => (
+              name="instances"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{field.charAt(0).toUpperCase() + field.slice(1)}</FormLabel>
+                  <FormLabel>Number of Instances</FormLabel>
                   <FormControl>
                     <Input
-                      type={isNumber ? 'number' : 'text'}
-                      value={rhfField.value ?? ''}
-                      onChange={e => {
-                        if (isNumber) {
-                          // Convert to number, but allow empty string for clearing
-                          const val = e.target.value;
-                          rhfField.onChange(val === '' ? '' : Number(val));
-                        } else {
-                          rhfField.onChange(e);
-                        }
-                      }}
+                      type="number"
+                      min={1}
+                      max={6}
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
                       disabled={disabled}
                     />
                   </FormControl>
@@ -66,12 +77,74 @@ export function ResourceSettingsForm({ schema, initialValues, onSubmit, disabled
                 </FormItem>
               )}
             />
-          );
-        })}
-        <Button type="submit" disabled={disabled || !form.formState.isDirty || !form.formState.isValid}>
-          Save
+          </CardContent>
+        </Card>
+
+        <Button 
+          type="submit" 
+          disabled={disabled}
+          className="w-full"
+        >
+          Save Configuration
         </Button>
       </form>
     </Form>
   );
 }
+
+// Flows Form Component  
+function FlowsForm({ initialValues, onSubmit, disabled }: Omit<ResourceSettingsFormProps, 'resourceType'>) {
+  const schema = resourceSchemas['Konnektr.Flows'];
+  const defaultValues = initialValues || defaultConfigurations['Konnektr.Flows'];
+
+  const form = useForm<any>({
+    resolver: zodResolver(schema),
+    defaultValues,
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Basic Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Flow Configuration</CardTitle>
+            <CardDescription>Configure your containerized application flow</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="replicas"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Replicas</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={10}
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      disabled={disabled}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Button 
+          type="submit" 
+          disabled={disabled}
+          className="w-full"
+        >
+          Save Configuration
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+export default ResourceSettingsForm;

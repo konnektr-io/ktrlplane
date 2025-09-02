@@ -1,10 +1,4 @@
-import { z } from "zod";
-
-export const resourceSchemas = {
-  GraphDatabase: z.object({
-    instances: z.number().int().min(1).max(6),
-  }),
-  Flow: z.object({}), // No settings for Flow
-};
-
-export type ResourceType = keyof typeof resourceSchemas;
+// Re-export schemas from the features module
+export { resourceSchemas, defaultConfigurations, type ResourceType } from '@/features/resources/schemas';
+export { DigitalTwinsSchema, type DigitalTwinsSettings, type SinkConfig, type EventRouteConfig } from '@/features/resources/schemas/DigitalTwinsSchema';
+export { FlowSchema, type FlowSettings } from '@/features/resources/schemas/FlowSchema';

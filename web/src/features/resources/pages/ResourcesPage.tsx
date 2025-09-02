@@ -2,15 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useResourceStore } from '../store/resourceStore';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Database, Server, Globe, FileText, Filter } from 'lucide-react';
-import { toast } from 'sonner';
 
 const resourceTypeIcons = {
   'Database': Database,
@@ -20,22 +16,10 @@ const resourceTypeIcons = {
   'Storage': FileText,
 } as const;
 
-const resourceTypes = [
-  { value: 'Konnektr.DigitalTwins', label: 'Digital Twins' },
-  { value: 'Konnektr.Flows', label: 'Flows' },
-];
-
 export default function ResourcesPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { resources, isLoading, fetchResources, createResource, error } = useResourceStore();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    type: '', 
-    settings_json: '{}' 
-  });
-  const [isCreating, setIsCreating] = useState(false);
+  const { resources, isLoading, fetchResources, error } = useResourceStore();
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
@@ -43,36 +27,6 @@ export default function ResourcesPage() {
       fetchResources(projectId);
     }
   }, [projectId, fetchResources]);
-
-  const handleCreateResource = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim() || !formData.type) {
-      toast.error('Name and type are required');
-      return;
-    }
-
-    if (!projectId) return;
-
-    setIsCreating(true);
-    try {
-      const newResource = await createResource(projectId, {
-        name: formData.name.trim(),
-        type: formData.type as 'Konnektr.DigitalTwins' | 'Konnektr.Flows',
-  settings_json: JSON.parse(formData.settings_json),
-      });
-
-      if (newResource) {
-        toast.success('Resource created successfully!');
-        setIsDialogOpen(false);
-  setFormData({ name: '', type: '', settings_json: '{}' });
-        fetchResources(projectId);
-      }
-    } catch (error) {
-      toast.error('Failed to create resource');
-    } finally {
-      setIsCreating(false);
-    }
-  };
 
   if (isLoading) {
     return <div>Loading resources...</div>;
@@ -101,71 +55,24 @@ export default function ResourcesPage() {
             </CardTitle>
             <div className="flex items-center gap-2">
               <div className="relative">
-                <input
+                <Input
                   type="text"
                   placeholder="Filter resources..."
-                  className="input input-sm border rounded px-2 py-1 text-sm w-48 pl-8"
+                  className="w-48 pl-8"
                   value={filter}
                   onChange={e => setFilter(e.target.value)}
-                  style={{ minWidth: 0 }}
                 />
                 <Filter className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    New Resource
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create New Resource</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateResource} className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Name *</Label>
-                      <Input
-                        id="name"
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter resource name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="type">Type *</Label>
-                      <Select 
-                        value={formData.type} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select resource type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {resourceTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={isCreating}>
-                        {isCreating ? 'Creating...' : 'Create Resource'}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button onClick={() => navigate(`/projects/${projectId}/resources/create`)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Resource
+              </Button>
             </div>
           </div>
-          <CardDescription>Manage cloud resources in this project</CardDescription>
+          <CardDescription>
+            Manage your project resources and their configurations
+          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto border-t">

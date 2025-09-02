@@ -8,6 +8,7 @@ import OrganizationLayout from '@/features/organizations/layouts/OrganizationLay
 import ProtectedRoute from '@/features/auth/ProtectedRoute';
 import ProjectListPage from '@/features/projects/pages/ProjectListPage';
 import ResourcesPage from '@/features/resources/pages/ResourcesPage';
+import CreateResourcePage from '@/features/resources/pages/CreateResourcePage';
 import ResourceDetailPage from '@/features/resources/pages/ResourceDetailPage';
 import ResourceAccessPage from '@/features/resources/pages/ResourceAccessPage';
 import ProjectSettingsPage from '@/features/projects/pages/ProjectSettingsPage';
@@ -50,6 +51,7 @@ function App() {
             <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectLayout /></ProtectedRoute>}>
               <Route index element={<ProjectDetailPage />} />
               <Route path="resources" element={<ResourcesPage />} />
+              <Route path="resources/create" element={<CreateResourcePage />} />
               <Route path="access" element={<ProjectAccessPage />} />
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
               <Route path="settings" element={<ProjectSettingsPage />} />
