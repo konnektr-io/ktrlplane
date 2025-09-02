@@ -29,7 +29,11 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, name, owne
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			// Log rollback error but don't override the main error
+		}
+	}()
 
 	// Insert organization
 	org := &models.Organization{

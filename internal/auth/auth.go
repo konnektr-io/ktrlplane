@@ -41,9 +41,6 @@ var (
 )
 
 func SetupAuth(audience, domain string) error {
-	apiAudience = audience
-	auth0Domain = domain
-	
 	issuerURL, err := url.Parse("https://" + domain + "/")
 	if err != nil {
 		return fmt.Errorf("failed to parse the issuer url: %w", err)

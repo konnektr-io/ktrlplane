@@ -23,7 +23,11 @@ func (s *RBACService) AssignRole(ctx context.Context, userID, roleName, scopeTyp
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			// Log rollback error but don't override the main error
+		}
+	}()
 
 	err = s.AssignRoleInTx(ctx, tx, userID, roleName, scopeType, scopeID, assignedBy)
 	if err != nil {

@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"ktrlplane/internal/config"
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 
@@ -87,7 +87,7 @@ func runMigrations(pool *pgxpool.Pool) error {
 		fmt.Printf("Applying migration %s...\n", filename)
 
 		// Read migration file
-		content, err := ioutil.ReadFile(file)
+		content, err := os.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("failed to read migration file %s: %w", filename, err)
 		}
