@@ -10,11 +10,11 @@ The easiest way to deploy ktrlplane in production:
 
 ```bash
 # Add Helm repository
-helm repo add ktrlplane https://charts.ktrlplane.io
+helm repo add konnektr https://charts.konnektr.io
 helm repo update
 
 # Install with custom values
-helm install ktrlplane ktrlplane/ktrlplane -f values.yaml
+helm install ktrlplane konnektr/ktrlplane -f values.yaml
 ```
 
 ### Example values.yaml
