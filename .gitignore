@@ -1,2 +1,5 @@
 *.exe
 config.yaml
+.env
+.env.local
+.env.production

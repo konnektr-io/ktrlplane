@@ -24,7 +24,6 @@ WORKDIR /root/
 # Copy the binary and migrations
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrations ./migrations/
-COPY config.yaml .
 
 EXPOSE 8080
 

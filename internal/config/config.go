@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/spf13/viper"
 )
@@ -22,7 +24,6 @@ type DatabaseConfig struct {
 	User      string `mapstructure:"user"`
 	Password  string `mapstructure:"password"`
 	DBName    string `mapstructure:"dbname"`
-	GraphPath string `mapstructure:"graphpath"`
 	SSLMode   string `mapstructure:"sslmode"`
 }
 
@@ -33,6 +34,12 @@ type Auth0Config struct {
 }
 
 func LoadConfig(path string) (config Config, err error) {
+	// Try to load from environment variables first
+	if envConfig, err := loadFromEnv(); err == nil {
+		return envConfig, nil
+	}
+
+	// Fallback to config file
 	viper.AddConfigPath(path)
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -45,4 +52,59 @@ func LoadConfig(path string) (config Config, err error) {
 
 	err = viper.Unmarshal(&config)
 	return
+}
+
+func loadFromEnv() (Config, error) {
+	// Check if required environment variables are set
+	requiredEnvVars := []string{
+		"KTRLPLANE_DB_HOST",
+		"KTRLPLANE_DB_USER", 
+		"KTRLPLANE_DB_PASSWORD",
+		"KTRLPLANE_DB_NAME",
+		"KTRLPLANE_AUTH0_DOMAIN",
+		"KTRLPLANE_AUTH0_AUDIENCE",
+	}
+
+	for _, envVar := range requiredEnvVars {
+		if os.Getenv(envVar) == "" {
+			return Config{}, fmt.Errorf("required environment variable %s is not set", envVar)
+		}
+	}
+
+	// Parse database port
+	dbPort := 5432 // default
+	if portStr := os.Getenv("KTRLPLANE_DB_PORT"); portStr != "" {
+		if p, err := strconv.Atoi(portStr); err == nil {
+			dbPort = p
+		}
+	}
+
+	// Build config from environment variables
+	config := Config{
+		Server: ServerConfig{
+			Port: getEnvWithDefault("KTRLPLANE_SERVER_PORT", "3001"),
+		},
+		Database: DatabaseConfig{
+			Host:      os.Getenv("KTRLPLANE_DB_HOST"),
+			Port:      dbPort,
+			User:      os.Getenv("KTRLPLANE_DB_USER"),
+			Password:  os.Getenv("KTRLPLANE_DB_PASSWORD"),
+			DBName:    os.Getenv("KTRLPLANE_DB_NAME"),
+			SSLMode:   getEnvWithDefault("KTRLPLANE_DB_SSL_MODE", "disable"),
+		},
+		Auth0: Auth0Config{
+			Domain:   os.Getenv("KTRLPLANE_AUTH0_DOMAIN"),
+			Audience: os.Getenv("KTRLPLANE_AUTH0_AUDIENCE"),
+			ClientID: getEnvWithDefault("KTRLPLANE_AUTH0_CLIENT_ID", ""),
+		},
+	}
+
+	return config, nil
+}
+
+func getEnvWithDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
