@@ -13,6 +13,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/stripe/stripe-go/v76"
 )
 
 func main() {
@@ -34,14 +36,23 @@ func main() {
 		log.Fatalf("Failed to set up authentication: %v", err)
 	}
 
+	// --- Stripe Setup ---
+	if cfg.Stripe.SecretKey != "" {
+		stripe.Key = cfg.Stripe.SecretKey
+		log.Println("Stripe initialized successfully")
+	} else {
+		log.Println("Warning: Stripe secret key not configured. Billing features will not work.")
+	}
+
 	// --- Service Initialization ---
 	projectService := service.NewProjectService()
 	resourceService := service.NewResourceService()
 	organizationService := service.NewOrganizationService()
 	rbacService := service.NewRBACService()
+	billingService := service.NewBillingService(db.GetDB())
 
 	// --- API Handler Initialization ---
-	apiHandler := api.NewAPIHandler(projectService, resourceService, organizationService, rbacService)
+	apiHandler := api.NewAPIHandler(projectService, resourceService, organizationService, rbacService, billingService)
 
 	// --- Router Setup ---
 	router := api.SetupRouter(apiHandler)

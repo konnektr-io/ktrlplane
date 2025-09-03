@@ -33,3 +33,6 @@ export const DigitalTwinsSchema = z.object({
 export type DigitalTwinsSettings = z.infer<typeof DigitalTwinsSchema>;
 export type EventSinksConfig = z.infer<typeof eventSinksSchema>;
 export type EventRouteConfig = z.infer<typeof eventRouteSchema>;
+export type KafkaSinkConfig = z.infer<typeof kafkaSinkConfig>;
+export type KustoSinkConfig = z.infer<typeof kustoSinkConfig>;
+export type SinkConfig = KafkaSinkConfig | KustoSinkConfig;

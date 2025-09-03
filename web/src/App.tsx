@@ -22,6 +22,7 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import OrganizationOverviewPage from '@/features/organizations/pages/OrganizationOverviewPage';
 import OrganizationSettingsPage from '@/features/organizations/pages/OrganizationSettingsPage';
 import ResourceSettingsPage from '@/features/resources/pages/ResourceSettingsPage';
+import BillingPage from '@/features/billing/pages/BillingPage';
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
               <Route path="resources/create" element={<CreateResourcePage />} />
               <Route path="access" element={<ProjectAccessPage />} />
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
+              <Route path="billing" element={<BillingPage />} />
               <Route path="settings" element={<ProjectSettingsPage />} />
             </Route>
 
@@ -73,7 +75,7 @@ function App() {
               <Route path="projects" element={<ProjectListPage />} />
               <Route path="access" element={<OrganizationAccessPage />} />
               <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
-              <Route path="billing" element={<div>Organization Billing Page</div>} />
+              <Route path="billing" element={<BillingPage />} />
               <Route path="settings" element={<OrganizationSettingsPage />} />
             </Route>
 

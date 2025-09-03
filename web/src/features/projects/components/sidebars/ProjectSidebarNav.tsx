@@ -1,6 +1,5 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useProjectStore } from '../../store/projectStore';
-import { useOrganizationStore } from '../../../organizations/store/organizationStore';
 import {
   SidebarGroup,
   SidebarGroupContent,

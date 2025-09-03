@@ -14,14 +14,16 @@ type APIHandler struct {
 	ResourceService     *service.ResourceService
 	OrganizationService *service.OrganizationService
 	RBACService         *service.RBACService
+	BillingService      *service.BillingService
 }
 
-func NewAPIHandler(ps *service.ProjectService, rs *service.ResourceService, os *service.OrganizationService, rbac *service.RBACService) *APIHandler {
+func NewAPIHandler(ps *service.ProjectService, rs *service.ResourceService, os *service.OrganizationService, rbac *service.RBACService, bs *service.BillingService) *APIHandler {
 	return &APIHandler{
 		ProjectService:      ps,
 		ResourceService:     rs,
 		OrganizationService: os,
 		RBACService:         rbac,
+		BillingService:      bs,
 	}
 }
 
@@ -660,4 +662,293 @@ func (h *APIHandler) DeleteOrganizationRoleAssignment(c *gin.Context) {
 		"organization_id": orgID,
 		"assignment_id": assignmentID,
 	})
+}
+
+// --- Billing Handlers ---
+
+// GetBillingInfo retrieves billing information for organization or project
+func (h *APIHandler) GetBillingInfo(c *gin.Context) {
+	// Determine scope type and ID from URL
+	var scopeType, scopeID string
+	
+	if orgID := c.Param("orgId"); orgID != "" {
+		scopeType = "organization"
+		scopeID = orgID
+	} else if projectID := c.Param("projectId"); projectID != "" {
+		scopeType = "project"
+		scopeID = projectID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check manage_billing permission
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
+		return
+	}
+
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to view billing information"})
+		return
+	}
+
+	billingInfo, err := h.BillingService.GetBillingInfo(scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get billing information", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, billingInfo)
+}
+
+// UpdateBillingInfo updates billing settings
+func (h *APIHandler) UpdateBillingInfo(c *gin.Context) {
+	// Determine scope type and ID from URL
+	var scopeType, scopeID string
+	
+	if orgID := c.Param("orgId"); orgID != "" {
+		scopeType = "organization"
+		scopeID = orgID
+	} else if projectID := c.Param("projectId"); projectID != "" {
+		scopeType = "project"
+		scopeID = projectID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
+		return
+	}
+
+	var req models.UpdateBillingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check manage_billing permission
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
+		return
+	}
+
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to manage billing"})
+		return
+	}
+
+	account, err := h.BillingService.UpdateBillingAccount(scopeType, scopeID, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update billing information", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, account)
+}
+
+// CreateStripeCustomer creates a Stripe customer
+func (h *APIHandler) CreateStripeCustomer(c *gin.Context) {
+	// Determine scope type and ID from URL
+	var scopeType, scopeID string
+	
+	if orgID := c.Param("orgId"); orgID != "" {
+		scopeType = "organization"
+		scopeID = orgID
+	} else if projectID := c.Param("projectId"); projectID != "" {
+		scopeType = "project"
+		scopeID = projectID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
+		return
+	}
+
+	var req models.CreateStripeCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check manage_billing permission
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
+		return
+	}
+
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to manage billing"})
+		return
+	}
+
+	account, err := h.BillingService.CreateStripeCustomer(scopeType, scopeID, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Stripe customer", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, account)
+}
+
+// CreateStripeSubscription creates a Stripe subscription
+func (h *APIHandler) CreateStripeSubscription(c *gin.Context) {
+	// Determine scope type and ID from URL
+	var scopeType, scopeID string
+	
+	if orgID := c.Param("orgId"); orgID != "" {
+		scopeType = "organization"
+		scopeID = orgID
+	} else if projectID := c.Param("projectId"); projectID != "" {
+		scopeType = "project"
+		scopeID = projectID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
+		return
+	}
+
+	var req models.CreateStripeSubscriptionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check manage_billing permission
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
+		return
+	}
+
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to manage billing"})
+		return
+	}
+
+	account, err := h.BillingService.CreateStripeSubscription(scopeType, scopeID, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create subscription", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, account)
+}
+
+// CreateStripeCustomerPortal creates a Stripe customer portal session
+func (h *APIHandler) CreateStripeCustomerPortal(c *gin.Context) {
+	// Determine scope type and ID from URL
+	var scopeType, scopeID string
+	
+	if orgID := c.Param("orgId"); orgID != "" {
+		scopeType = "organization"
+		scopeID = orgID
+	} else if projectID := c.Param("projectId"); projectID != "" {
+		scopeType = "project"
+		scopeID = projectID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check manage_billing permission
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
+		return
+	}
+
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to manage billing"})
+		return
+	}
+
+	// Get return URL from request
+	type PortalRequest struct {
+		ReturnURL string `json:"return_url" binding:"required"`
+	}
+	
+	var req PortalRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	portalURL, err := h.BillingService.CreateStripeCustomerPortal(scopeType, scopeID, req.ReturnURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create customer portal", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"portal_url": portalURL})
+}
+
+// CancelSubscription cancels a Stripe subscription
+func (h *APIHandler) CancelSubscription(c *gin.Context) {
+	// Determine scope type and ID from URL
+	var scopeType, scopeID string
+	
+	if orgID := c.Param("orgId"); orgID != "" {
+		scopeType = "organization"
+		scopeID = orgID
+	} else if projectID := c.Param("projectId"); projectID != "" {
+		scopeType = "project"
+		scopeID = projectID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check manage_billing permission
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
+		return
+	}
+
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to manage billing"})
+		return
+	}
+
+	account, err := h.BillingService.CancelSubscription(scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel subscription", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, account)
 }

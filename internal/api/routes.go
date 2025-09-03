@@ -52,6 +52,17 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 					orgRBAC.POST("", handler.CreateOrganizationRoleAssignment)    // Assign role
 					orgRBAC.DELETE("/:assignmentId", handler.DeleteOrganizationRoleAssignment) // Remove role assignment
 				}
+
+				// Organization Billing routes
+				orgBilling := organizationDetail.Group("/billing")
+				{
+					orgBilling.GET("", handler.GetBillingInfo)                           // Get billing information
+					orgBilling.PUT("", handler.UpdateBillingInfo)                       // Update billing settings
+					orgBilling.POST("/customer", handler.CreateStripeCustomer)          // Create Stripe customer
+					orgBilling.POST("/subscription", handler.CreateStripeSubscription)  // Create subscription
+					orgBilling.POST("/portal", handler.CreateStripeCustomerPortal)      // Create customer portal session
+					orgBilling.POST("/cancel", handler.CancelSubscription)              // Cancel subscription
+				}
 			}
 		}
 
@@ -73,6 +84,17 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 					projectRBAC.GET("", handler.ListProjectRoleAssignments)       // List role assignments
 					projectRBAC.POST("", handler.CreateProjectRoleAssignment)    // Assign role
 					projectRBAC.DELETE("/:assignmentId", handler.DeleteProjectRoleAssignment) // Remove role assignment
+				}
+
+				// Project Billing routes
+				projectBilling := projectDetail.Group("/billing")
+				{
+					projectBilling.GET("", handler.GetBillingInfo)                           // Get billing information
+					projectBilling.PUT("", handler.UpdateBillingInfo)                       // Update billing settings
+					projectBilling.POST("/customer", handler.CreateStripeCustomer)          // Create Stripe customer
+					projectBilling.POST("/subscription", handler.CreateStripeSubscription)  // Create subscription
+					projectBilling.POST("/portal", handler.CreateStripeCustomerPortal)      // Create customer portal session
+					projectBilling.POST("/cancel", handler.CancelSubscription)              // Cancel subscription
 				}
 
 				// --- Resource Routes (nested under project) ---

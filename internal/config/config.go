@@ -12,6 +12,7 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Auth0    Auth0Config    `mapstructure:"auth0"`
+	Stripe   StripeConfig   `mapstructure:"stripe"`
 }
 
 type ServerConfig struct {
@@ -31,6 +32,12 @@ type Auth0Config struct {
 	Domain   string `mapstructure:"domain"`
 	Audience string `mapstructure:"audience"`
 	ClientID string `mapstructure:"client_id"`
+}
+
+type StripeConfig struct {
+	SecretKey      string `mapstructure:"secret_key"`
+	PublishableKey string `mapstructure:"publishable_key"`
+	WebhookSecret  string `mapstructure:"webhook_secret"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
@@ -96,6 +103,11 @@ func loadFromEnv() (Config, error) {
 			Domain:   os.Getenv("KTRLPLANE_AUTH0_DOMAIN"),
 			Audience: os.Getenv("KTRLPLANE_AUTH0_AUDIENCE"),
 			ClientID: getEnvWithDefault("KTRLPLANE_AUTH0_CLIENT_ID", ""),
+		},
+		Stripe: StripeConfig{
+			SecretKey:      getEnvWithDefault("STRIPE_SECRET_KEY", ""),
+			PublishableKey: getEnvWithDefault("STRIPE_PUBLISHABLE_KEY", ""),
+			WebhookSecret:  getEnvWithDefault("STRIPE_WEBHOOK_SECRET", ""),
 		},
 	}
 

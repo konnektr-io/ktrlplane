@@ -9,13 +9,19 @@ import (
 // Consider defining more specific structs if properties are stable.
 
 type Project struct {
-	ProjectID   string    `json:"project_id" agtype:"project_id"`
-	OrgID       *string   `json:"org_id" agtype:"org_id" db:"org_id"`
-	Name        string    `json:"name" agtype:"name"`
-	Description string    `json:"description,omitempty" agtype:"description"`
-	Status      string    `json:"status" agtype:"status"`
-	CreatedAt   time.Time `json:"created_at" agtype:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" agtype:"updated_at"`
+	ProjectID                string    `json:"project_id" agtype:"project_id"`
+	OrgID                    *string   `json:"org_id" agtype:"org_id" db:"org_id"`
+	Name                     string    `json:"name" agtype:"name"`
+	Description              string    `json:"description,omitempty" agtype:"description"`
+	Status                   string    `json:"status" agtype:"status"`
+	StripeCustomerID         *string   `json:"stripe_customer_id,omitempty" db:"stripe_customer_id"`
+	StripeSubscriptionID     *string   `json:"stripe_subscription_id,omitempty" db:"stripe_subscription_id"`
+	SubscriptionStatus       string    `json:"subscription_status" db:"subscription_status"`
+	SubscriptionPlan         string    `json:"subscription_plan" db:"subscription_plan"`
+	BillingEmail             *string   `json:"billing_email,omitempty" db:"billing_email"`
+	InheritsBillingFromOrg   bool      `json:"inherits_billing_from_org" db:"inherits_billing_from_org"`
+	CreatedAt                time.Time `json:"created_at" agtype:"created_at"`
+	UpdatedAt                time.Time `json:"updated_at" agtype:"updated_at"`
 }
 
 type Resource struct {
@@ -95,10 +101,15 @@ type User struct {
 // RBAC Models
 
 type Organization struct {
-	OrgID     string    `json:"org_id" db:"org_id"`
-	Name      string    `json:"name" db:"name"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	OrgID                   string  `json:"org_id" db:"org_id"`
+	Name                    string  `json:"name" db:"name"`
+	StripeCustomerID        *string `json:"stripe_customer_id,omitempty" db:"stripe_customer_id"`
+	StripeSubscriptionID    *string `json:"stripe_subscription_id,omitempty" db:"stripe_subscription_id"`
+	SubscriptionStatus      string  `json:"subscription_status" db:"subscription_status"`
+	SubscriptionPlan        string  `json:"subscription_plan" db:"subscription_plan"`
+	BillingEmail            *string `json:"billing_email,omitempty" db:"billing_email"`
+	CreatedAt               time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt               time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type Role struct {
@@ -160,4 +171,65 @@ type UserPermission struct {
 	ScopeType    string `json:"scope_type"`
 	ScopeID      string `json:"scope_id"`
 	HasPermission bool  `json:"has_permission"`
+}
+
+// Billing Models
+
+type BillingAccount struct {
+	BillingAccountID       string    `json:"billing_account_id" db:"billing_account_id"`
+	ScopeType              string    `json:"scope_type" db:"scope_type"` // "organization" or "project"
+	ScopeID                string    `json:"scope_id" db:"scope_id"`
+	StripeCustomerID       *string   `json:"stripe_customer_id,omitempty" db:"stripe_customer_id"`
+	StripeSubscriptionID   *string   `json:"stripe_subscription_id,omitempty" db:"stripe_subscription_id"`
+	SubscriptionStatus     string    `json:"subscription_status" db:"subscription_status"`
+	SubscriptionPlan       string    `json:"subscription_plan" db:"subscription_plan"`
+	BillingEmail           *string   `json:"billing_email,omitempty" db:"billing_email"`
+	CreatedAt              time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt              time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// Billing API Request/Response Types
+
+type CreateStripeCustomerRequest struct {
+	Email       string `json:"email" binding:"required"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
+type CreateStripeSubscriptionRequest struct {
+	PriceID         string `json:"price_id" binding:"required"`
+	PaymentMethodID string `json:"payment_method_id" binding:"required"`
+}
+
+type UpdateBillingRequest struct {
+	BillingEmail       *string `json:"billing_email"`
+	SubscriptionPlan   *string `json:"subscription_plan"`
+}
+
+type BillingInfo struct {
+	BillingAccount       BillingAccount `json:"billing_account"`
+	StripeCustomerPortal *string        `json:"stripe_customer_portal,omitempty"`
+	UpcomingInvoice      *StripeInvoice `json:"upcoming_invoice,omitempty"`
+	PaymentMethods       []StripePaymentMethod `json:"payment_methods,omitempty"`
+}
+
+type StripeInvoice struct {
+	ID             string  `json:"id"`
+	AmountDue      int64   `json:"amount_due"`
+	Currency       string  `json:"currency"`
+	PeriodStart    int64   `json:"period_start"`
+	PeriodEnd      int64   `json:"period_end"`
+	Status         string  `json:"status"`
+	HostedInvoiceURL *string `json:"hosted_invoice_url,omitempty"`
+}
+
+type StripePaymentMethod struct {
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Card *struct {
+		Brand    string `json:"brand"`
+		Last4    string `json:"last4"`
+		ExpMonth int64  `json:"exp_month"`
+		ExpYear  int64  `json:"exp_year"`
+	} `json:"card,omitempty"`
 }
