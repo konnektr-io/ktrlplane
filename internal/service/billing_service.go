@@ -8,11 +8,11 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stripe/stripe-go/v76"
-	"github.com/stripe/stripe-go/v76/customer"
 	"github.com/stripe/stripe-go/v76/billingportal/session"
-	"github.com/stripe/stripe-go/v76/subscription"
+	"github.com/stripe/stripe-go/v76/customer"
 	"github.com/stripe/stripe-go/v76/invoice"
 	"github.com/stripe/stripe-go/v76/paymentmethod"
+	"github.com/stripe/stripe-go/v76/subscription"
 )
 
 type BillingService struct {
