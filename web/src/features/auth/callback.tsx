@@ -37,7 +37,7 @@ export default function AuthCallbackPage() {
   }
 
   if (isAuthenticated) {
-    return null;
+    return <Navigate to="/projects" replace />;
   }
 
   return <Navigate to="/login" replace />;
