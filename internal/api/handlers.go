@@ -352,7 +352,7 @@ func (h *APIHandler) ListRoles(c *gin.Context) {
 			IsSystem:    true,
 		},
 		{
-			RoleID:      "role-2", 
+			RoleID:      "role-2",
 			Name:        "Editor",
 			DisplayName: "Editor",
 			Description: "Can create, edit, and delete resources",
@@ -360,13 +360,13 @@ func (h *APIHandler) ListRoles(c *gin.Context) {
 		},
 		{
 			RoleID:      "role-3",
-			Name:        "Viewer", 
+			Name:        "Viewer",
 			DisplayName: "Viewer",
 			Description: "Read-only access to resources",
 			IsSystem:    true,
 		},
 	}
-	
+
 	c.JSON(http.StatusOK, roles)
 }
 
@@ -390,19 +390,19 @@ func (h *APIHandler) SearchUsers(c *gin.Context) {
 
 func (h *APIHandler) ListProjectRoleAssignments(c *gin.Context) {
 	projectID := c.Param("projectId")
-	
+
 	assignments, err := h.RBACService.GetRoleAssignmentsWithInheritance(c.Request.Context(), "project", projectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch role assignments", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, assignments)
 }
 
 func (h *APIHandler) CreateProjectRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
-	
+
 	var req struct {
 		UserID   string `json:"user_id" binding:"required"`
 		RoleName string `json:"role_name" binding:"required"`
@@ -436,10 +436,10 @@ func (h *APIHandler) CreateProjectRoleAssignment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Role assignment created",
-		"project_id": projectID,
-		"user_id": req.UserID,
-		"role": req.RoleName,
+		"message":     "Role assignment created",
+		"project_id":  projectID,
+		"user_id":     req.UserID,
+		"role":        req.RoleName,
 		"assigned_by": user.ID,
 	})
 }
@@ -454,7 +454,7 @@ func (h *APIHandler) DeleteProjectRoleAssignment(c *gin.Context) {
 		return
 	}
 
-	hasPermission, err := h.RBACService.CheckPermission(c,user.ID,"manage_access","project",projectID)
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_access", "project", projectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
 		return
@@ -464,39 +464,39 @@ func (h *APIHandler) DeleteProjectRoleAssignment(c *gin.Context) {
 		return
 	}
 
-	err = h.RBACService.DeleteRoleAssignment(c,assignmentID)
+	err = h.RBACService.DeleteRoleAssignment(c, assignmentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role assignment", "details": err.Error()})
 		return
 	}
-	
+
 	// For now, just return success
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Role assignment deleted",
-		"project_id": projectID,
+		"message":       "Role assignment deleted",
+		"project_id":    projectID,
 		"assignment_id": assignmentID,
-	});
+	})
 }
 
 // --- Resource RBAC Handlers ---
 
 func (h *APIHandler) ListResourceRoleAssignments(c *gin.Context) {
-	_ = c.Param("projectId")  // TODO: use projectID for additional validation
+	_ = c.Param("projectId") // TODO: use projectID for additional validation
 	resourceID := c.Param("resourceId")
-	
+
 	assignments, err := h.RBACService.GetRoleAssignmentsWithInheritance(c.Request.Context(), "resource", resourceID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch role assignments", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, assignments)
 }
 
 func (h *APIHandler) CreateResourceRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
-	
+
 	var req struct {
 		UserID   string `json:"user_id" binding:"required"`
 		RoleName string `json:"role_name" binding:"required"`
@@ -529,11 +529,11 @@ func (h *APIHandler) CreateResourceRoleAssignment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Role assignment created",
-		"project_id": projectID,
+		"message":     "Role assignment created",
+		"project_id":  projectID,
 		"resource_id": resourceID,
-		"user_id": req.UserID,
-		"role": req.RoleName,
+		"user_id":     req.UserID,
+		"role":        req.RoleName,
 		"assigned_by": user.ID,
 	})
 }
@@ -542,14 +542,14 @@ func (h *APIHandler) DeleteResourceRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
 	assignmentID := c.Param("assignmentId")
-	
+
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
 
-	hasPermission, err := h.RBACService.CheckPermission(c,user.ID,"manage_access","resource",resourceID)
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_access", "resource", resourceID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
 		return
@@ -559,16 +559,16 @@ func (h *APIHandler) DeleteResourceRoleAssignment(c *gin.Context) {
 		return
 	}
 
-	err = h.RBACService.DeleteRoleAssignment(c,assignmentID)
+	err = h.RBACService.DeleteRoleAssignment(c, assignmentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role assignment", "details": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Role assignment deleted",
-		"project_id": projectID,
-		"resource_id": resourceID,
+		"message":       "Role assignment deleted",
+		"project_id":    projectID,
+		"resource_id":   resourceID,
 		"assignment_id": assignmentID,
 	})
 }
@@ -577,19 +577,19 @@ func (h *APIHandler) DeleteResourceRoleAssignment(c *gin.Context) {
 
 func (h *APIHandler) ListOrganizationRoleAssignments(c *gin.Context) {
 	orgID := c.Param("orgId")
-	
+
 	assignments, err := h.RBACService.GetRoleAssignmentsForScope(c.Request.Context(), "organization", orgID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch role assignments", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, assignments)
 }
 
 func (h *APIHandler) CreateOrganizationRoleAssignment(c *gin.Context) {
 	orgID := c.Param("orgId")
-	
+
 	var req struct {
 		UserID   string `json:"user_id" binding:"required"`
 		RoleName string `json:"role_name" binding:"required"`
@@ -622,26 +622,25 @@ func (h *APIHandler) CreateOrganizationRoleAssignment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Role assignment created",
+		"message":         "Role assignment created",
 		"organization_id": orgID,
-		"user_id": req.UserID,
-		"role": req.RoleName,
-		"assigned_by": user.ID,
+		"user_id":         req.UserID,
+		"role":            req.RoleName,
+		"assigned_by":     user.ID,
 	})
 }
 
 func (h *APIHandler) DeleteOrganizationRoleAssignment(c *gin.Context) {
 	orgID := c.Param("orgId")
 	assignmentID := c.Param("assignmentId")
-	
-	
+
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
 
-	hasPermission, err := h.RBACService.CheckPermission(c,user.ID,"manage_access","organization",orgID)
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_access", "organization", orgID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
 		return
@@ -651,16 +650,16 @@ func (h *APIHandler) DeleteOrganizationRoleAssignment(c *gin.Context) {
 		return
 	}
 
-	err = h.RBACService.DeleteRoleAssignment(c,assignmentID)
+	err = h.RBACService.DeleteRoleAssignment(c, assignmentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role assignment", "details": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Role assignment deleted",
+		"message":         "Role assignment deleted",
 		"organization_id": orgID,
-		"assignment_id": assignmentID,
+		"assignment_id":   assignmentID,
 	})
 }
 
@@ -670,7 +669,7 @@ func (h *APIHandler) DeleteOrganizationRoleAssignment(c *gin.Context) {
 func (h *APIHandler) GetBillingInfo(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
-	
+
 	if orgID := c.Param("orgId"); orgID != "" {
 		scopeType = "organization"
 		scopeID = orgID
@@ -713,7 +712,7 @@ func (h *APIHandler) GetBillingInfo(c *gin.Context) {
 func (h *APIHandler) UpdateBillingInfo(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
-	
+
 	if orgID := c.Param("orgId"); orgID != "" {
 		scopeType = "organization"
 		scopeID = orgID
@@ -762,7 +761,7 @@ func (h *APIHandler) UpdateBillingInfo(c *gin.Context) {
 func (h *APIHandler) CreateStripeCustomer(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
-	
+
 	if orgID := c.Param("orgId"); orgID != "" {
 		scopeType = "organization"
 		scopeID = orgID
@@ -811,7 +810,7 @@ func (h *APIHandler) CreateStripeCustomer(c *gin.Context) {
 func (h *APIHandler) CreateStripeSubscription(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
-	
+
 	if orgID := c.Param("orgId"); orgID != "" {
 		scopeType = "organization"
 		scopeID = orgID
@@ -860,7 +859,7 @@ func (h *APIHandler) CreateStripeSubscription(c *gin.Context) {
 func (h *APIHandler) CreateStripeCustomerPortal(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
-	
+
 	if orgID := c.Param("orgId"); orgID != "" {
 		scopeType = "organization"
 		scopeID = orgID
@@ -894,7 +893,7 @@ func (h *APIHandler) CreateStripeCustomerPortal(c *gin.Context) {
 	type PortalRequest struct {
 		ReturnURL string `json:"return_url" binding:"required"`
 	}
-	
+
 	var req PortalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -914,7 +913,7 @@ func (h *APIHandler) CreateStripeCustomerPortal(c *gin.Context) {
 func (h *APIHandler) CancelSubscription(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
-	
+
 	if orgID := c.Param("orgId"); orgID != "" {
 		scopeType = "organization"
 		scopeID = orgID
