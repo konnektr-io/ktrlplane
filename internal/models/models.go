@@ -60,6 +60,7 @@ func (r Resource) MarshalJSON() ([]byte, error) {
 // --- API Request/Response Payloads ---
 
 type CreateOrganizationRequest struct {
+	ID   string `json:"id" binding:"required"`
 	Name string `json:"name" binding:"required"`
 }
 
@@ -68,6 +69,7 @@ type UpdateOrganizationRequest struct {
 }
 
 type CreateProjectRequest struct {
+	ID          string `json:"id" binding:"required"`
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 	// OrgID       string `json:"org_id" binding:"required"`
@@ -80,6 +82,7 @@ type UpdateProjectRequest struct {
 }
 
 type CreateResourceRequest struct {
+	ID         string          `json:"id" binding:"required"`
 	Name       string          `json:"name" binding:"required"`
 	Type       string          `json:"type" binding:"required"` // e.g., "GraphDatabase"
 	SettingsJSON json.RawMessage `json:"settings_json"`             // Initial settings as JSON

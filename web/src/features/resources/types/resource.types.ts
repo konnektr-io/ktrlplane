@@ -12,6 +12,7 @@ export interface Resource {
 }
 
 export interface CreateResourceData {
+  id: string;
   name: string;
   type: string;
   settings_json?: Record<string, any>;

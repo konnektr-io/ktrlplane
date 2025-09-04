@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
-
-	"github.com/google/uuid"
+	"ktrlplane/internal/utils"
 )
 
 type ProjectService struct {
@@ -23,6 +22,11 @@ func NewProjectService() *ProjectService {
 
 // CreateProject creates a new project within an organization
 func (s *ProjectService) CreateProject(ctx context.Context, req models.CreateProjectRequest, userID string) (*models.Project, error) {
+	// Validate the provided ID
+	if err := utils.ValidateDNSID(req.ID); err != nil {
+		return nil, fmt.Errorf("invalid project ID: %w", err)
+	}
+
 	// For self-service, we need to either:
 	// 1. Create a new organization if user doesn't have one
 	// 2. Create project in user's existing organization with write access
@@ -36,7 +40,11 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	var orgID string
 	if len(orgs) == 0 {
 		// Self-service: Create new organization for the user using the project name
-		org, err := s.orgService.CreateOrganization(ctx, req.Name, userID)
+		orgReq := models.CreateOrganizationRequest{
+			ID:   req.ID + "-org", // Use project ID as base for org ID
+			Name: req.Name,
+		}
+		org, err := s.orgService.CreateOrganization(ctx, orgReq, userID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create organization: %w", err)
 		}
@@ -61,7 +69,6 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	
 	// Create project
 	pool := db.GetDB()
-	projectID := uuid.New().String()
 
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -75,7 +82,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 
 	// Insert project
 	project := &models.Project{
-		ProjectID:   projectID,
+		ProjectID:   req.ID,
 		OrgID:       &orgID,
 		Name:        req.Name,
 		Description: req.Description,
@@ -89,7 +96,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	}
 
 	// Assign project owner role to the user
-	err = s.rbacService.AssignRoleInTx(ctx, tx, userID, "Owner", "project", projectID, userID)
+	err = s.rbacService.AssignRoleInTx(ctx, tx, userID, "Owner", "project", req.ID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assign project owner role: %w", err)
 	}

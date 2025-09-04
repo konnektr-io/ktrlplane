@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { generateDNSId, validateDNSId, slugify } from '@/lib/dnsUtils';
 
 
 // Accept optional organizationId prop (for direct usage or from route params)
@@ -27,8 +28,19 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
     : allProjects;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState({ id: '', name: '', description: '' });
   const [isCreating, setIsCreating] = useState(false);
+
+  const handleNameChange = (name: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      name,
+      // Auto-generate ID from name if ID is empty or was auto-generated
+      id: prev.id === '' || prev.id === slugify(prev.name) + '-' + prev.id.slice(-4) 
+          ? generateDNSId(name) 
+          : prev.id
+    }));
+  };
 
   useEffect(() => {
     fetchProjects();
@@ -41,9 +53,21 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
       return;
     }
 
+    if (!formData.id.trim()) {
+      toast.error('Project ID is required');
+      return;
+    }
+
+    const idValidationError = validateDNSId(formData.id);
+    if (idValidationError) {
+      toast.error(idValidationError);
+      return;
+    }
+
     setIsCreating(true);
     try {
       const newProject = await createProject({
+        id: formData.id.trim(),
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
       });
@@ -51,7 +75,7 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
       if (newProject) {
         toast.success('Project created successfully!');
         setIsDialogOpen(false);
-        setFormData({ name: '', description: '' });
+        setFormData({ id: '', name: '', description: '' });
         fetchProjects(); // Refresh the list
       }
     } catch (error) {
@@ -94,10 +118,29 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
                   id="name"
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="Enter project name"
                   required
                 />
+              </div>
+              <div>
+                <Label htmlFor="id">ID *</Label>
+                <Input
+                  id="id"
+                  type="text"
+                  value={formData.id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, id: e.target.value }))}
+                  placeholder="project-id-4f2a"
+                  required
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Used for Kubernetes resources and DNS. Auto-generated from name but can be edited.
+                </p>
+                {formData.id && validateDNSId(formData.id) && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {validateDNSId(formData.id)}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="description">Description</Label>

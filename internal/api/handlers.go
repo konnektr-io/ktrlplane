@@ -55,7 +55,7 @@ func (h *APIHandler) CreateOrganization(c *gin.Context) {
 		return
 	}
 
-	org, err := h.OrganizationService.CreateOrganization(c.Request.Context(), req.Name, user.ID)
+	org, err := h.OrganizationService.CreateOrganization(c.Request.Context(), req, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create organization", "details": err.Error()})
 		return

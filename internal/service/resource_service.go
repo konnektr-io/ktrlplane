@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
-
-	"github.com/google/uuid"
+	"ktrlplane/internal/utils"
 )
 
 type ResourceService struct {
@@ -21,6 +20,11 @@ func NewResourceService() *ResourceService {
 
 // CreateResource creates a new resource if user has write access to the project
 func (s *ResourceService) CreateResource(ctx context.Context, projectID string, req models.CreateResourceRequest, userID string) (*models.Resource, error) {
+	// Validate the provided ID
+	if err := utils.ValidateDNSID(req.ID); err != nil {
+		return nil, fmt.Errorf("invalid resource ID: %w", err)
+	}
+
 	// Check write permission on project (resources inherit from project permissions)
 	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "write", "project", projectID)
 	if err != nil {
@@ -30,14 +34,12 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 		return nil, fmt.Errorf("insufficient permissions to create resource")
 	}
 
-	resourceID := uuid.New().String()
-
-	err = db.ExecQuery(ctx, db.CreateResourceQuery, resourceID, projectID, req.Name, req.Type, req.SettingsJSON)
+	err = db.ExecQuery(ctx, db.CreateResourceQuery, req.ID, projectID, req.Name, req.Type, req.SettingsJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	return s.GetResourceByID(ctx, projectID, resourceID, userID)
+	return s.GetResourceByID(ctx, projectID, req.ID, userID)
 }
 
 // GetResourceByID returns a resource if user has read access to the project

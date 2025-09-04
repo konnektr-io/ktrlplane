@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Project } from "../types/project.types";
+import { Project, CreateProjectData } from "../types/project.types";
 import apiClient from "@/lib/axios";
 import { toast } from "sonner";
 import axios from "axios";
@@ -14,10 +14,7 @@ interface ProjectState {
   error: string | null;
   fetchProjects: () => Promise<void>;
   fetchProjectById: (projectId: string) => Promise<void>;
-  createProject: (data: {
-    name: string;
-    description?: string;
-  }) => Promise<Project | null>;
+  createProject: (data: CreateProjectData) => Promise<Project | null>;
   updateProject: (
     projectId: string,
     data: Partial<{ name: string; description: string }>

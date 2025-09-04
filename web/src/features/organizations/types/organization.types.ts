@@ -6,6 +6,7 @@ export interface Organization {
 }
 
 export interface CreateOrganizationData {
+  id: string;
   name: string;
 }
 

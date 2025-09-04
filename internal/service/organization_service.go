@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
-
-	"github.com/google/uuid"
+	"ktrlplane/internal/utils"
 )
 
 type OrganizationService struct {
@@ -20,10 +19,13 @@ func NewOrganizationService() *OrganizationService {
 }
 
 // CreateOrganization creates a new organization and assigns the creator as owner
-func (s *OrganizationService) CreateOrganization(ctx context.Context, name, ownerUserID string) (*models.Organization, error) {
-	pool := db.GetDB()
+func (s *OrganizationService) CreateOrganization(ctx context.Context, req models.CreateOrganizationRequest, ownerUserID string) (*models.Organization, error) {
+	// Validate the provided ID
+	if err := utils.ValidateDNSID(req.ID); err != nil {
+		return nil, fmt.Errorf("invalid organization ID: %w", err)
+	}
 
-	orgID := uuid.New().String()
+	pool := db.GetDB()
 
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -37,8 +39,8 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, name, owne
 
 	// Insert organization
 	org := &models.Organization{
-		OrgID: orgID,
-		Name:  name,
+		OrgID: req.ID,
+		Name:  req.Name,
 	}
 
 	err = tx.QueryRow(ctx, db.CreateOrganizationWithTimestampsQuery,
@@ -48,7 +50,7 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, name, owne
 	}
 
 	// Assign owner role to the user
-	err = s.rbacService.AssignRoleInTx(ctx, tx, ownerUserID, "Owner", "organization", orgID, ownerUserID)
+	err = s.rbacService.AssignRoleInTx(ctx, tx, ownerUserID, "Owner", "organization", req.ID, ownerUserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assign owner role: %w", err)
 	}

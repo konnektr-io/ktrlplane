@@ -9,6 +9,7 @@ import { useResourceStore } from '../store/resourceStore';
 import { ResourceSettingsForm } from '../components/ResourceSettingsForm';
 import { defaultConfigurations } from '@/lib/resourceSchemas';
 import { Database, Workflow, ArrowLeft } from 'lucide-react';
+import { generateDNSId, validateDNSId, slugify } from '@/lib/dnsUtils';
 
 const resourceTypes = [
   { 
@@ -33,16 +34,35 @@ export default function CreateResourcePage() {
   const [step, setStep] = useState<'basic' | 'configuration'>('basic');
   const [isCreating, setIsCreating] = useState(false);
   const [basicData, setBasicData] = useState({
+    id: '',
     name: '',
     type: '',
   });
 
   const handleBasicSubmit = () => {
-    if (!basicData.name.trim() || !basicData.type) {
-      toast.error('Name and type are required');
+    if (!basicData.name.trim() || !basicData.type || !basicData.id.trim()) {
+      toast.error('Name, ID, and type are required');
       return;
     }
+
+    const idValidationError = validateDNSId(basicData.id);
+    if (idValidationError) {
+      toast.error(idValidationError);
+      return;
+    }
+
     setStep('configuration');
+  };
+
+  const handleNameChange = (name: string) => {
+    setBasicData(prev => ({ 
+      ...prev, 
+      name,
+      // Auto-generate ID from name if ID is empty or was auto-generated
+      id: prev.id === '' || prev.id === slugify(prev.name) + '-' + prev.id.slice(-4) 
+          ? generateDNSId(name) 
+          : prev.id
+    }));
   };
 
   const handleConfigurationSubmit = async (configuration: any) => {
@@ -51,6 +71,7 @@ export default function CreateResourcePage() {
     setIsCreating(true);
     try {
       const newResource = await createResource(projectId, {
+        id: basicData.id.trim(),
         name: basicData.name.trim(),
         type: basicData.type as 'Konnektr.DigitalTwins' | 'Konnektr.Flows',
         settings_json: configuration,
@@ -138,13 +159,32 @@ export default function CreateResourcePage() {
                   id="name"
                   type="text"
                   value={basicData.name}
-                  onChange={(e) => setBasicData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="e.g., production-digital-twins"
                   className="w-full"
                 />
                 <p className="text-sm text-muted-foreground">
-                  Use lowercase letters, numbers, and hyphens only
+                  Display name for your resource
                 </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="id">ID *</Label>
+                <Input
+                  id="id"
+                  type="text"
+                  value={basicData.id}
+                  onChange={(e) => setBasicData(prev => ({ ...prev, id: e.target.value }))}
+                  placeholder="e.g., production-digital-twins-4f2a"
+                  className="w-full"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Used for Kubernetes resources and DNS. Auto-generated from name but can be edited.
+                </p>
+                {basicData.id && validateDNSId(basicData.id) && (
+                  <p className="text-sm text-red-500">
+                    {validateDNSId(basicData.id)}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -201,7 +241,7 @@ export default function CreateResourcePage() {
           <div className="flex gap-3">
             <Button 
               onClick={handleBasicSubmit}
-              disabled={!basicData.name.trim() || !basicData.type}
+              disabled={!basicData.name.trim() || !basicData.type || !basicData.id.trim()}
               className="flex-1"
             >
               Continue to Configuration
