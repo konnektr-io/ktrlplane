@@ -1,4 +1,5 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useUserPermissions } from '@/features/access/hooks/useUserPermissions';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -56,6 +57,9 @@ export default function OrganizationSidebarNav() {
   const { orgId } = useParams<{ orgId: string }>();
   const { state } = useSidebar();
 
+  // Fetch permissions for current organization
+  const { permissions } = useUserPermissions('organization', orgId);
+
   const isCollapsed = state === 'collapsed';
 
   return (
@@ -68,11 +72,21 @@ export default function OrganizationSidebarNav() {
             {organizationMenuItems.map((item) => {
               const fullPath = `/organizations/${orgId}${item.path ? `/${item.path}` : ''}`;
               const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/organizations/${orgId}` || location.pathname === `/organizations/${orgId}/`));
+
+              // Only allow Billing if user has manage_billing permission
+              const isBilling = item.title === 'Billing';
+              const canManageBilling = permissions?.includes('manage_billing');
+              const isDisabled = isBilling && !canManageBilling;
+
               const menuButton = (
-                <SidebarMenuButton 
+                <SidebarMenuButton
                   asChild
                   isActive={isActive}
-                  onClick={() => navigate(fullPath)}
+                  onClick={() => {
+                    if (!isDisabled) navigate(fullPath);
+                  }}
+                  disabled={isDisabled}
+                  style={isDisabled ? { opacity: 0.5, pointerEvents: 'none', cursor: 'not-allowed' } : {}}
                 >
                   <div className="flex items-center gap-2 cursor-pointer">
                     <item.icon className="h-4 w-4" />
@@ -90,6 +104,9 @@ export default function OrganizationSidebarNav() {
                       </TooltipTrigger>
                       <TooltipContent side="right">
                         <p>{item.title}</p>
+                        {isDisabled && (
+                          <span className="text-xs text-muted-foreground block mt-1">You do not have permission to manage billing</span>
+                        )}
                       </TooltipContent>
                     </Tooltip>
                   ) : (

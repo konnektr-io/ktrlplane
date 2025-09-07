@@ -1,5 +1,6 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useProjectStore } from '../../store/projectStore';
+import { useUserPermissions } from '@/features/access/hooks/useUserPermissions';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -64,6 +65,9 @@ export default function ProjectSidebarNav() {
   const { projectId } = useParams<{ projectId: string }>();
   const { currentProject, projects, setCurrentProject } = useProjectStore();
   const { state } = useSidebar();
+
+  // Fetch permissions for current project
+  const { permissions } = useUserPermissions('project', projectId);
 
   const handleProjectChange = (newProjectId: string) => {
     const selected = projects.find((p) => p.project_id === newProjectId) || null;
@@ -134,11 +138,21 @@ export default function ProjectSidebarNav() {
             {projectMenuItems.map((item) => {
               const fullPath = `/projects/${projectId}${item.path ? `/${item.path}` : ''}`;
               const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/projects/${projectId}` || location.pathname === `/projects/${projectId}/`));
+
+              // Only allow Billing if user has manage_billing permission
+              const isBilling = item.title === 'Billing';
+              const canManageBilling = permissions?.includes('manage_billing');
+              const isDisabled = isBilling && !canManageBilling;
+
               const menuButton = (
-                <SidebarMenuButton 
+                <SidebarMenuButton
                   asChild
                   isActive={isActive}
-                  onClick={() => navigate(fullPath)}
+                  onClick={() => {
+                    if (!isDisabled) navigate(fullPath);
+                  }}
+                  disabled={isDisabled}
+                  style={isDisabled ? { opacity: 0.5, pointerEvents: 'none', cursor: 'not-allowed' } : {}}
                 >
                   <div className="flex items-center gap-2 cursor-pointer">
                     <item.icon className="h-4 w-4" />
@@ -156,6 +170,9 @@ export default function ProjectSidebarNav() {
                       </TooltipTrigger>
                       <TooltipContent side="right">
                         <p>{item.title}</p>
+                        {isDisabled && (
+                          <span className="text-xs text-muted-foreground block mt-1">You do not have permission to manage billing</span>
+                        )}
                       </TooltipContent>
                     </Tooltip>
                   ) : (
