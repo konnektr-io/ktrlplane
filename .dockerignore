@@ -9,9 +9,6 @@ instructions.md
 # Documentation and deployment examples
 docs/
 
-# Exclude web directory from backend build
-web/
-
 # Node modules (handled separately in frontend)
 node_modules
 npm-debug.log*
