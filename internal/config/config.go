@@ -38,7 +38,13 @@ type StripeConfig struct {
 	SecretKey           string            `mapstructure:"secret_key"`
 	PublishableKey      string            `mapstructure:"publishable_key"`
 	WebhookSecret       string            `mapstructure:"webhook_secret"`
-	ProductIDs          map[string]string `mapstructure:"product_ids"`
+	Products            []StripeProduct   `mapstructure:"products"`
+}
+
+type StripeProduct struct {
+	ResourceType string `mapstructure:"resource_type"`
+	SKU          string `mapstructure:"sku"`
+	ProductID    string `mapstructure:"product_id"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
@@ -105,11 +111,11 @@ func loadFromEnv() (Config, error) {
 			Audience: os.Getenv("KTRLPLANE_AUTH0_AUDIENCE"),
 			ClientID: getEnvWithDefault("KTRLPLANE_AUTH0_CLIENT_ID", ""),
 		},
-	       Stripe: StripeConfig{
-		       SecretKey:      getEnvWithDefault("STRIPE_SECRET_KEY", ""),
-		       PublishableKey: getEnvWithDefault("STRIPE_PUBLISHABLE_KEY", ""),
-		       WebhookSecret:  getEnvWithDefault("STRIPE_WEBHOOK_SECRET", ""),
-	       },
+		Stripe: StripeConfig{
+			SecretKey:      getEnvWithDefault("STRIPE_SECRET_KEY", ""),
+			PublishableKey: getEnvWithDefault("STRIPE_PUBLISHABLE_KEY", ""),
+			WebhookSecret:  getEnvWithDefault("STRIPE_WEBHOOK_SECRET", ""),
+		},
 	}
 
 	return config, nil

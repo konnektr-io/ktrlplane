@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"ktrlplane/internal/config"
 	"ktrlplane/internal/models"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stripe/stripe-go/v82"
@@ -228,11 +229,13 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 	
 	// Build subscription items based on resources
 	var items []*stripe.SubscriptionItemsParams
-	for resourceType, count := range resourceCounts {
+	for resourceKey, count := range resourceCounts {
 		if count > 0 {
-			priceID, err := s.getPriceIDForResourceType(resourceType)
+			// Parse resourceKey which is now "resourceType:sku"
+			resourceType, sku := parseResourceKey(resourceKey)
+			priceID, err := s.getPriceIDForResourceType(resourceType, sku)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get price ID for resource type %s: %w", resourceType, err)
+				return nil, fmt.Errorf("failed to get price ID for resource type %s with SKU %s: %w", resourceType, sku, err)
 			}
 			items = append(items, &stripe.SubscriptionItemsParams{
 				Price:    stripe.String(priceID),
@@ -515,24 +518,21 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 	return billingInfo, nil
 }
 
-// getProductIDForResourceType maps resource types to Stripe product IDs
-func (s *BillingService) getProductIDForResourceType(resourceType string) string {
-	productIDs := s.config.Stripe.ProductIDs
-	switch resourceType {
-	case "Konnektr.DigitalTwins":
-		return productIDs["digital_twins"]
-	case "Konnektr.Flows":
-		return productIDs["flows"]
-	default:
-		return ""
+// getProductIDForResourceType maps resource types and SKUs to Stripe product IDs
+func (s *BillingService) getProductIDForResourceType(resourceType, sku string) string {
+	for _, product := range s.config.Stripe.Products {
+		if product.ResourceType == resourceType && product.SKU == sku {
+			return product.ProductID
+		}
 	}
+	return ""
 }
 
-// getPriceIDForResourceType gets the default price ID for a resource type
-func (s *BillingService) getPriceIDForResourceType(resourceType string) (string, error) {
-	productID := s.getProductIDForResourceType(resourceType)
+// getPriceIDForResourceType gets the default price ID for a resource type and SKU
+func (s *BillingService) getPriceIDForResourceType(resourceType, sku string) (string, error) {
+	productID := s.getProductIDForResourceType(resourceType, sku)
 	if productID == "" {
-		return "", fmt.Errorf("no product ID configured for resource type %s", resourceType)
+		return "", fmt.Errorf("no product ID configured for resource type %s with SKU %s", resourceType, sku)
 	}
 	
 	priceID, err := s.getDefaultPriceForProduct(productID)
@@ -541,6 +541,16 @@ func (s *BillingService) getPriceIDForResourceType(resourceType string) (string,
 	}
 	
 	return priceID, nil
+}
+
+// parseResourceKey splits a resourceKey like "Konnektr.DigitalTwins:free" into resourceType and sku
+func parseResourceKey(resourceKey string) (resourceType, sku string) {
+	parts := strings.Split(resourceKey, ":")
+	if len(parts) == 2 {
+		return parts[0], parts[1]
+	}
+	// Fallback for resources without SKU (default to free)
+	return resourceKey, "free"
 }
 
 // getDefaultPriceForProduct fetches the default price for a Stripe product
@@ -564,7 +574,7 @@ func (s *BillingService) getDefaultPriceForProduct(productID string) (string, er
 	return "", fmt.Errorf("no active prices found for product %s", productID)
 }
 
-// getResourceCounts counts resources by type for a given scope (organization or project)
+// getResourceCounts counts resources by type and SKU for a given scope (organization or project)
 func (s *BillingService) getResourceCounts(scopeType, scopeID string) (map[string]int, error) {
 	resourceCounts := make(map[string]int)
 	
@@ -572,19 +582,19 @@ func (s *BillingService) getResourceCounts(scopeType, scopeID string) (map[strin
 	if scopeType == "organization" {
 		// For organizations, count resources across all projects in the organization
 		query = `
-			SELECT r.type, COUNT(*) as count
+			SELECT r.type, COALESCE(r.sku, 'free') as sku, COUNT(*) as count
 			FROM ktrlplane.resources r
 			JOIN ktrlplane.projects p ON r.project_id = p.project_id
 			WHERE p.org_id = $1
-			GROUP BY r.type
+			GROUP BY r.type, COALESCE(r.sku, 'free')
 		`
 	} else {
 		// For projects, count resources directly in the project
 		query = `
-			SELECT r.type, COUNT(*) as count
+			SELECT r.type, COALESCE(r.sku, 'free') as sku, COUNT(*) as count
 			FROM ktrlplane.resources r
 			WHERE r.project_id = $1
-			GROUP BY r.type
+			GROUP BY r.type, COALESCE(r.sku, 'free')
 		`
 	}
 	
@@ -595,12 +605,14 @@ func (s *BillingService) getResourceCounts(scopeType, scopeID string) (map[strin
 	defer rows.Close()
 	
 	for rows.Next() {
-		var resourceType string
+		var resourceType, sku string
 		var count int
-		if err := rows.Scan(&resourceType, &count); err != nil {
+		if err := rows.Scan(&resourceType, &sku, &count); err != nil {
 			return nil, fmt.Errorf("failed to scan resource count: %w", err)
 		}
-		resourceCounts[resourceType] = count
+		// Create composite key: "resourceType:sku"
+		resourceKey := fmt.Sprintf("%s:%s", resourceType, sku)
+		resourceCounts[resourceKey] = count
 	}
 	
 	return resourceCounts, nil
@@ -610,16 +622,19 @@ func (s *BillingService) getResourceCounts(scopeType, scopeID string) (map[strin
 func (s *BillingService) createSubscriptionWithResources(customerID string, resourceCounts map[string]int) (*stripe.Subscription, error) {
 	var subscriptionItems []*stripe.SubscriptionItemsParams
 	
-	// Create subscription items for each resource type
-	for resourceType, count := range resourceCounts {
+	// Create subscription items for each resource type:sku combination
+	for resourceKey, count := range resourceCounts {
 		if count <= 0 {
 			continue
 		}
 
-		// Get product ID for this resource type
-		productID := s.getProductIDForResourceType(resourceType)
+		// Parse resourceKey which is now "resourceType:sku"
+		resourceType, sku := parseResourceKey(resourceKey)
+		
+		// Get product ID for this resource type and SKU
+		productID := s.getProductIDForResourceType(resourceType, sku)
 		if productID == "" {
-			fmt.Printf("Warning: No product ID configured for resource type %s\n", resourceType)
+			fmt.Printf("Warning: No product ID configured for resource type %s with SKU %s\n", resourceType, sku)
 			continue
 		}
 

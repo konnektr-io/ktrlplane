@@ -1,13 +1,12 @@
 import { useAuth0 } from '@auth0/auth0-react';
-import { Navigate } from 'react-router-dom';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
   // Show loading spinner while Auth0 is loading
   if (isLoading) {
@@ -21,9 +20,27 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Do not redirect to /login if on /callback route
+  // Immediately redirect to Auth0 if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      loginWithRedirect({
+        appState: { 
+          returnTo: window.location.pathname + window.location.search 
+        }
+      });
+    }
+  }, [isAuthenticated, isLoading, loginWithRedirect]);
+
+  // Don't render anything while redirecting
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

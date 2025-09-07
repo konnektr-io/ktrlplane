@@ -1,15 +1,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
 
 export default function AuthCallbackPage() {
-  const { isLoading, error, isAuthenticated } = useAuth0();
-
-  useEffect(() => {
-    if (error) {
-      console.error('Auth0 callback error:', error);
-    }
-  }, [error]);
+  const { isLoading, error } = useAuth0();
 
   if (isLoading) {
     return (
@@ -28,17 +20,14 @@ export default function AuthCallbackPage() {
         <div className="text-center">
           <h2 className="text-xl font-semibold text-red-600">Authentication Error</h2>
           <p className="mt-2 text-muted-foreground">{error.message}</p>
-          <a href="/login" className="mt-4 inline-block text-primary hover:underline">
-            Try Again
+          <a href="/catalog" className="mt-4 inline-block text-primary hover:underline">
+            Back to Catalog
           </a>
         </div>
       </div>
     );
   }
 
-  if (isAuthenticated) {
-    return <Navigate to="/projects" replace />;
-  }
-
-  return <Navigate to="/login" replace />;
+  // Auth0 will handle the redirect via onRedirectCallback
+  return null;
 }

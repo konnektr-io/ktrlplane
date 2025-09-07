@@ -23,8 +23,15 @@ import OrganizationOverviewPage from '@/features/organizations/pages/Organizatio
 import OrganizationSettingsPage from '@/features/organizations/pages/OrganizationSettingsPage';
 import ResourceSettingsPage from '@/features/resources/pages/ResourceSettingsPage';
 import BillingPage from '@/features/billing/pages/BillingPage';
+import CatalogPage from '@/features/catalog/CatalogPage';
+import CatalogDeployPage from '@/features/catalog/CatalogDeployPage';
 
 function App() {
+  const onRedirectCallback = (appState?: any) => {
+    // Navigate to the return URL or default to projects
+    window.location.replace(appState?.returnTo || '/projects');
+  };
+
   return (
     <Auth0Provider
       domain={import.meta.env.VITE_AUTH0_DOMAIN}
@@ -34,6 +41,9 @@ function App() {
         audience: import.meta.env.VITE_AUTH0_AUDIENCE,
         scope: "openid profile email access:platform"
       }}
+      useRefreshTokens={true}
+      cacheLocation="localstorage"
+      onRedirectCallback={onRedirectCallback}
     >
       <AuthSetup>
         <Router>
@@ -41,6 +51,8 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/callback" element={<AuthCallbackPage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/catalog/deploy/:resourceTypeId" element={<CatalogDeployPage />} />
 
             {/* Project Selection */}
             <Route element={<ProtectedRoute><ProjectSelectorLayout /></ProtectedRoute>}>
