@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
+import { useUserPermissions } from '@/features/access/hooks/useUserPermissions';
 import { ResourceSettingsForm } from '../components/ResourceSettingsForm';
 import { resourceSchemas, ResourceType } from '../schemas';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,9 @@ import { useResourceStore } from '../store/resourceStore';
 export default function ResourceSettingsPage() {
   const { projectId, resourceId } = useParams<{ projectId: string; resourceId: string }>();
   const { currentResource, updateResource } = useResourceStore();
+  // Permissions for resource (prefer resource, fallback to project)
+  const { permissions: resourcePermissions } = useUserPermissions('resource', resourceId);
+  const { permissions: projectPermissions } = useUserPermissions('project', projectId);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentResource?.name || '');
   const [settingsJson, setSettingsJson] = useState(
@@ -32,6 +36,9 @@ export default function ResourceSettingsPage() {
     setSaving(false);
     setEditing(false);
   };
+
+  // Only allow editing if user has 'write' on resource or project
+  const canEdit = resourcePermissions?.includes('write') || projectPermissions?.includes('write');
 
   return (
     <div className="space-y-6">
@@ -157,7 +164,11 @@ export default function ResourceSettingsPage() {
                     </>
                   );
                 } else if (!editing) {
-                  return <Button size="sm" onClick={() => setEditing(true)}>Edit</Button>;
+                  return (
+                    <Button size="sm" onClick={() => setEditing(true)} disabled={!canEdit} title={!canEdit ? 'You do not have permission to edit this resource' : undefined}>
+                      Edit
+                    </Button>
+                  );
                 }
                 return null;
               })()}

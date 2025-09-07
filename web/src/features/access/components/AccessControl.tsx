@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccessStore } from '../store/accessStore';
+import { useUserPermissions } from '../hooks/useUserPermissions';
 import { AccessControlContextType, RoleAssignment } from '../types';
 import RolePermissionsTooltip from './RolePermissionsTooltip';
 import {
@@ -63,6 +64,9 @@ export default function AccessControl({ context }: AccessControlProps) {
     removeUser,
   } = useAccessStore();
 
+  // Permissions for this scope
+  const { permissions } = useUserPermissions(context.scopeType, context.scopeId);
+
   const [removeConfirmation, setRemoveConfirmation] = useState<RoleAssignment | null>(null);
 
   useEffect(() => {
@@ -120,7 +124,12 @@ export default function AccessControl({ context }: AccessControlProps) {
             Manage who has access to this {context.scopeType} and what they can do
           </p>
         </div>
-        <Button onClick={() => navigate(getCreateAccessUrl())} className="gap-2">
+        <Button
+          onClick={() => navigate(getCreateAccessUrl())}
+          className="gap-2"
+          disabled={!permissions?.includes('manage_access')}
+          title={!permissions?.includes('manage_access') ? 'You do not have permission to manage access' : undefined}
+        >
           <UserPlus className="h-4 w-4" />
           Grant Access
         </Button>
@@ -158,7 +167,12 @@ export default function AccessControl({ context }: AccessControlProps) {
               <p className="text-muted-foreground mb-4">
                 Start by granting access to users for this {context.scopeType}
               </p>
-              <Button onClick={() => navigate(getCreateAccessUrl())} className="gap-2">
+              <Button
+                onClick={() => navigate(getCreateAccessUrl())}
+                className="gap-2"
+                disabled={!permissions?.includes('manage_access')}
+                title={!permissions?.includes('manage_access') ? 'You do not have permission to manage access' : undefined}
+              >
                 <UserPlus className="h-4 w-4" />
                 Grant Access
               </Button>
@@ -238,8 +252,9 @@ export default function AccessControl({ context }: AccessControlProps) {
                           {assignment.inheritance_type === 'direct' ? (
                             <>
                               <DropdownMenuItem
-                                onClick={() => setRemoveConfirmation(assignment)}
+                                onClick={() => permissions?.includes('manage_access') && setRemoveConfirmation(assignment)}
                                 className="text-red-600 focus:text-red-600"
+                                disabled={!permissions?.includes('manage_access')}
                               >
                                 <UserX className="h-4 w-4 mr-2" />
                                 Remove Access

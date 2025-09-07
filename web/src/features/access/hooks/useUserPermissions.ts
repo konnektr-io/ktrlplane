@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchUserPermissions } from "../api/permissions";
 
 export function useUserPermissions(
-  scopeType: "organization" | "project",
+  scopeType: "organization" | "project" | "resource",
   scopeId: string | undefined | null
 ) {
   const [permissions, setPermissions] = useState<string[] | null>(null);
