@@ -200,8 +200,8 @@ type CreateStripeCustomerRequest struct {
 }
 
 type CreateStripeSubscriptionRequest struct {
-	PriceID         string `json:"price_id" binding:"required"`
-	PaymentMethodID string `json:"payment_method_id" binding:"required"`
+	PriceID         string `json:"price_id,omitempty"`
+	PaymentMethodID string `json:"payment_method_id,omitempty"`
 }
 
 type UpdateBillingRequest struct {
@@ -214,6 +214,8 @@ type BillingInfo struct {
 	StripeCustomerPortal *string        `json:"stripe_customer_portal,omitempty"`
 	UpcomingInvoice      *StripeInvoice `json:"upcoming_invoice,omitempty"`
 	PaymentMethods       []StripePaymentMethod `json:"payment_methods,omitempty"`
+	SubscriptionItems    []StripeSubscriptionItem `json:"subscription_items,omitempty"`
+	SubscriptionDetails  *StripeSubscriptionDetails `json:"subscription_details,omitempty"`
 }
 
 type StripeInvoice struct {
@@ -235,4 +237,31 @@ type StripePaymentMethod struct {
 		ExpMonth int64  `json:"exp_month"`
 		ExpYear  int64  `json:"exp_year"`
 	} `json:"card,omitempty"`
+}
+
+type StripeSubscriptionItem struct {
+	ID       string `json:"id"`
+	Quantity int64  `json:"quantity"`
+	Price    *struct {
+		ID            string `json:"id"`
+		UnitAmount    int64  `json:"unit_amount"`
+		Currency      string `json:"currency"`
+		Recurring     *struct {
+			Interval      string `json:"interval"`
+			IntervalCount int64  `json:"interval_count"`
+		} `json:"recurring,omitempty"`
+		Product *struct {
+			ID          string `json:"id"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+		} `json:"product,omitempty"`
+	} `json:"price,omitempty"`
+}
+
+type StripeSubscriptionDetails struct {
+	ID                 string `json:"id"`
+	Status             string `json:"status"`
+	CurrentPeriodStart int64  `json:"current_period_start"`
+	CurrentPeriodEnd   int64  `json:"current_period_end"`
+	CancelAtPeriodEnd  bool   `json:"cancel_at_period_end"`
 }

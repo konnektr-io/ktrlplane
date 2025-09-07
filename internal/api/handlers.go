@@ -824,9 +824,12 @@ func (h *APIHandler) CreateStripeSubscription(c *gin.Context) {
 
 	var req models.CreateStripeSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Printf("JSON binding error: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	fmt.Printf("Request parsed successfully: %+v\n", req)
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
@@ -846,8 +849,10 @@ func (h *APIHandler) CreateStripeSubscription(c *gin.Context) {
 		return
 	}
 
+	fmt.Printf("About to call billing service CreateStripeSubscription\n")
 	account, err := h.BillingService.CreateStripeSubscription(scopeType, scopeID, req)
 	if err != nil {
+		fmt.Printf("Billing service error: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create subscription", "details": err.Error()})
 		return
 	}

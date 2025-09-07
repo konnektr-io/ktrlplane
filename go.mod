@@ -9,6 +9,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v76 v76.25.0
+	github.com/stripe/stripe-go/v82 v82.5.0
 )
 
 require (

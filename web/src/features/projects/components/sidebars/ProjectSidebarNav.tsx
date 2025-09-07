@@ -26,7 +26,8 @@ import {
   Database, 
   Settings,
   Shield,
-  FolderOpen
+  FolderOpen,
+  CreditCard
 } from 'lucide-react';
 
 const projectMenuItems = [
@@ -44,6 +45,11 @@ const projectMenuItems = [
     title: 'Access & Permissions', 
     icon: Shield,
     path: 'access',
+  },
+  {
+    title: 'Billing',
+    icon: CreditCard,
+    path: 'billing',
   },
   {
     title: 'Settings',

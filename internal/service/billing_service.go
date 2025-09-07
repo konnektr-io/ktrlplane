@@ -4,23 +4,28 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"ktrlplane/internal/config"
 	"ktrlplane/internal/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/stripe/stripe-go/v76"
-	"github.com/stripe/stripe-go/v76/billingportal/session"
-	"github.com/stripe/stripe-go/v76/customer"
-	"github.com/stripe/stripe-go/v76/invoice"
-	"github.com/stripe/stripe-go/v76/paymentmethod"
-	"github.com/stripe/stripe-go/v76/subscription"
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/billingportal/session"
+	"github.com/stripe/stripe-go/v82/customer"
+	"github.com/stripe/stripe-go/v82/paymentmethod"
+	"github.com/stripe/stripe-go/v82/price"
+	"github.com/stripe/stripe-go/v82/subscription"
 )
 
 type BillingService struct {
-	db *pgxpool.Pool
+	db     *pgxpool.Pool
+	config *config.Config
 }
 
-func NewBillingService(db *pgxpool.Pool) *BillingService {
-	return &BillingService{db: db}
+func NewBillingService(db *pgxpool.Pool, cfg *config.Config) *BillingService {
+	return &BillingService{
+		db:     db,
+		config: cfg,
+	}
 }
 
 // GetBillingAccount retrieves billing information for a scope (organization or project)
@@ -148,11 +153,32 @@ func (s *BillingService) CreateStripeCustomer(scopeType, scopeID string, req mod
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Stripe customer: %w", err)
 	}
+
+	// Get existing resources to create subscription items
+	resourceCounts, err := s.getResourceCounts(scopeType, scopeID)
+	if err != nil {
+		fmt.Printf("Warning: Failed to get resource counts: %v\n", err)
+		resourceCounts = make(map[string]int)
+	}
+
+	// Create subscription with resource-based items if we have resources
+	var subscriptionID *string
+	var subscriptionStatus string = "trial"
 	
-	// Update billing account with Stripe customer ID
+	if len(resourceCounts) > 0 {
+		subscription, err := s.createSubscriptionWithResources(stripeCustomer.ID, resourceCounts)
+		if err != nil {
+			fmt.Printf("Warning: Failed to create subscription: %v\n", err)
+		} else if subscription != nil {
+			subscriptionID = &subscription.ID
+			subscriptionStatus = string(subscription.Status)
+		}
+	}
+
+	// Update billing account with Stripe customer ID and subscription ID (if created)
 	query := `
 		UPDATE ktrlplane.billing_accounts 
-		SET stripe_customer_id = $3, billing_email = $4, updated_at = NOW()
+		SET stripe_customer_id = $3, stripe_subscription_id = $4, subscription_status = $5, billing_email = $6, updated_at = NOW()
 		WHERE scope_type = $1 AND scope_id = $2
 		RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
 		          stripe_subscription_id, subscription_status, subscription_plan, 
@@ -160,7 +186,7 @@ func (s *BillingService) CreateStripeCustomer(scopeType, scopeID string, req mod
 	`
 	
 	var account models.BillingAccount
-	row := s.db.QueryRow(context.Background(), query, scopeType, scopeID, stripeCustomer.ID, req.Email)
+	row := s.db.QueryRow(context.Background(), query, scopeType, scopeID, stripeCustomer.ID, subscriptionID, subscriptionStatus, req.Email)
 	
 	err = row.Scan(
 		&account.BillingAccountID,
@@ -194,15 +220,35 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 		return nil, errors.New("Stripe customer not found")
 	}
 	
+	// Get resource counts for subscription items
+	resourceCounts, err := s.getResourceCounts(scopeType, scopeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get resource counts: %w", err)
+	}
+	
+	// Build subscription items based on resources
+	var items []*stripe.SubscriptionItemsParams
+	for resourceType, count := range resourceCounts {
+		if count > 0 {
+			priceID, err := s.getPriceIDForResourceType(resourceType)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get price ID for resource type %s: %w", resourceType, err)
+			}
+			items = append(items, &stripe.SubscriptionItemsParams{
+				Price:    stripe.String(priceID),
+				Quantity: stripe.Int64(int64(count)),
+			})
+		}
+	}
+	
+	if len(items) == 0 {
+		return nil, errors.New("no resources found to create subscription items")
+	}
+	
 	// Create Stripe subscription
 	params := &stripe.SubscriptionParams{
 		Customer: stripe.String(*account.StripeCustomerID),
-		Items: []*stripe.SubscriptionItemsParams{
-			{
-				Price: stripe.String(req.PriceID),
-			},
-		},
-		DefaultPaymentMethod: stripe.String(req.PaymentMethodID),
+		Items:    items,
 	}
 	
 	stripeSubscription, err := subscription.New(params)
@@ -337,7 +383,7 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 	// If Stripe customer exists, get additional Stripe data
 	if account.StripeCustomerID != nil {
 		// Get upcoming invoice
-		if account.StripeSubscriptionID != nil {
+		/* if account.StripeSubscriptionID != nil {
 			upcomingInvoice, err := invoice.Upcoming(&stripe.InvoiceUpcomingParams{
 				Customer:     stripe.String(*account.StripeCustomerID),
 				Subscription: stripe.String(*account.StripeSubscriptionID),
@@ -353,7 +399,7 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 					HostedInvoiceURL: &upcomingInvoice.HostedInvoiceURL,
 				}
 			}
-		}
+		} */
 		
 		// Get payment methods
 		pmParams := &stripe.PaymentMethodListParams{
@@ -390,6 +436,228 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 		
 		billingInfo.PaymentMethods = paymentMethods
 	}
+
+	// Get subscription details and items if subscription exists
+	if account.StripeSubscriptionID != nil && *account.StripeSubscriptionID != "" {
+		sub, err := subscription.Get(*account.StripeSubscriptionID, &stripe.SubscriptionParams{
+			Expand: []*string{stripe.String("items.data.price.product")},
+		})
+		if err != nil {
+			fmt.Printf("Warning: Failed to get subscription details: %v\n", err)
+		} else {
+			// Add subscription items to billing info
+			var subscriptionItems []models.StripeSubscriptionItem
+			for _, item := range sub.Items.Data {
+				subscriptionItem := models.StripeSubscriptionItem{
+					ID:       item.ID,
+					Quantity: item.Quantity,
+				}
+				
+				if item.Price != nil {
+					subscriptionItem.Price = &struct {
+						ID            string `json:"id"`
+						UnitAmount    int64  `json:"unit_amount"`
+						Currency      string `json:"currency"`
+						Recurring     *struct {
+							Interval      string `json:"interval"`
+							IntervalCount int64  `json:"interval_count"`
+						} `json:"recurring,omitempty"`
+						Product *struct {
+							ID          string `json:"id"`
+							Name        string `json:"name"`
+							Description string `json:"description"`
+						} `json:"product,omitempty"`
+					}{
+						ID:         item.Price.ID,
+						UnitAmount: item.Price.UnitAmount,
+						Currency:   string(item.Price.Currency),
+					}
+					
+					if item.Price.Recurring != nil {
+						subscriptionItem.Price.Recurring = &struct {
+							Interval      string `json:"interval"`
+							IntervalCount int64  `json:"interval_count"`
+						}{
+							Interval:      string(item.Price.Recurring.Interval),
+							IntervalCount: item.Price.Recurring.IntervalCount,
+						}
+					}
+					
+					if item.Price.Product != nil {
+						subscriptionItem.Price.Product = &struct {
+							ID          string `json:"id"`
+							Name        string `json:"name"`
+							Description string `json:"description"`
+						}{
+							ID:          item.Price.Product.ID,
+							Name:        item.Price.Product.Name,
+							Description: item.Price.Product.Description,
+						}
+					}
+				}
+				
+				subscriptionItems = append(subscriptionItems, subscriptionItem)
+			}
+			
+			billingInfo.SubscriptionItems = subscriptionItems
+			
+			// Add subscription status details
+			billingInfo.SubscriptionDetails = &models.StripeSubscriptionDetails{
+				ID:                 sub.ID,
+				Status:             string(sub.Status),
+				CurrentPeriodStart: 0, // Not available in this SDK version
+				CurrentPeriodEnd:   0, // Not available in this SDK version
+				CancelAtPeriodEnd:  sub.CancelAtPeriodEnd,
+			}
+		}
+	}
 	
 	return billingInfo, nil
+}
+
+// getProductIDForResourceType maps resource types to Stripe product IDs
+func (s *BillingService) getProductIDForResourceType(resourceType string) string {
+	productIDs := s.config.Stripe.ProductIDs
+	switch resourceType {
+	case "Konnektr.DigitalTwins":
+		return productIDs["digital_twins"]
+	case "Konnektr.Flows":
+		return productIDs["flows"]
+	default:
+		return ""
+	}
+}
+
+// getPriceIDForResourceType gets the default price ID for a resource type
+func (s *BillingService) getPriceIDForResourceType(resourceType string) (string, error) {
+	productID := s.getProductIDForResourceType(resourceType)
+	if productID == "" {
+		return "", fmt.Errorf("no product ID configured for resource type %s", resourceType)
+	}
+	
+	priceID, err := s.getDefaultPriceForProduct(productID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get price for product %s: %w", productID, err)
+	}
+	
+	return priceID, nil
+}
+
+// getDefaultPriceForProduct fetches the default price for a Stripe product
+func (s *BillingService) getDefaultPriceForProduct(productID string) (string, error) {
+	// List prices for this product
+	params := &stripe.PriceListParams{
+		Product: stripe.String(productID),
+		Active:  stripe.Bool(true),
+	}
+	
+	iter := price.List(params)
+	if iter.Next() {
+		// Return the first active price (typically the default)
+		return iter.Price().ID, nil
+	}
+	
+	if iter.Err() != nil {
+		return "", fmt.Errorf("error listing prices for product %s: %w", productID, iter.Err())
+	}
+	
+	return "", fmt.Errorf("no active prices found for product %s", productID)
+}
+
+// getResourceCounts counts resources by type for a given scope (organization or project)
+func (s *BillingService) getResourceCounts(scopeType, scopeID string) (map[string]int, error) {
+	resourceCounts := make(map[string]int)
+	
+	var query string
+	if scopeType == "organization" {
+		// For organizations, count resources across all projects in the organization
+		query = `
+			SELECT r.type, COUNT(*) as count
+			FROM ktrlplane.resources r
+			JOIN ktrlplane.projects p ON r.project_id = p.project_id
+			WHERE p.org_id = $1
+			GROUP BY r.type
+		`
+	} else {
+		// For projects, count resources directly in the project
+		query = `
+			SELECT r.type, COUNT(*) as count
+			FROM ktrlplane.resources r
+			WHERE r.project_id = $1
+			GROUP BY r.type
+		`
+	}
+	
+	rows, err := s.db.Query(context.Background(), query, scopeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query resource counts: %w", err)
+	}
+	defer rows.Close()
+	
+	for rows.Next() {
+		var resourceType string
+		var count int
+		if err := rows.Scan(&resourceType, &count); err != nil {
+			return nil, fmt.Errorf("failed to scan resource count: %w", err)
+		}
+		resourceCounts[resourceType] = count
+	}
+	
+	return resourceCounts, nil
+}
+
+// createSubscriptionWithResources creates a Stripe subscription with items based on resource counts
+func (s *BillingService) createSubscriptionWithResources(customerID string, resourceCounts map[string]int) (*stripe.Subscription, error) {
+	var subscriptionItems []*stripe.SubscriptionItemsParams
+	
+	// Create subscription items for each resource type
+	for resourceType, count := range resourceCounts {
+		if count <= 0 {
+			continue
+		}
+
+		// Get product ID for this resource type
+		productID := s.getProductIDForResourceType(resourceType)
+		if productID == "" {
+			fmt.Printf("Warning: No product ID configured for resource type %s\n", resourceType)
+			continue
+		}
+
+		// Get the default price for this product from Stripe
+		priceID, err := s.getDefaultPriceForProduct(productID)
+		if err != nil {
+			fmt.Printf("Warning: Failed to get price for product %s: %v\n", productID, err)
+			continue
+		}
+
+		subscriptionItems = append(subscriptionItems, &stripe.SubscriptionItemsParams{
+			Price:    stripe.String(priceID),
+			Quantity: stripe.Int64(int64(count)),
+		})
+	}
+	
+	// If no mapped resources found, create an empty subscription that items can be added to later
+	if len(subscriptionItems) == 0 {
+		fmt.Printf("No subscription items found, creating empty subscription for future use\n")
+		subParams := &stripe.SubscriptionParams{
+			Customer: stripe.String(customerID),
+			Items:    []*stripe.SubscriptionItemsParams{},
+		}
+		return subscription.New(subParams)
+	}
+	
+	// Create the subscription with items
+	subParams := &stripe.SubscriptionParams{
+		Customer: stripe.String(customerID),
+		Items:    subscriptionItems,
+		// Default payment behavior - customer will need to add payment method
+		PaymentBehavior: stripe.String("default_incomplete"),
+	}
+	
+	subscription, err := subscription.New(subParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create subscription: %w", err)
+	}
+	
+	return subscription, nil
 }

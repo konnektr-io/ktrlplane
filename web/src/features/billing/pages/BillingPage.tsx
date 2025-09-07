@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CreditCard, Download, Settings, AlertTriangle } from 'lucide-react';
+import { Loader2, CreditCard, Download, Settings, AlertTriangle, Calendar, Package } from 'lucide-react';
 import axios from '@/lib/axios';
 
 interface BillingAccount {
@@ -49,6 +49,35 @@ interface BillingInfo {
   stripe_customer_portal?: string;
   upcoming_invoice?: StripeInvoice;
   payment_methods?: StripePaymentMethod[];
+  subscription_items?: StripeSubscriptionItem[];
+  subscription_details?: StripeSubscriptionDetails;
+}
+
+interface StripeSubscriptionItem {
+  id: string;
+  quantity: number;
+  price?: {
+    id: string;
+    unit_amount: number;
+    currency: string;
+    recurring?: {
+      interval: string;
+      interval_count: number;
+    };
+    product?: {
+      id: string;
+      name: string;
+      description: string;
+    };
+  };
+}
+
+interface StripeSubscriptionDetails {
+  id: string;
+  status: string;
+  current_period_start: number;
+  current_period_end: number;
+  cancel_at_period_end: boolean;
 }
 
 export default function BillingPage() {
@@ -66,7 +95,7 @@ export default function BillingPage() {
   // Determine if this is an organization or project billing page
   const scopeType = orgId ? 'organization' : 'project';
   const scopeId = orgId || projectId || '';
-  const baseURL = orgId ? `/api/v1/organizations/${orgId}` : `/api/v1/projects/${projectId}`;
+  const baseURL = orgId ? `/organizations/${orgId}` : `/projects/${projectId}`;
 
   useEffect(() => {
     fetchBillingInfo();
@@ -76,10 +105,12 @@ export default function BillingPage() {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching billing info from:', `${baseURL}/billing`);
       const response = await axios.get(`${baseURL}/billing`);
       setBillingInfo(response.data);
       setBillingEmail(response.data.billing_account.billing_email || '');
     } catch (err: any) {
+      console.error('Billing fetch error:', err);
       setError(err.response?.data?.error || 'Failed to load billing information');
     } finally {
       setLoading(false);
@@ -129,6 +160,18 @@ export default function BillingPage() {
       window.location.href = response.data.portal_url;
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to open customer portal');
+      setUpdating(false);
+    }
+  };
+
+  const createSubscription = async () => {
+    try {
+      setUpdating(true);
+      await axios.post(`${baseURL}/billing/subscription`, {});
+      await fetchBillingInfo();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to create subscription');
+    } finally {
       setUpdating(false);
     }
   };
@@ -194,7 +237,7 @@ export default function BillingPage() {
     );
   }
 
-  const { billing_account: account, upcoming_invoice, payment_methods } = billingInfo;
+  const { billing_account: account, upcoming_invoice, payment_methods, subscription_items, subscription_details } = billingInfo;
   const hasStripeCustomer = !!account.stripe_customer_id;
   const hasActiveSubscription = !!account.stripe_subscription_id && account.subscription_status === 'active';
 
@@ -229,19 +272,125 @@ export default function BillingPage() {
           <div className="flex items-center justify-between">
             <span className="font-medium">Status:</span>
             <Badge className={getStatusColor(account.subscription_status)}>
-              {account.subscription_status}
+              {account.subscription_status || 'No subscription'}
             </Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Plan:</span>
-            <span className="capitalize">{account.subscription_plan}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-medium">Billing Email:</span>
             <span>{account.billing_email || 'Not set'}</span>
           </div>
+          {/* Create subscription button if no subscription exists but customer exists */}
+          {hasStripeCustomer && !hasActiveSubscription && (
+            <div className="pt-2">
+              <Button 
+                onClick={createSubscription}
+                disabled={updating}
+                className="w-full"
+              >
+                {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Subscription with Current Resources
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Subscription Details */}
+      {hasActiveSubscription && subscription_details && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Subscription Details
+            </CardTitle>
+            <CardDescription>
+              Detailed information about your current subscription
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Subscription ID:</span>
+              <span className="font-mono text-sm">{subscription_details.id}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Status:</span>
+              <Badge className={getStatusColor(subscription_details.status)}>
+                {subscription_details.status}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Current Period:</span>
+              <span>
+                {formatDate(subscription_details.current_period_start)} - {formatDate(subscription_details.current_period_end)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Cancel at Period End:</span>
+              <Badge variant={subscription_details.cancel_at_period_end ? "destructive" : "default"}>
+                {subscription_details.cancel_at_period_end ? "Yes" : "No"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Subscription Items */}
+      {hasActiveSubscription && subscription_items && subscription_items.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Subscription Items
+            </CardTitle>
+            <CardDescription>
+              Products and services included in your subscription
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {subscription_items.map((item) => (
+                <div key={item.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">
+                        {item.price?.product?.name || 'Product'}
+                      </h4>
+                      {item.price?.product?.description && (
+                        <p className="text-sm text-muted-foreground">
+                          {item.price.product.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">
+                        Quantity: {item.quantity}
+                      </div>
+                      {item.price && (
+                        <div className="text-sm text-muted-foreground">
+                          {formatCurrency(item.price.unit_amount, item.price.currency)}
+                          {item.price.recurring && (
+                            <span>
+                              /{item.price.recurring.interval_count > 1 
+                                ? `${item.price.recurring.interval_count} ` 
+                                : ''}{item.price.recurring.interval}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Item ID: {item.id}</span>
+                    {item.price && (
+                      <span>Price ID: {item.price.id}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Billing Email Management */}
       <Card>
@@ -284,11 +433,11 @@ export default function BillingPage() {
           <CardContent>
             <AlertDialog open={showSetupDialog} onOpenChange={setShowSetupDialog}>
               <AlertDialogTrigger asChild>
-                <Button>Setup Stripe Customer</Button>
+                <Button>Setup Billing Account</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Setup Stripe Customer</AlertDialogTitle>
+                  <AlertDialogTitle>Setup Billing Account</AlertDialogTitle>
                   <AlertDialogDescription>
                     Create a customer account in Stripe for billing management.
                   </AlertDialogDescription>
@@ -348,7 +497,7 @@ export default function BillingPage() {
                 className="w-full"
               >
                 {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Open Stripe Customer Portal
+                Open Payment Management Portal
               </Button>
               <p className="text-sm text-muted-foreground">
                 The customer portal allows you to update payment methods, download invoices, 

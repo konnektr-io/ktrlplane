@@ -32,6 +32,21 @@ pnpm install
 pnpm run dev
 ```
 
+
+
+## Billing & Stripe Configuration
+
+To enable billing and subscription management, set the following environment variables in your `config.yaml` or as environment variables:
+
+```env
+# Stripe API keys (test or live)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+These are required for billing features to function. See the [Billing Implementation Plan](docs/billing-implementation-plan.md) for more details.
+
 ## Documentation
 
 - 📚 [Documentation](docs/) - Complete documentation

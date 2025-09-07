@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/stripe/stripe-go/v76"
+	"github.com/stripe/stripe-go/v82"
 )
 
 func main() {
@@ -49,7 +49,7 @@ func main() {
 	resourceService := service.NewResourceService()
 	organizationService := service.NewOrganizationService()
 	rbacService := service.NewRBACService()
-	billingService := service.NewBillingService(db.GetDB())
+	billingService := service.NewBillingService(db.GetDB(), &cfg)
 
 	// --- API Handler Initialization ---
 	apiHandler := api.NewAPIHandler(projectService, resourceService, organizationService, rbacService, billingService)

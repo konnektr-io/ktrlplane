@@ -1,0 +1,4 @@
+project_id,org_id,name,description,status,created_at,updated_at,stripe_customer_id,stripe_subscription_id,subscription_status,subscription_plan,billing_email,inherits_billing_from_org
+cb9a4599-a248-40fa-8cf5-cb0d64fde1ae,3bb52c63-958f-4f9f-aa0a-82f5ff0ef9ef,TestProject,Test123,Active,2025-08-10 06:12:38.340794,2025-08-24 12:18:57.762223,NULL,NULL,trial,starter,NULL,True
+9f8e7d96-d1f7-474f-b77d-6bffb23fbf78,6d49e9ad-d1b8-4c49-95be-7be59d63d1c8,new project,this is a new project,Active,2025-08-24 14:43:00.816044,2025-08-30 12:21:53.491793,NULL,NULL,trial,starter,NULL,True
+konnektr-test-project-b8h1,konnektr-test-project-b8h1-org,Konnektr Test Project,,Active,2025-09-05 13:53:19.730746,2025-09-05 13:53:19.730746,NULL,NULL,trial,starter,NULL,True
