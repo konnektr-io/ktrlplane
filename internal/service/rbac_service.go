@@ -56,6 +56,26 @@ func (s *RBACService) AssignRoleInTx(ctx context.Context, tx pgx.Tx, userID, rol
 	return nil
 }
 
+// ListPermissions returns all actions (permissions) the user has for a given scope, considering inheritance
+func (s *RBACService) ListPermissions(ctx context.Context, userID, scopeType, scopeID string) ([]string, error) {
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.ListPermissionsWithInheritanceQuery, userID, scopeType, scopeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list permissions: %w", err)
+	}
+	defer rows.Close()
+
+	var permissions []string
+	for rows.Next() {
+		var action string
+		if err := rows.Scan(&action); err != nil {
+			return nil, fmt.Errorf("failed to scan permission: %w", err)
+		}
+		permissions = append(permissions, action)
+	}
+	return permissions, nil
+}
+
 // CheckPermission checks if a user has a specific permission on a resource
 func (s *RBACService) CheckPermission(ctx context.Context, userID, action, scopeType, scopeID string) (bool, error) {
 	pool := db.GetDB()

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Database, Server, Globe, FileText, Filter } from 'lucide-react';
+import { PlusCircle, Database, Server, Globe, FileText, Filter, Trash2 } from 'lucide-react';
 
 const resourceTypeIcons = {
   'Database': Database,
@@ -19,7 +19,17 @@ const resourceTypeIcons = {
 export default function ResourcesPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { resources, isLoading, fetchResources, error } = useResourceStore();
+  const { resources, isLoading, fetchResources, error, deleteResource } = useResourceStore();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const resourceToDelete = resources.find(r => r.resource_id === deletingId);
+  const handleDelete = async () => {
+    if (projectId && deletingId) {
+      await deleteResource(projectId, deletingId);
+      setDeletingId(null);
+      setShowConfirm(false);
+    }
+  };
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
@@ -98,9 +108,11 @@ export default function ResourcesPage() {
                     const IconComponent = resourceTypeIcons[resource.type as keyof typeof resourceTypeIcons] || Server;
                     return (
                       <TableRow key={resource.resource_id} className="hover:bg-muted/50 cursor-pointer border-b last:border-b-0" onClick={() => navigate(`/projects/${projectId}/resources/${resource.resource_id}`)}>
-                        <TableCell className="flex items-center gap-2">
-                          <IconComponent className="h-4 w-4 text-primary" />
-                          <span className="font-medium">{resource.name}</span>
+                        <TableCell className="p-2 pl-4 align-middle whitespace-nowrap h-full">
+                          <div className="flex items-center gap-2 h-full">
+                            <IconComponent className="h-4 w-4 text-primary" />
+                            <span className="font-medium">{resource.name}</span>
+                          </div>
                         </TableCell>
                         <TableCell>{resource.type}</TableCell>
                         <TableCell>
@@ -109,7 +121,7 @@ export default function ResourcesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>{resource.created_at.toLocaleDateString()}</TableCell>
-                        <TableCell>
+                        <TableCell className="flex gap-2">
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -117,7 +129,33 @@ export default function ResourcesPage() {
                           >
                             Configure
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive/10"
+                            title="Delete resource"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setDeletingId(resource.resource_id);
+                              setShowConfirm(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
+      {/* Delete confirmation dialog */}
+      {showConfirm && resourceToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-2">Delete Resource</h2>
+            <p className="mb-4">Are you sure you want to delete <span className="font-bold">{resourceToDelete.name}</span>? This action cannot be undone.</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setShowConfirm(false); setDeletingId(null); }}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
                       </TableRow>
                     );
                   })

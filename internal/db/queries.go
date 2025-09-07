@@ -93,70 +93,75 @@ const (
 		VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
 		ON CONFLICT (user_id, role_id, scope_type, scope_id) DO NOTHING`
 
-	CheckPermissionWithInheritanceQuery = `
-		WITH RECURSIVE permission_check AS (
-			-- Direct permissions on the requested scope
-			SELECT DISTINCT 1 as has_permission
-			FROM ktrlplane.role_assignments ra
-			JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
-			JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
-			WHERE ra.user_id = $1
-			  AND p.resource_type = 'Konnektr.KtrlPlane'
-			  AND p.action = $2
-			  AND ra.scope_type = $3
-			  AND ra.scope_id = $4
-			  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
-			
-			UNION
-			
-			-- Inherited permissions from organization (if checking project/resource)
-			SELECT DISTINCT 1 as has_permission
-			FROM ktrlplane.role_assignments ra
-			JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
-			JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
-			JOIN ktrlplane.projects proj ON proj.project_id = $4 -- if scopeType is project
-			WHERE ra.user_id = $1
-			  AND p.resource_type = 'Konnektr.KtrlPlane'
-			  AND p.action = $2
-			  AND ra.scope_type = 'organization'
-			  AND ra.scope_id = proj.org_id
-			  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
-			  AND $3 = 'project'
-			
-			UNION
-			
-			-- Inherited permissions from project (if checking resource)
-			SELECT DISTINCT 1 as has_permission
-			FROM ktrlplane.role_assignments ra
-			JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
-			JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
-			JOIN ktrlplane.resources res ON res.resource_id = $4 -- if scopeType is resource
-			WHERE ra.user_id = $1
-			  AND p.resource_type = 'Konnektr.KtrlPlane'
-			  AND p.action = $2
-			  AND ra.scope_type = 'project'
-			  AND ra.scope_id = res.project_id
-			  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
-			  AND $3 = 'resource'
-			
-			UNION
-			
-			-- Inherited permissions from organization (if checking resource)
-			SELECT DISTINCT 1 as has_permission
-			FROM ktrlplane.role_assignments ra
-			JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
-			JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
-			JOIN ktrlplane.resources res ON res.resource_id = $4 -- if scopeType is resource
-			JOIN ktrlplane.projects proj ON proj.project_id = res.project_id
-			WHERE ra.user_id = $1
-			  AND p.resource_type = 'Konnektr.KtrlPlane'
-			  AND p.action = $2
-			  AND ra.scope_type = 'organization'
-			  AND ra.scope_id = proj.org_id
-			  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
-			  AND $3 = 'resource'
-		)
-		SELECT EXISTS(SELECT 1 FROM permission_check) as has_permission`
+	// Base CTE for permission inheritance logic
+	AllPermissionsWithInheritanceCTE = `
+			WITH all_permissions AS (
+				-- Direct permissions on the requested scope
+				SELECT DISTINCT p.action
+				FROM ktrlplane.role_assignments ra
+				JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
+				JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
+				WHERE ra.user_id = $1
+				  AND p.resource_type = 'Konnektr.KtrlPlane'
+				  AND ra.scope_type = $2
+				  AND ra.scope_id = $3
+				  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+
+				UNION
+
+				-- Inherited permissions from organization (if checking project/resource)
+				SELECT DISTINCT p.action
+				FROM ktrlplane.role_assignments ra
+				JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
+				JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
+				JOIN ktrlplane.projects proj ON proj.project_id = $3 -- if scopeType is project
+				WHERE ra.user_id = $1
+				  AND p.resource_type = 'Konnektr.KtrlPlane'
+				  AND ra.scope_type = 'organization'
+				  AND ra.scope_id = proj.org_id
+				  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+				  AND $2 = 'project'
+
+				UNION
+
+				-- Inherited permissions from project (if checking resource)
+				SELECT DISTINCT p.action
+				FROM ktrlplane.role_assignments ra
+				JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
+				JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
+				JOIN ktrlplane.resources res ON res.resource_id = $3 -- if scopeType is resource
+				WHERE ra.user_id = $1
+				  AND p.resource_type = 'Konnektr.KtrlPlane'
+				  AND ra.scope_type = 'project'
+				  AND ra.scope_id = res.project_id
+				  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+				  AND $2 = 'resource'
+
+				UNION
+
+				-- Inherited permissions from organization (if checking resource)
+				SELECT DISTINCT p.action
+				FROM ktrlplane.role_assignments ra
+				JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
+				JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
+				JOIN ktrlplane.resources res ON res.resource_id = $3 -- if scopeType is resource
+				JOIN ktrlplane.projects proj ON proj.project_id = res.project_id
+				WHERE ra.user_id = $1
+				  AND p.resource_type = 'Konnektr.KtrlPlane'
+				  AND ra.scope_type = 'organization'
+				  AND ra.scope_id = proj.org_id
+				  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
+				  AND $2 = 'resource'
+			)
+		`
+
+	// Query for checking a specific permission (action)
+	CheckPermissionWithInheritanceQuery = AllPermissionsWithInheritanceCTE + `
+		SELECT EXISTS(SELECT 1 FROM all_permissions WHERE action = $4) as has_permission`
+
+	// Query for listing all permissions (actions) for a user/scope
+	ListPermissionsWithInheritanceQuery = AllPermissionsWithInheritanceCTE + `
+		SELECT DISTINCT action FROM all_permissions`
 
 	GetUserRolesQuery = `
 		SELECT ra.assignment_id, ra.user_id, ra.role_id, ra.scope_type, ra.scope_id, ra.assigned_by, ra.created_at, ra.expires_at

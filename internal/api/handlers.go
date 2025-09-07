@@ -956,3 +956,27 @@ func (h *APIHandler) CancelSubscription(c *gin.Context) {
 
 	c.JSON(http.StatusOK, account)
 }
+
+// ListPermissionsHandler returns all permissions (actions) the current user has for a given scope
+func (h *APIHandler) ListPermissionsHandler(c *gin.Context) {
+	scopeType := c.Query("scopeType")
+	scopeID := c.Query("scopeId")
+	if scopeType == "" || scopeID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing scopeType or scopeId"})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	permissions, err := h.RBACService.ListPermissions(c.Request.Context(), user.ID, scopeType, scopeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list permissions", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"permissions": permissions})
+}
