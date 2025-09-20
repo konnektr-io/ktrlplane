@@ -53,12 +53,10 @@ export default function ResourcesPage() {
   const resourceToDelete = resources.find((r) => r.resource_id === deletingId);
 
   // Helper to check if user can delete a resource (resource-level permission)
-  const canDeleteResource = (resourceId: string) => {
-    // For now, assume delete permission is project-wide; for per-resource, would need to fetch per-resource permissions
-    // If you want to optimize, you could fetch all resource permissions in a batch
-    // For now, just check projectPermissions for 'delete' (if RBAC is project-level for resources)
-    return projectPermissions?.includes("delete");
-  };
+  // Deprecated: now handled per-resource below
+  // const canDeleteResource = (resourceId: string) => {
+  //   return projectPermissions?.includes("delete");
+  // };
   const handleDelete = async () => {
     if (projectId && deletingId) {
       await deleteResource(projectId, deletingId);
@@ -155,6 +153,12 @@ export default function ResourcesPage() {
                       resourceTypeIcons[
                         resource.type as keyof typeof resourceTypeIcons
                       ] || Server;
+                    // Fetch resource-level permissions for this resource
+                    const {
+                      permissions: resourcePermissions,
+                      loading: resourcePermLoading,
+                    } = useUserPermissions("resource", resource.resource_id);
+                    const canDelete = resourcePermissions?.includes("delete");
                     return (
                       <TableRow
                         key={resource.resource_id}
@@ -199,7 +203,8 @@ export default function ResourcesPage() {
                           >
                             Configure
                           </Button>
-                          {canDeleteResource(resource.resource_id) && (
+                          {/* Show delete button only if user has resource-level delete permission */}
+                          {canDelete && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -210,6 +215,7 @@ export default function ResourcesPage() {
                                 setDeletingId(resource.resource_id);
                                 setShowConfirm(true);
                               }}
+                              disabled={resourcePermLoading}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
