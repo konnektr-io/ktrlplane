@@ -18,6 +18,23 @@ services:
       timeout: 5s
       retries: 5
 
+  ktrlplane-migrations:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.backend
+    environment:
+      KTRLPLANE_DB_HOST: postgres
+      KTRLPLANE_DB_PORT: 5432
+      KTRLPLANE_DB_NAME: ktrlplane_db
+      KTRLPLANE_DB_USER: ktrlplane
+      KTRLPLANE_DB_PASSWORD: password
+      KTRLPLANE_DB_SSL_MODE: disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["./migrate"]
+    restart: "no"
+
   ktrlplane-backend:
     build:
       context: ../..
@@ -31,13 +48,15 @@ services:
       KTRLPLANE_DB_USER: ktrlplane
       KTRLPLANE_DB_PASSWORD: password
       KTRLPLANE_DB_SSL_MODE: disable
-      KTRLPLANE_AUTH0_DOMAIN: auth.konnektr.io
-      KTRLPLANE_AUTH0_AUDIENCE: https://api.ktrlplane.example.io
-      KTRLPLANE_AUTH0_CLIENT_ID: client_id
+      KTRLPLANE_AUTH_DOMAIN: auth.konnektr.io
+      KTRLPLANE_AUTH_AUDIENCE: https://api.ktrlplane.example.io
+      KTRLPLANE_AUTH_CLIENT_ID: client_id
       KTRLPLANE_SERVER_PORT: 8080
     depends_on:
       postgres:
         condition: service_healthy
+      ktrlplane-migrations:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   ktrlplane-frontend:
