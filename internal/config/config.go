@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -45,17 +46,18 @@ type StripeProduct struct {
 }
 
 func LoadConfig(path string) (config Config, err error) {
-       viper.AddConfigPath(path)
-       viper.SetConfigName("config")
-       viper.SetConfigType("yaml")
-       viper.SetEnvPrefix("KTRLPLANE")
-       viper.AutomaticEnv()
+		viper.AddConfigPath(path)
+		viper.SetConfigName("config")
+		viper.SetConfigType("yaml")
+		viper.SetEnvPrefix("ktrlplane")
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+       	viper.AutomaticEnv()
 
-       err = viper.ReadInConfig()
-       if err != nil {
-	       return Config{}, fmt.Errorf("fatal error config file: %w", err)
-       }
+		err = viper.ReadInConfig()
+		if err != nil {
+			return Config{}, fmt.Errorf("fatal error config file: %w", err)
+		}
 
-       err = viper.Unmarshal(&config)
-       return
+		err = viper.Unmarshal(&config)
+		return
 }
