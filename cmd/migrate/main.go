@@ -19,6 +19,19 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
+	
+	log.Printf("ENV KTRLPLANE_DATABASE_HOST=%s\n",      os.Getenv("KTRLPLANE_DATABASE_HOST"))
+	log.Printf("ENV KTRLPLANE_DATABASE_PORT=%s\n",      os.Getenv("KTRLPLANE_DATABASE_PORT"))
+	log.Printf("ENV KTRLPLANE_DATABASE_DBNAME=%s\n",    os.Getenv("KTRLPLANE_DATABASE_DBNAME"))
+	log.Printf("ENV KTRLPLANE_DATABASE_USER=%s\n",      os.Getenv("KTRLPLANE_DATABASE_USER"))
+	log.Printf("ENV KTRLPLANE_DATABASE_PASSWORD=%s\n",  os.Getenv("KTRLPLANE_DATABASE_PASSWORD"))
+	log.Printf("ENV KTRLPLANE_DATABASE_SSLMODE=%s\n",   os.Getenv("KTRLPLANE_DATABASE_SSLMODE"))
+	log.Printf("ENV KTRLPLANE_AUTH_ISSUER=%s\n",       os.Getenv("KTRLPLANE_AUTH_ISSUER"))
+	log.Printf("ENV KTRLPLANE_AUTH_AUDIENCE=%s\n",     os.Getenv("KTRLPLANE_AUTH_AUDIENCE"))
+	log.Printf("ENV KTRLPLANE_STRIPE_SECRET_KEY=%s\n",  os.Getenv("KTRLPLANE_STRIPE_SECRET_KEY"))
+	log.Printf("ENV KTRLPLANE_STRIPE_PUBLISHABLE_KEY=%s\n", os.Getenv("KTRLPLANE_STRIPE_PUBLISHABLE_KEY"))
+	log.Printf("ENV KTRLPLANE_STRIPE_WEBHOOK_SECRET=%s\n", os.Getenv("KTRLPLANE_STRIPE_WEBHOOK_SECRET"))
+
 	// Debug: print loaded config
 	log.Printf("Loaded config: %+v", cfg)
 
