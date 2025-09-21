@@ -1,6 +1,16 @@
 # Frontend Dockerfile
 FROM node:18-alpine AS builder
 
+# Accept build arguments for Vite environment variables
+ARG VITE_AUTH0_DOMAIN
+ARG VITE_AUTH0_CLIENT_ID  
+ARG VITE_AUTH0_AUDIENCE
+
+# Set them as environment variables for the build process
+ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN
+ENV VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID
+ENV VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE
+
 WORKDIR /app
 
 # Copy package files

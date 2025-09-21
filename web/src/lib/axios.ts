@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:3001/api/v1',
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL || window.location.origin + "/api/v1",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 

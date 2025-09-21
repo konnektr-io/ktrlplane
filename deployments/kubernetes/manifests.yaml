@@ -3,23 +3,6 @@ kind: Namespace
 metadata:
   name: ktrlplane
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ktrlplane-config
-  namespace: ktrlplane
-data:
-  config.yaml: |
-    database:
-      host: postgres-service
-      port: 5432
-      name: ktrlplane_db
-      user: ktrlplane
-      password: password
-    auth0:
-      domain: your-auth0-domain
-      audience: your-auth0-audience
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -117,6 +100,10 @@ spec:
           value: ktrlplane
         - name: DB_PASSWORD
           value: password
+        - name: KTRLPLANE_AUTH_DOMAIN
+          value: auth.konnektr.io
+        - name: KTRLPLANE_AUTH_AUDIENCE
+          value: https://api.ktrlplane.konnektr.io
         volumeMounts:
         - name: config
           mountPath: /root/config.yaml

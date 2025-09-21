@@ -75,8 +75,8 @@ func loadFromEnv() (Config, error) {
 		"KTRLPLANE_DB_USER", 
 		"KTRLPLANE_DB_PASSWORD",
 		"KTRLPLANE_DB_NAME",
-		"KTRLPLANE_AUTH0_DOMAIN",
-		"KTRLPLANE_AUTH0_AUDIENCE",
+		"KTRLPLANE_AUTH_DOMAIN",
+		"KTRLPLANE_AUTH_AUDIENCE",
 	}
 
 	for _, envVar := range requiredEnvVars {
@@ -107,9 +107,8 @@ func loadFromEnv() (Config, error) {
 			SSLMode:   getEnvWithDefault("KTRLPLANE_DB_SSL_MODE", "disable"),
 		},
 		Auth0: Auth0Config{
-			Domain:   os.Getenv("KTRLPLANE_AUTH0_DOMAIN"),
-			Audience: os.Getenv("KTRLPLANE_AUTH0_AUDIENCE"),
-			ClientID: getEnvWithDefault("KTRLPLANE_AUTH0_CLIENT_ID", ""),
+			Domain:   os.Getenv("KTRLPLANE_AUTH_DOMAIN"),
+			Audience: os.Getenv("KTRLPLANE_AUTH_AUDIENCE"),
 		},
 		Stripe: StripeConfig{
 			SecretKey:      getEnvWithDefault("STRIPE_SECRET_KEY", ""),

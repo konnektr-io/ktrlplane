@@ -99,6 +99,10 @@ jobs:
         with:
           context: .
           file: ./deployments/docker/Dockerfile.frontend
+          build-args: |
+            VITE_AUTH0_DOMAIN=${{ vars.AUTH0_DOMAIN }}
+            VITE_AUTH0_CLIENT_ID=${{ vars.AUTH0_CLIENT_ID }}
+            VITE_AUTH0_AUDIENCE=${{ vars.AUTH0_AUDIENCE }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

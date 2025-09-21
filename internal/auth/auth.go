@@ -32,8 +32,6 @@ func (c CustomClaims) Validate(ctx context.Context) error {
 // Placeholder for Auth0 configuration needed by middleware
 var (
 	jwtValidator *validator.Validator
-	apiAudience  string
-	auth0Domain  string
 	
 	// Cache for processed users to avoid repeated DB checks
 	processedUsers = make(map[string]bool)
@@ -119,45 +117,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// Store user in context
 		c.Set("user", user)
-		c.Next()
-	}
-}
-
-// RBACMiddleware checks if the user in context has the required role for the project. Placeholder.
-func RBACMiddleware(requiredRole string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		user, exists := c.Get("user")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "User context not found"})
-			return
-		}
-		currentUser := user.(models.User) // Type assertion
-
-		projectID := c.Param("projectId") // Assuming project ID is in the URL path
-		if projectID == "" {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Project ID missing in request path"})
-			return
-		}
-
-		// ---=== Placeholder: Replace with actual RBAC check ===---
-		// hasPermission, err := checkPermissionInDB(c.Request.Context(), currentUser.ID, projectID, requiredRole)
-		// if err != nil {
-		//      c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions"})
-		//      return
-		// }
-		// if !hasPermission {
-		//      c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
-		//      return
-		// }
-		hasPermission := true // Mock permission
-		// ---===================================================---
-
-		if !hasPermission {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions (mock)"})
-			return
-		}
-
-		fmt.Printf("Mock RBAC check successful for user %s, project %s, role %s\n", currentUser.ID, projectID, requiredRole)
 		c.Next()
 	}
 }
