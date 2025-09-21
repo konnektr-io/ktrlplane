@@ -9,7 +9,7 @@ import (
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
-	Auth     AuthConfig    `mapstructure:"auth"`
+	Auth     AuthConfig     `mapstructure:"auth"`
 	Stripe   StripeConfig   `mapstructure:"stripe"`
 }
 
