@@ -27,9 +27,8 @@ type DatabaseConfig struct {
 }
 
 type AuthConfig struct {
-	Domain   string `mapstructure:"domain"`
+	Issuer   string `mapstructure:"issuer"`
 	Audience string `mapstructure:"audience"`
-	ClientID string `mapstructure:"client_id"`
 }
 
 type StripeConfig struct {

@@ -38,8 +38,8 @@ var (
 	userCacheMutex sync.RWMutex
 )
 
-func SetupAuth(audience, domain string) error {
-	issuerURL, err := url.Parse("https://" + domain + "/")
+func SetupAuth(audience, issuer string) error {
+	issuerURL, err := url.Parse(issuer)
 	if err != nil {
 		return fmt.Errorf("failed to parse the issuer url: %w", err)
 	}
@@ -62,7 +62,7 @@ func SetupAuth(audience, domain string) error {
 		return fmt.Errorf("failed to set up the jwt validator: %w", err)
 	}
 
-	log.Printf("Auth0 JWT validation configured for domain: %s, audience: %s", domain, audience)
+	log.Printf("Auth0 JWT validation configured for issuer: %s, audience: %s", issuer, audience)
 	return nil
 }
 
