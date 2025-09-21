@@ -32,7 +32,7 @@ func main() {
 
 	// --- Authentication Setup ---
 	// Pass Auth0 config to the auth package
-	if err := auth.SetupAuth(cfg.Auth0.Audience, cfg.Auth0.Domain); err != nil {
+	if err := auth.SetupAuth(cfg.Auth.Audience, cfg.Auth.Domain); err != nil {
 		log.Fatalf("Failed to set up authentication: %v", err)
 	}
 
