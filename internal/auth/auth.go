@@ -62,7 +62,7 @@ func SetupAuth(audience, issuer string) error {
 		return fmt.Errorf("failed to set up the jwt validator: %w", err)
 	}
 
-	log.Printf("Auth0 JWT validation configured for issuer: %s, audience: %s", issuer, audience)
+	log.Printf("Auth JWT validation configured for issuer: %s, audience: %s", issuer, audience)
 	return nil
 }
 

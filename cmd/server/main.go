@@ -58,7 +58,10 @@ func main() {
 	router := api.SetupRouter(apiHandler)
 
 	// --- Server Initialization ---
-	serverAddr := "127.0.0.1:" + cfg.Server.Port
+	if cfg.Server.Port == "" {
+		log.Fatalf("Server port is not set in configuration. Please set cfg.Server.Port.")
+	}
+	serverAddr := "0.0.0.0:" + cfg.Server.Port
 	srv := &http.Server{
 		Addr:    serverAddr,
 		Handler: router,

@@ -49,7 +49,7 @@ func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.SetEnvPrefix("KTRLPLANE")
+	viper.SetEnvPrefix("ktrlplane")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
