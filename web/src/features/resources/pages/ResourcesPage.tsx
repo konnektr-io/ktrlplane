@@ -29,6 +29,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useUserPermissions } from "@/features/access/hooks/useUserPermissions";
+import { useMultipleResourcePermissions } from "@/features/access/hooks/useMultipleResourcePermissions";
 
 const resourceTypeIcons = {
   Database: Database,
@@ -43,6 +44,10 @@ export default function ResourcesPage() {
   const navigate = useNavigate();
   const { resources, isLoading, fetchResources, error, deleteResource } =
     useResourceStore();
+  const resourceIds = resources.map((r) => r.resource_id);
+  const { permissionsMap, loadingMap } =
+    useMultipleResourcePermissions(resourceIds);
+
   // Permissions for project (for create)
   const { permissions: projectPermissions } = useUserPermissions(
     "project",
@@ -52,11 +57,7 @@ export default function ResourcesPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const resourceToDelete = resources.find((r) => r.resource_id === deletingId);
 
-  // Helper to check if user can delete a resource (resource-level permission)
-  // Deprecated: now handled per-resource below
-  // const canDeleteResource = (resourceId: string) => {
-  //   return projectPermissions?.includes("delete");
-  // };
+  // Resource-level permissions will be handled via state and effect below
   const handleDelete = async () => {
     if (projectId && deletingId) {
       await deleteResource(projectId, deletingId);
@@ -153,12 +154,12 @@ export default function ResourcesPage() {
                       resourceTypeIcons[
                         resource.type as keyof typeof resourceTypeIcons
                       ] || Server;
-                    // Fetch resource-level permissions for this resource
-                    const {
-                      permissions: resourcePermissions,
-                      loading: resourcePermLoading,
-                    } = useUserPermissions("resource", resource.resource_id);
-                    const canDelete = resourcePermissions?.includes("delete");
+                    // Use new hook for per-resource permissions
+                    const resourcePermissions =
+                      permissionsMap[resource.resource_id] || [];
+                    const resourcePermLoading =
+                      loadingMap[resource.resource_id] || false;
+                    const canDelete = resourcePermissions.includes("delete");
                     return (
                       <TableRow
                         key={resource.resource_id}

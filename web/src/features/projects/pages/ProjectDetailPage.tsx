@@ -1,21 +1,44 @@
-import { useParams } from 'react-router-dom';
-import { useProjectStore } from '../store/projectStore';
-import { useOrganizationStore } from '../../organizations/store/organizationStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, Activity } from 'lucide-react';
+import { useParams, Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useProjectStore } from "../store/projectStore";
+import { useOrganizationStore } from "../../organizations/store/organizationStore";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Building2, Activity } from "lucide-react";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
   const { currentProject } = useProjectStore();
-  const { currentOrganization } = useOrganizationStore();
+  const { currentOrganization, fetchOrganizationById } = useOrganizationStore();
+
+  // Update currentOrganization when the project's org_id changes
+  useEffect(() => {
+    if (
+      currentProject?.org_id &&
+      currentProject.org_id !== currentOrganization?.org_id
+    ) {
+      fetchOrganizationById(currentProject.org_id);
+    }
+  }, [
+    currentProject?.org_id,
+    currentOrganization?.org_id,
+    fetchOrganizationById,
+  ]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{currentProject?.name || 'Project Overview'}</h1>
+        <h1 className="text-3xl font-bold">
+          {currentProject?.name || "Project Overview"}
+        </h1>
         <p className="text-muted-foreground">
-          {currentProject?.description || 'Project details and overview'}
+          {currentProject?.description || "Project details and overview"}
         </p>
       </div>
 
@@ -31,8 +54,12 @@ export default function ProjectDetailPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium">Status</p>
-              <Badge variant={currentProject?.status === 'Active' ? 'default' : 'secondary'}>
-                {currentProject?.status || 'Unknown'}
+              <Badge
+                variant={
+                  currentProject?.status === "Active" ? "default" : "secondary"
+                }
+              >
+                {currentProject?.status || "Unknown"}
               </Badge>
             </div>
             <div>
@@ -70,9 +97,12 @@ export default function ProjectDetailPage() {
               </div>
               <div>
                 <p className="text-sm font-medium">Organization ID</p>
-                <p className="text-sm text-muted-foreground font-mono">
+                <Link
+                  to={`/organizations/${currentOrganization.org_id}/settings`}
+                  className="text-sm text-muted-foreground font-mono hover:text-foreground"
+                >
                   {currentOrganization.org_id}
-                </p>
+                </Link>
               </div>
             </CardContent>
           </Card>

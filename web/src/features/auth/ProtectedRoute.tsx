@@ -8,6 +8,17 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
+  // Immediately redirect to Auth0 if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      loginWithRedirect({
+        appState: {
+          returnTo: window.location.pathname + window.location.search,
+        },
+      });
+    }
+  }, [isAuthenticated, isLoading, loginWithRedirect]);
+
   // Show loading spinner while Auth0 is loading
   if (isLoading) {
     return (
@@ -19,17 +30,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       </div>
     );
   }
-
-  // Immediately redirect to Auth0 if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      loginWithRedirect({
-        appState: { 
-          returnTo: window.location.pathname + window.location.search 
-        }
-      });
-    }
-  }, [isAuthenticated, isLoading, loginWithRedirect]);
 
   // Don't render anything while redirecting
   if (!isAuthenticated) {
