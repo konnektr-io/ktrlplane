@@ -30,13 +30,13 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	// For self-service, we need to either:
 	// 1. Create a new organization if user doesn't have one
 	// 2. Create project in user's existing organization with write access
-	
+
 	// First, check if user has any organizations
 	orgs, err := s.orgService.ListOrganizations(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user organizations: %w", err)
 	}
-	
+
 	var orgID string
 	if len(orgs) == 0 {
 		// Self-service: Create new organization for the user using the project name
@@ -61,12 +61,12 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 				break
 			}
 		}
-		
+
 		if orgID == "" {
 			return nil, fmt.Errorf("no write access to any organization")
 		}
 	}
-	
+
 	// Create project
 	pool := db.GetDB()
 
@@ -105,7 +105,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
-	
+
 	return project, nil
 }
 
@@ -113,6 +113,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 func (s *ProjectService) GetProjectByID(ctx context.Context, projectID, userID string) (*models.Project, error) {
 	// Check read permission
 	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "read", "project", projectID)
+	fmt.Printf("[DEBUG] GetProjectByID: userID=%s, projectID=%s, hasPermission=%v, err=%v\n", userID, projectID, hasPermission, err)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check permissions: %w", err)
 	}
