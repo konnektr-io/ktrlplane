@@ -34,8 +34,6 @@ type Resource struct {
 	CreatedAt    time.Time       `json:"created_at" agtype:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at" agtype:"updated_at"`
 	ErrorMessage *string         `json:"error_message,omitempty" agtype:"error_message"`
-	// Specific fields for resource types might be present but accessed via HelmValues
-	AccessURL *string `json:"access_url,omitempty" agtype:"access_url"` // Example specific field
 }
 
 // Custom MarshalJSON to ensure settings_json is always a JSON object (never a string/null)

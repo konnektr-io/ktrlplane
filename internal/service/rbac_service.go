@@ -85,7 +85,7 @@ func (s *RBACService) CheckPermission(ctx context.Context, userID, action, scope
 	// 2. Inherited from parent scopes (organization -> project -> resource)
 
 	var hasPermission bool
-	err := pool.QueryRow(ctx, db.CheckPermissionWithInheritanceQuery, userID, action, scopeType, scopeID).Scan(&hasPermission)
+	err := pool.QueryRow(ctx, db.CheckPermissionWithInheritanceQuery, userID, scopeType, scopeID, action).Scan(&hasPermission)
 	if err != nil {
 		return false, fmt.Errorf("failed to check permission: %w", err)
 	}

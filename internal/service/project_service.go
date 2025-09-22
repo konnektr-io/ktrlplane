@@ -113,7 +113,6 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 func (s *ProjectService) GetProjectByID(ctx context.Context, projectID, userID string) (*models.Project, error) {
 	// Check read permission
 	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "read", "project", projectID)
-	fmt.Printf("[DEBUG] GetProjectByID: userID=%s, projectID=%s, hasPermission=%v, err=%v\n", userID, projectID, hasPermission, err)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check permissions: %w", err)
 	}

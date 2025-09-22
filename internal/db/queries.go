@@ -63,10 +63,12 @@ const (
 		VALUES ($1, $2, $3, $4, 'Creating', $5, NOW(), NOW())`
 
 	GetResourceByIDQuery = `
-		SELECT * FROM ktrlplane.resources WHERE project_id = $1 AND resource_id = $2`
+		SELECT resource_id, project_id, name, type, status, settings_json, error_message, created_at, updated_at
+		FROM ktrlplane.resources WHERE project_id = $1 AND resource_id = $2`
 
 	ListResourcesQuery = `
-		SELECT * FROM ktrlplane.resources WHERE project_id = $1`
+		SELECT resource_id, project_id, name, type, status, settings_json, error_message, created_at, updated_at
+		FROM ktrlplane.resources WHERE project_id = $1`
 
 	UpdateResourceQuery = `
 		UPDATE ktrlplane.resources SET name = $3, settings_json = $4, status = 'Updating', updated_at = NOW() WHERE project_id = $1 AND resource_id = $2`
