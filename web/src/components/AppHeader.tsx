@@ -20,6 +20,7 @@ import {
   Building2,
   FolderOpen
 } from 'lucide-react';
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default function AppHeader() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function AppHeader() {
   };
 
   const handleNavigateToProjects = () => {
-    navigate('/projects');
+    navigate("/projects");
   };
 
   const handleNavigateToOrgSettings = () => {
@@ -61,9 +62,9 @@ export default function AppHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
                   {user?.picture ? (
-                    <img 
-                      src={user.picture} 
-                      alt="User avatar" 
+                    <img
+                      src={user.picture}
+                      alt="User avatar"
                       className="h-6 w-6 rounded-full"
                     />
                   ) : (
@@ -80,6 +81,7 @@ export default function AppHeader() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <ModeToggle />
           </div>
         </div>
       </header>
@@ -127,9 +129,9 @@ export default function AppHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2">
                 {user?.picture ? (
-                  <img 
-                    src={user.picture} 
-                    alt="User avatar" 
+                  <img
+                    src={user.picture}
+                    alt="User avatar"
                     className="h-6 w-6 rounded-full"
                   />
                 ) : (
@@ -146,6 +148,7 @@ export default function AppHeader() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <ModeToggle />
         </div>
       </div>
     </header>
