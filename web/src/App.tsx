@@ -22,9 +22,7 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import OrganizationOverviewPage from '@/features/organizations/pages/OrganizationOverviewPage';
 import OrganizationSettingsPage from '@/features/organizations/pages/OrganizationSettingsPage';
 import ResourceSettingsPage from '@/features/resources/pages/ResourceSettingsPage';
-import BillingPage from '@/features/billing/pages/BillingPage';
-import CatalogPage from '@/features/catalog/CatalogPage';
-import CatalogDeployPage from '@/features/catalog/CatalogDeployPage';
+import BillingPage from "@/features/billing/pages/BillingPage";
 
 function App() {
   const onRedirectCallback = (appState?: any) => {
@@ -39,7 +37,7 @@ function App() {
       authorizationParams={{
         redirect_uri: window.location.origin + "/callback",
         audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-        scope: "openid profile email access:platform"
+        scope: "openid profile email access:platform",
       }}
       useRefreshTokens={true}
       cacheLocation="localstorage"
@@ -51,42 +49,89 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/callback" element={<AuthCallbackPage />} />
-            <Route path="/catalog" element={<CatalogPage />} />
-            <Route path="/catalog/deploy/:resourceTypeId" element={<CatalogDeployPage />} />
 
             {/* Project Selection */}
-            <Route element={<ProtectedRoute><ProjectSelectorLayout /></ProtectedRoute>}>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <ProjectSelectorLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route path="/" element={<Navigate to="/projects" replace />} />
               <Route path="/projects" element={<ProjectListPage />} />
             </Route>
 
             {/* Project-based Routes (plural) */}
-            <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectLayout /></ProtectedRoute>}>
+            <Route
+              path="/projects/:projectId"
+              element={
+                <ProtectedRoute>
+                  <ProjectLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<ProjectDetailPage />} />
               <Route path="resources" element={<ResourcesPage />} />
               <Route path="resources/create" element={<CreateResourcePage />} />
               <Route path="access" element={<ProjectAccessPage />} />
-              <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
+              <Route
+                path="access/grant"
+                element={<CreateRoleAssignmentPage />}
+              />
               <Route path="billing" element={<BillingPage />} />
               <Route path="settings" element={<ProjectSettingsPage />} />
             </Route>
 
+            {/* Global resource creation route for homepage integration */}
+            <Route
+              path="/resources/create"
+              element={
+                <ProtectedRoute>
+                  <CreateResourcePage />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Resource-based Routes (plural) */}
-            <Route path="/projects/:projectId/resources/:resourceId" element={<ProtectedRoute><ResourceLayout /></ProtectedRoute>}>
+            <Route
+              path="/projects/:projectId/resources/:resourceId"
+              element={
+                <ProtectedRoute>
+                  <ResourceLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<ResourceDetailPage />} />
               <Route path="access" element={<ResourceAccessPage />} />
-              <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
+              <Route
+                path="access/grant"
+                element={<CreateRoleAssignmentPage />}
+              />
               <Route path="logs" element={<div>Resource Logs Page</div>} />
-              <Route path="monitoring" element={<div>Resource Monitoring Page</div>} />
+              <Route
+                path="monitoring"
+                element={<div>Resource Monitoring Page</div>}
+              />
               <Route path="settings" element={<ResourceSettingsPage />} />
             </Route>
 
             {/* Organization-based Routes (plural) */}
-            <Route path="/organizations/:orgId" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
+            <Route
+              path="/organizations/:orgId"
+              element={
+                <ProtectedRoute>
+                  <OrganizationLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<OrganizationOverviewPage />} />
               <Route path="projects" element={<ProjectListPage />} />
               <Route path="access" element={<OrganizationAccessPage />} />
-              <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
+              <Route
+                path="access/grant"
+                element={<CreateRoleAssignmentPage />}
+              />
               <Route path="billing" element={<BillingPage />} />
               <Route path="settings" element={<OrganizationSettingsPage />} />
             </Route>

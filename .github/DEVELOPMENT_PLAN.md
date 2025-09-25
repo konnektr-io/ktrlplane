@@ -316,20 +316,31 @@ _Track anything preventing progress_
 
 #### 3. Catalog & Homepage Integration Strategy
 
-- [ ] **Evaluate removing KtrlPlane CatalogPage**
   - Consolidate product discovery to main homepage
   - Implement homepage → create resource flow
   - Support tier pre-selection via URL parameters
 
 **Homepage Integration Requirements:**
 
-- Homepage should redirect to `/projects/{projectId}/resources/create?resourceType={type}&tier={tier}`
-- Support authentication flow: homepage → login → project selection → resource creation
-- Maintain consistency with existing auth patterns
+
+
 
 ## 🔄 Continuous Improvements
 
-### Regular Reviews (Weekly)
+  - Resource creation page should auto-select last active project (from localStorage/Zustand)
+  - If no project is found, prompt user to select or create a project
+  - Add project selection dropdown to resource creation page, defaulting to last active project, but allowing user to choose another
+  - If user changes project, update resource creation flow accordingly
+  - Ensure flow works for users with multiple projects, no projects, or when coming from direct link
+
+**Edge Cases:**
+  - If user is not authenticated, redirect to login
+  - If user has no projects, prompt to create one before proceeding
+  - If user has multiple projects, allow selection via dropdown
+
+**User Experience:**
+  - Seamless flow: homepage → login (if needed) → resource creation page (with project selection) → resource configuration
+
 
 - [ ] Update progress on current phase tasks
 - [ ] Review and adjust priorities based on user feedback
