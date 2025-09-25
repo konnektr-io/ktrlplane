@@ -10,70 +10,102 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
-import { resourceSchemas, defaultConfigurations } from "@/features/resources/schemas";
-import { DigitalTwinsSettings } from "@/features/resources/schemas/DigitalTwinsSchema";
+import {
+  resourceSchemas,
+  defaultConfigurations,
+} from "@/features/resources/schemas";
+import type { GraphSettings } from "@/features/resources/schemas/GraphSchema";
 
-interface DigitalTwinsFormProps {
-  initialValues?: DigitalTwinsSettings;
-  onSubmit: (values: DigitalTwinsSettings) => void;
+interface GraphFormProps {
+  initialValues?: GraphSettings;
+  onSubmit: (values: GraphSettings) => void;
   disabled?: boolean;
 }
 
-export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalTwinsFormProps) {
-  const schema = resourceSchemas['Konnektr.DigitalTwins'];
-  const defaultValues = initialValues || defaultConfigurations['Konnektr.DigitalTwins'];
+export function GraphForm({
+  initialValues,
+  onSubmit,
+  disabled,
+}: GraphFormProps) {
+  const schema = resourceSchemas["Konnektr.Graph"];
+  const defaultValues =
+    initialValues || defaultConfigurations["Konnektr.Graph"];
 
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues,
   });
 
-  const { fields: kafkaFields, append: appendKafka, remove: removeKafka } = useFieldArray({
+  const {
+    fields: kafkaFields,
+    append: appendKafka,
+    remove: removeKafka,
+  } = useFieldArray({
     control: form.control,
-    name: "eventSinks.kafka"
+    name: "eventSinks.kafka",
   });
 
-  const { fields: kustoFields, append: appendKusto, remove: removeKusto } = useFieldArray({
+  const {
+    fields: kustoFields,
+    append: appendKusto,
+    remove: removeKusto,
+  } = useFieldArray({
     control: form.control,
-    name: "eventSinks.kusto"
+    name: "eventSinks.kusto",
   });
 
-  const { fields: routeFields, append: appendRoute, remove: removeRoute } = useFieldArray({
+  const {
+    fields: routeFields,
+    append: appendRoute,
+    remove: removeRoute,
+  } = useFieldArray({
     control: form.control,
-    name: "eventRoutes"
+    name: "eventRoutes",
   });
 
   // Get all available sink names for the route dropdown
   const allSinks = form.watch();
   const availableSinkNames = [
     ...(allSinks.eventSinks?.kafka?.map((sink: any) => sink.name) || []),
-    ...(allSinks.eventSinks?.kusto?.map((sink: any) => sink.name) || [])
+    ...(allSinks.eventSinks?.kusto?.map((sink: any) => sink.name) || []),
   ].filter(Boolean);
 
   const handleAddKafkaSink = () => {
     appendKafka({
-      name: '',
-      brokerList: '',
-      topic: '',
-      saslMechanism: 'OAUTHBEARER'
+      name: "",
+      brokerList: "",
+      topic: "",
+      saslMechanism: "OAUTHBEARER",
     });
   };
 
   const handleAddKustoSink = () => {
     appendKusto({
-      name: '',
-      ingestionUri: '',
-      database: ''
+      name: "",
+      ingestionUri: "",
+      database: "",
     });
   };
 
   const handleAddRoute = () => {
     appendRoute({
-      sinkName: '',
-      eventFormat: 'EventNotification'
+      sinkName: "",
+      eventFormat: "EventNotification",
     });
   };
 
@@ -84,14 +116,19 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
         <Card>
           <CardHeader>
             <CardTitle>Kafka Event Sinks</CardTitle>
-            <CardDescription>Configure Kafka sinks for event streaming with federated credentials</CardDescription>
+            <CardDescription>
+              Configure Kafka sinks for event streaming with federated
+              credentials
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {kafkaFields.map((field, index) => (
               <Card key={field.id} className="p-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">Kafka Sink {index + 1}</h4>
+                    <h4 className="text-sm font-medium">
+                      Kafka Sink {index + 1}
+                    </h4>
                     <Button
                       type="button"
                       variant="outline"
@@ -102,7 +139,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventSinks.kafka.${index}.name`}
@@ -120,7 +157,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventSinks.kafka.${index}.brokerList`}
@@ -138,7 +175,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventSinks.kafka.${index}.topic`}
@@ -156,7 +193,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventSinks.kafka.${index}.saslMechanism`}
@@ -180,7 +217,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                 </div>
               </Card>
             ))}
-            
+
             <Button
               type="button"
               variant="outline"
@@ -198,14 +235,19 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
         <Card>
           <CardHeader>
             <CardTitle>Kusto Event Sinks</CardTitle>
-            <CardDescription>Configure Azure Data Explorer (Kusto) sinks with federated credentials</CardDescription>
+            <CardDescription>
+              Configure Azure Data Explorer (Kusto) sinks with federated
+              credentials
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {kustoFields.map((field, index) => (
               <Card key={field.id} className="p-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">Kusto Sink {index + 1}</h4>
+                    <h4 className="text-sm font-medium">
+                      Kusto Sink {index + 1}
+                    </h4>
                     <Button
                       type="button"
                       variant="outline"
@@ -216,7 +258,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventSinks.kusto.${index}.name`}
@@ -234,7 +276,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventSinks.kusto.${index}.ingestionUri`}
@@ -252,7 +294,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventSinks.kusto.${index}.database`}
@@ -273,7 +315,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                 </div>
               </Card>
             ))}
-            
+
             <Button
               type="button"
               variant="outline"
@@ -291,14 +333,18 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
         <Card>
           <CardHeader>
             <CardTitle>Event Routes</CardTitle>
-            <CardDescription>Configure routing rules to send events to specific sinks</CardDescription>
+            <CardDescription>
+              Configure routing rules to send events to specific sinks
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {routeFields.map((field, index) => (
               <Card key={field.id} className="p-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">Event Route {index + 1}</h4>
+                    <h4 className="text-sm font-medium">
+                      Event Route {index + 1}
+                    </h4>
                     <Button
                       type="button"
                       variant="outline"
@@ -309,14 +355,17 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventRoutes.${index}.sinkName`}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Target Sink</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger disabled={disabled}>
                               <SelectValue placeholder="Select a sink" />
@@ -339,22 +388,29 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name={`eventRoutes.${index}.eventFormat`}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Event Format</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger disabled={disabled}>
                               <SelectValue placeholder="Select event format" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="EventNotification">Event Notification</SelectItem>
-                            <SelectItem value="DataHistory">Data History</SelectItem>
+                            <SelectItem value="EventNotification">
+                              Event Notification
+                            </SelectItem>
+                            <SelectItem value="DataHistory">
+                              Data History
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -364,7 +420,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
                 </div>
               </Card>
             ))}
-            
+
             <Button
               type="button"
               variant="outline"
@@ -375,7 +431,7 @@ export function DigitalTwinsForm({ initialValues, onSubmit, disabled }: DigitalT
               <Plus className="h-4 w-4 mr-2" />
               Add Event Route
             </Button>
-            
+
             {availableSinkNames.length === 0 && (
               <div className="text-sm text-muted-foreground text-center">
                 Create at least one sink to add event routes

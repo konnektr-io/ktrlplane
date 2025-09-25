@@ -13,17 +13,33 @@ import { generateDNSId, validateDNSId, slugify } from '@/lib/dnsUtils';
 import { resourceTypes as catalogResourceTypes } from '@/features/catalog/resourceTypes';
 
 const resourceTypes = [
-  { 
-    value: 'Konnektr.DigitalTwins', 
-    label: 'Digital Twins', 
-    description: 'Age Graph Database for storing and querying digital twin data with event processing',
-    icon: Database
+  {
+    value: "Konnektr.Graph",
+    label: "Graph",
+    description:
+      "High-performance graph database and API layer for digital twin data and event processing.",
+    icon: Database,
   },
-  { 
-    value: 'Konnektr.Flows', 
-    label: 'Flows', 
-    description: 'Process flows and workflows with configurable scaling and environment variables',
-    icon: Workflow
+  {
+    value: "Konnektr.Flow",
+    label: "Flow",
+    description:
+      "Real-time data and event processing engine for digital twins and automation.",
+    icon: Workflow,
+  },
+  {
+    value: "Konnektr.Assembler",
+    label: "Assembler",
+    description:
+      "AI-powered digital twin builder for automated model generation.",
+    icon: Database,
+  },
+  {
+    value: "Konnektr.Compass",
+    label: "Compass",
+    description:
+      "Navigation and discovery tool for digital twin analytics and simulation.",
+    icon: Database,
   },
 ];
 

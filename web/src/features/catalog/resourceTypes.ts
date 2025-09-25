@@ -24,10 +24,10 @@ export interface ResourceType {
 
 export const resourceTypes: ResourceType[] = [
   {
-    id: "Konnektr.DigitalTwins",
-    name: "Digital Twins",
+    id: "Konnektr.Graph",
+    name: "Graph",
     description:
-      "Age Graph Database for storing and querying digital twin data with event processing",
+      "High-performance graph database and API layer for digital twin data and event processing.",
     longDescription:
       "A scalable, event-driven graph database for digital twin modeling, analytics, and event processing.",
     icon: Database,
@@ -49,14 +49,14 @@ export const resourceTypes: ResourceType[] = [
         limits: { Twins: "10,000", Storage: "10GB" },
       },
     ],
-    documentationUrl: "https://docs.konnektr.io/digital-twins",
+    documentationUrl: "https://docs.konnektr.io/graph",
     isPopular: true,
   },
   {
-    id: "Konnektr.Flows",
-    name: "Flows",
+    id: "Konnektr.Flow",
+    name: "Flow",
     description:
-      "Process flows and workflows with configurable scaling and environment variables",
+      "Real-time data and event processing engine for digital twins and automation.",
     longDescription:
       "A workflow engine for orchestrating business processes, automation, and integrations.",
     icon: Workflow,
@@ -78,7 +78,65 @@ export const resourceTypes: ResourceType[] = [
         limits: { Flows: "50", Executions: "10,000/mo" },
       },
     ],
-    documentationUrl: "https://docs.konnektr.io/flows",
+    documentationUrl: "https://docs.konnektr.io/flow",
+    isNew: true,
+  },
+  {
+    id: "Konnektr.Assembler",
+    name: "Assembler",
+    description:
+      "AI-powered digital twin builder for automated model generation.",
+    longDescription:
+      "Automate the creation of DTDL models and graph relationships from any data source with an intuitive, low-code visual interface.",
+    icon: Database,
+    category: "AI Builder",
+    features: ["AI model generation", "Low-code interface", "DTDL support"],
+    skus: [
+      {
+        sku: "free",
+        name: "Free",
+        price: "$0/mo",
+        features: ["Up to 3 models", "Community support"],
+        limits: { Models: "3", DataSources: "1" },
+      },
+      {
+        sku: "standard",
+        name: "Standard",
+        price: "$49/mo",
+        features: ["Up to 20 models", "Email support"],
+        limits: { Models: "20", DataSources: "5" },
+      },
+    ],
+    documentationUrl: "https://docs.konnektr.io/assembler",
+    isNew: true,
+  },
+  {
+    id: "Konnektr.Compass",
+    name: "Compass",
+    description:
+      "Navigation and discovery tool for digital twin analytics and simulation.",
+    longDescription:
+      "Analytics, visualization, and simulation layer for digital twin environments.",
+    icon: Database,
+    category: "Analytics",
+    features: ["Dashboarding", "Simulation", "Cross-twin analytics"],
+    skus: [
+      {
+        sku: "free",
+        name: "Free",
+        price: "$0/mo",
+        features: ["Basic analytics", "Community support"],
+        limits: { Dashboards: "1", Simulations: "1" },
+      },
+      {
+        sku: "standard",
+        name: "Standard",
+        price: "$99/mo",
+        features: ["Advanced analytics", "Simulation engine", "Email support"],
+        limits: { Dashboards: "10", Simulations: "10" },
+      },
+    ],
+    documentationUrl: "https://docs.konnektr.io/compass",
     isNew: true,
   },
 ];
