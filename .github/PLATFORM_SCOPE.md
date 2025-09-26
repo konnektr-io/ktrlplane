@@ -1,4 +1,4 @@
-# Konnektr Platform - Application Scope & Boundaries
+nektr Platform - Application Scope & Boundaries
 
 ## 🎯 Overview
 
@@ -53,7 +53,7 @@ Each application has a single primary responsibility and excels at that function
 
 ## 🏢 Application Scopes
 
-### KtrlPlane (Control Plane) - **THIS APPLICATION**
+### KtrlPlane (Control Plane)
 
 **One-Liner**: The central Control Plane for managing all users, resources, and billing.
 
@@ -97,7 +97,7 @@ Each application has a single primary responsibility and excels at that function
 
 ---
 
-### Konnektr Home Page (Marketing)
+### Konnektr Home Page (Marketing) - **THIS APPLICATION**
 
 **One-Liner**: Public-facing marketing and information website.
 
@@ -105,11 +105,47 @@ Each application has a single primary responsibility and excels at that function
 
 - Product information, pricing, blog, documentation links
 - Interactive demos and marketing content
+- Lead generation and conversion optimization
+- SEO optimization and organic discovery
+- Brand messaging and value proposition communication
+- User journey from discovery to platform engagement
 
 **❌ Out-of-Scope:**
 
 - User authentication or user-specific data
 - Resource management functionality
+- Billing or subscription management
+- Direct product functionality implementation
+
+**🔌 Key Interactions:**
+
+- Redirects to KtrlPlane for authentication and resource creation
+- Supports deep linking to specific product creation flows
+- Integration with KtrlPlane URL patterns for seamless transitions
+
+---
+
+### Konnektr Documentation Site (docs.konnektr.com)
+
+**One-Liner**: Central portal for all user-facing Konnektr documentation, guides, and API references.
+
+**✅ In-Scope:**
+- Interactive, searchable docs for all products using MDX, React, Vite, and Shadcn/UI
+- Consistent branding and design system
+- Automated PRs from product repos merge user docs into the site
+
+**❌ Out-of-Scope:**
+- Marketing, sales, or lead generation (see Konnektr Home)
+- Product business logic, backend integration, or user authentication
+
+**Key Interactions:**
+- "Docs" links from all apps point to docs.konnektr.com
+- Product repos push doc changes via GitHub Actions/PRs
+
+**Architecture:**
+- Separate Vite/React/MDX/Shadcn project (konnektr-docs)
+- Content organized by product, with live React components for demos
+- Deployed to docs.konnektr.com via static hosting/CDN
 
 ---
 
@@ -204,63 +240,67 @@ Each application has a single primary responsibility and excels at that function
 
 ## 🚨 Scope Enforcement Rules
 
-### For KtrlPlane Development:
+### For Konnektr Home Development:
 
 **✅ Always Do:**
 
-- Implement user, organization, and project management
-- Handle billing and subscription management
-- Provide RBAC and access control
-- Expose APIs for other applications to consume
-- Manage resource lifecycle through database records
+- Focus on marketing and lead generation
+- Create compelling product information and demos
+- Optimize for SEO and organic discovery
+- Implement clear user journeys to platform engagement
+- Maintain consistent brand messaging
+- Redirect to KtrlPlane for authentication and resource management
 
 **❌ Never Do:**
 
-- Implement graph query logic (that's Graph's job)
-- Build flow execution engines (that's Flow's job)
-- Create separate authentication systems for products
-- Directly deploy Kubernetes resources (that's the operator's job)
-- Store product-specific business data
+- Implement user authentication or session management
+- Store user-specific data or create user accounts
+- Implement business logic of other Konnektr products
+- Create separate billing or subscription systems
+- Directly integrate with product databases
+- Build resource management functionality
 
 ### Cross-Application Communication:
 
 **✅ Allowed:**
 
-- REST/gRPC API calls between applications
-- Event-based communication via message bus
-- Reading from shared configuration systems
+- Static links to other applications
+- URL parameter passing for deep linking
+- Shared design system components
+- Marketing analytics and tracking
 
 **❌ Forbidden:**
 
-- Direct database connections between applications
-- Shared in-memory state
-- Direct file system sharing
-- Bypassing API boundaries
+- Direct API calls to product applications
+- Shared authentication sessions
+- Direct database connections
+- Real-time data integration
 
 ## 🔄 Boundary Evolution
 
 When requirements blur these boundaries:
 
 1. **First**: Try to solve within existing scope
-2. **Second**: Extend APIs to support the use case
+2. **Second**: Create clear handoff points to appropriate applications
 3. **Last Resort**: Discuss boundary changes with architecture team
 
 ## 📝 Compliance Checklist
 
 Before implementing any feature, verify:
 
-- [ ] Does this belong in KtrlPlane's scope?
-- [ ] Am I maintaining separation from Data Plane logic?
-- [ ] Are all external interactions through defined APIs?
-- [ ] Does this maintain centralized auth/billing principles?
-- [ ] Will this work with the db-query-operator model?
+- [ ] Does this belong in Konnektr Home's marketing scope?
+- [ ] Am I maintaining separation from platform functionality?
+- [ ] Are all user management features redirected to KtrlPlane?
+- [ ] Does this enhance the marketing and discovery experience?
+- [ ] Will this support seamless transitions to the platform?
 
 ---
 
 ## 📋 Change Log
 
 - **2025-01-27**: Initial platform scope document created
-- **2025-09-25**: Updated product names (AgeDigitalTwins → Konnektr Graph, clarified product descriptions)
+- **2025-09-25**: Updated product names (AgeDigitalTwins → Konnektr Graph, clarified product descriptions), added Konnektr Home as THIS APPLICATION
+- **2025-09-25**: Enhanced Konnektr Home scope definition for marketing website focus
 
 ---
 
