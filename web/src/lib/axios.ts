@@ -15,10 +15,10 @@ const apiClient = axios.create({
 });
 
 // Helper to get Auth0 logout method
-function getAuth0Logout() {
+// function getAuth0Logout() {
   // Try to get the Auth0 logout method from window
-  return window.auth0Logout || (() => { window.location.href = '/login'; });
-}
+//   return window.auth0Logout || (() => { window.location.href = '/login'; });
+// }
 
 // Function to setup auth interceptor with Auth0 token
 export const setupAuthInterceptor = (getAccessTokenSilently: () => Promise<string>) => {
@@ -32,13 +32,13 @@ export const setupAuthInterceptor = (getAccessTokenSilently: () => Promise<strin
         const token = await getAccessTokenSilently();
         if (!token) {
           // If token cannot be retrieved, force logout
-          getAuth0Logout()();
+          // getAuth0Logout()();
           throw new Error('Could not retrieve token');
         }
         config.headers.Authorization = `Bearer ${token}`;
       } catch (error) {
         console.warn('Failed to get access token:', error);
-        getAuth0Logout()();
+        // getAuth0Logout()();
       }
       return config;
     },
@@ -50,7 +50,7 @@ export const setupAuthInterceptor = (getAccessTokenSilently: () => Promise<strin
 
 
 // Response interceptor for error handling
-apiClient.interceptors.response.use(
+/* apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
@@ -62,6 +62,6 @@ apiClient.interceptors.response.use(
     }
     return Promise.reject(error);
   }
-);
+); */
 
 export default apiClient;

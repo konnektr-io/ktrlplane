@@ -1,14 +1,14 @@
-import { ReactNode, useEffect } from 'react';
-import { useProjectStore } from '../features/projects/store/projectStore';
-import { useOrganizationStore } from '../features/organizations/store/organizationStore';
+import { type ReactNode, useEffect } from "react";
+import { useProjectStore } from "../features/projects/store/projectStore";
+import { useOrganizationStore } from "../features/organizations/store/organizationStore";
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarProvider,
-} from '@/components/ui/sidebar';
-import AppHeader from '@/components/AppHeader';
-import { Outlet } from 'react-router-dom';
+} from "@/components/ui/sidebar";
+import AppHeader from "@/components/AppHeader";
+import { Outlet } from "react-router-dom";
 import konnektrLogo from "../assets/konnektr.svg";
 import { ThemeProvider } from "@/components/theme-provider";
 

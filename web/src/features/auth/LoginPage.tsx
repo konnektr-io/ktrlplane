@@ -3,16 +3,14 @@ import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import konnektrLogo from "@/assets/konnektr.svg";
 
 export default function LoginPage() {
   const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
 
-  useEffect(() => {
-    // If user is already authenticated, redirect them
-    if (isAuthenticated) {
-      return;
-    }
-  }, [isAuthenticated]);
+  const handleLogin = () => {
+    loginWithRedirect();
+  };
 
   if (isLoading) {
     return (
@@ -29,25 +27,20 @@ export default function LoginPage() {
     return <Navigate to="/projects" replace />;
   }
 
-  const handleLogin = () => {
-    loginWithRedirect();
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="max-w-md w-full space-y-8 p-6">
         <div className="text-center">
-          <img 
-            src="https://konnektr.io/assets/konnektr-DaFD7oiA.svg" 
-            alt="Konnektr" 
-            className="mx-auto h-12 w-auto mb-6"
-          />
+          <div className="flex justify-center items-center gap-6 h-10 mb-12">
+            <img src={konnektrLogo} alt="Konnektr" className="h-12" />
+            <div className="font-bold text-3xl">Konnektr</div>
+          </div>
           <h2 className="text-3xl font-bold">Welcome to ktrlplane</h2>
           <p className="mt-2 text-muted-foreground">
             Your cloud platform control plane
           </p>
         </div>
-        
+
         <Card>
           <CardHeader className="text-center">
             <CardTitle>Sign In</CardTitle>
@@ -56,11 +49,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              onClick={handleLogin}
-              className="w-full"
-              size="lg"
-            >
+            <Button onClick={handleLogin} className="w-full" size="lg">
               Sign in
             </Button>
           </CardContent>

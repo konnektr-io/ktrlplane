@@ -94,9 +94,11 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - Billing inheritance: projects can inherit from organization billing
 - Remove Stripe branding in UI (use generic payment terminology)
 
+
 ### 6. UI/UX Guidelines
 
 - Use shadcn/ui components consistently
+- Always use the fragment shorthand syntax (`<></>`) instead of `React.Fragment` in all React code
 - Implement proper loading states and error handling
 - Mobile-responsive design
 - Follow Konnektr Design System for consistency across platform
