@@ -2,7 +2,7 @@
 export { resourceSchemas, defaultConfigurations, type ResourceType } from '@/features/resources/schemas';
 export {
   DigitalTwinsSchema,
-  type DigitalTwinsSettings,
+  type GraphSettings as DigitalTwinsSettings,
   type SinkConfig,
   type EventRouteConfig,
 } from "@/features/resources/schemas/GraphSchema";

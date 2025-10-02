@@ -25,12 +25,12 @@ export const eventRouteSchema = z.object({
   eventFormat: z.enum(['EventNotification', 'DataHistory']),
 });
 
-export const DigitalTwinsSchema = z.object({
+export const GraphSchema = z.object({
   eventSinks: eventSinksSchema,
   eventRoutes: z.array(eventRouteSchema).default([]),
 });
 
-export type DigitalTwinsSettings = z.infer<typeof DigitalTwinsSchema>;
+export type GraphSettings = z.infer<typeof GraphSchema>;
 export type EventSinksConfig = z.infer<typeof eventSinksSchema>;
 export type EventRouteConfig = z.infer<typeof eventRouteSchema>;
 export type KafkaSinkConfig = z.infer<typeof kafkaSinkConfig>;

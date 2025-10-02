@@ -1,10 +1,10 @@
-import { DigitalTwinsSchema } from "./GraphSchema";
+import { GraphSchema } from "./GraphSchema";
 import { FlowSchema } from "./FlowSchema";
 import { AssemblerSchema } from "./AssemblerSchema";
 import { CompassSchema } from "./CompassSchema";
 
 export const resourceSchemas = {
-  "Konnektr.Graph": DigitalTwinsSchema,
+  "Konnektr.Graph": GraphSchema,
   "Konnektr.Flow": FlowSchema,
   "Konnektr.Assembler": AssemblerSchema,
   "Konnektr.Compass": CompassSchema,
