@@ -1,15 +1,24 @@
-import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth0 } from "@auth0/auth0-react";
+import { Navigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import konnektrLogo from "@/assets/konnektr.svg";
 
 export default function LoginPage() {
-  const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
+  const { loginWithRedirect /* , isAuthenticated */, isLoading } = useAuth0();
 
   const handleLogin = () => {
-    loginWithRedirect();
+    loginWithRedirect({
+      appState: {
+        returnTo: "projects" + window.location.search,
+      },
+    });
   };
 
   if (isLoading) {
@@ -23,9 +32,9 @@ export default function LoginPage() {
     );
   }
 
-  if (isAuthenticated) {
+  /*   if (isAuthenticated) {
     return <Navigate to="/projects" replace />;
-  }
+  } */
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
