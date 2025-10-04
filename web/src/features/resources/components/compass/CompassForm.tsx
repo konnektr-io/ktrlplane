@@ -1,7 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resourceSchemas } from "@/lib/resourceSchemas";
-import type { CompassSettings } from "../../schemas/CompassSchema";
+import {
+  CompassSchema,
+  type CompassSettings,
+} from "../../schemas/CompassSchema";
 
 interface CompassFormProps {
   initialValues?: CompassSettings;
@@ -14,7 +16,7 @@ export function CompassForm({
   onSubmit,
   disabled,
 }: CompassFormProps) {
-  const schema = resourceSchemas["Konnektr.Compass"];
+  const schema = CompassSchema;
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: initialValues,

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useProjectStore } from "@/features/projects/store/projectStore";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Database, Workflow, ArrowLeft, Check } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,12 +12,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { useResourceStore } from "../store/resourceStore";
+import { defaultConfigurations } from "@/features/resources/schemas";
 import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
-import { defaultConfigurations } from "@/lib/resourceSchemas";
-import { Database, Workflow, ArrowLeft, Check } from "lucide-react";
 import { generateDNSId, validateDNSId, slugify } from "@/lib/dnsUtils";
+import { useProjectStore } from "@/features/projects/store/projectStore";
 import { resourceTypes as catalogResourceTypes } from "@/features/catalog/resourceTypes";
 
 const resourceTypes = [
@@ -150,7 +150,7 @@ export default function CreateResourcePage() {
       const newResource = await createResource(selectedProjectId, {
         id: basicData.id.trim(),
         name: basicData.name.trim(),
-        type: basicData.type as "Konnektr.DigitalTwins" | "Konnektr.Flows",
+        type: basicData.type as "Konnektr.Graph" | "Konnektr.Flow",
         sku: basicData.sku, // Include SKU in the resource creation
         settings_json: configuration,
       });

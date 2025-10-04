@@ -1,7 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resourceSchemas } from "@/lib/resourceSchemas";
-import type { AssemblerSettings } from "../../schemas/AssemblerSchema";
+import {
+  AssemblerSchema,
+  type AssemblerSettings,
+} from "../../schemas/AssemblerSchema";
 
 interface AssemblerFormProps {
   initialValues?: AssemblerSettings;
@@ -14,7 +16,7 @@ export function AssemblerForm({
   onSubmit,
   disabled,
 }: AssemblerFormProps) {
-  const schema = resourceSchemas["Konnektr.Assembler"];
+  const schema = AssemblerSchema;
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: initialValues,

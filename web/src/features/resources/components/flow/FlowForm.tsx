@@ -1,7 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resourceSchemas } from "@/lib/resourceSchemas";
-import type { FlowSettings } from "@/features/resources/schemas/FlowSchema";
+import {
+  FlowSchema,
+  type FlowSettings,
+} from "@/features/resources/schemas/FlowSchema";
 
 interface FlowFormProps {
   initialValues?: FlowSettings;
@@ -10,7 +12,7 @@ interface FlowFormProps {
 }
 
 export function FlowForm({ initialValues, onSubmit, disabled }: FlowFormProps) {
-  const schema = resourceSchemas["Konnektr.Flow"];
+  const schema = FlowSchema;
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: initialValues,

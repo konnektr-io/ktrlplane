@@ -55,8 +55,8 @@ ingress:
 | `DB_NAME`        | Database name      | Yes      |
 | `DB_USER`        | Database user      | Yes      |
 | `DB_PASSWORD`    | Database password  | Yes      |
-| `AUTH0_DOMAIN`   | Auth0 domain       | Yes      |
-| `AUTH0_AUDIENCE` | Auth0 API audience | Yes      |
+| `AUTH_DOMAIN`    | Auth domain        | Yes      |
+| `AUTH_AUDIENCE`  | Auth audience      | Yes      |
 
 ### Database Setup
 
