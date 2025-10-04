@@ -23,7 +23,7 @@ const apiClient = axios.create({
 // Function to setup auth interceptor with Auth0 token
 export const setupAuthInterceptor = (
   getAccessTokenSilently: () => Promise<string>,
-  getAccessTokenWithPopup: () => Promise<string>
+  loginWithRedirect: () => Promise<void>
 ) => {
   // Clear any existing auth interceptors
   apiClient.interceptors.request.clear();
@@ -34,8 +34,8 @@ export const setupAuthInterceptor = (
       try {
         let token = await getAccessTokenSilently();
         if (!token) {
-          // If token cannot be retrieved, try with popup as fallback
-          token = await getAccessTokenWithPopup();
+          // If token cannot be retrieved redirect to login
+          await loginWithRedirect();
         }
         if (!token) {
           // If token cannot be retrieved throw error

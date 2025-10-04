@@ -58,9 +58,8 @@ export default function CreateResourcePage() {
   const navigate = useNavigate();
   const { createResource } = useResourceStore();
 
-  // Get the resource type from URL - it should always be provided now
+  // Get the resource type from URL - it may be provided from external links
   const preselectedResourceType = searchParams.get("resourceType");
-  const isFromCatalog = searchParams.get("from") === "catalog";
 
   // Project selection logic
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
@@ -88,17 +87,11 @@ export default function CreateResourcePage() {
     }
   }, [selectedProjectId, setLastProjectId]);
 
-  // If no resource type is provided, redirect to catalog
-  useEffect(() => {
-    if (!preselectedResourceType) {
-      navigate("/catalog");
-      return;
-    }
-  }, [preselectedResourceType, navigate]);
+  // No longer redirect to catalog - allow resource type selection on this page
 
-  // Start with tier selection if resource type is pre-selected, otherwise basic info
-  const [step, setStep] = useState<"tier" | "configuration">(
-    preselectedResourceType ? "tier" : "tier"
+  // Start with resource type selection if not pre-selected, otherwise tier selection
+  const [step, setStep] = useState<"resourceType" | "tier" | "configuration">(
+    preselectedResourceType ? "tier" : "resourceType"
   );
   const [isCreating, setIsCreating] = useState(false);
   const [basicData, setBasicData] = useState({
@@ -179,6 +172,8 @@ export default function CreateResourcePage() {
   const getBackButtonText = () => {
     if (step === "configuration") {
       return "Back to Tier Selection";
+    } else if (step === "tier") {
+      return "Back to Resource Selection";
     } else {
       return "Back to Resources";
     }
@@ -187,6 +182,8 @@ export default function CreateResourcePage() {
   const handleBackClick = () => {
     if (step === "configuration") {
       setStep("tier");
+    } else if (step === "tier") {
+      setStep("resourceType");
     } else {
       navigate(`/projects/${selectedProjectId}/resources`);
     }
@@ -233,16 +230,18 @@ export default function CreateResourcePage() {
         </div>
         <h1 className="text-2xl font-bold">Create New Resource</h1>
         <p className="text-muted-foreground">
-          {step === "tier"
+          {step === "resourceType"
+            ? "Choose the type of resource you want to create"
+            : step === "tier"
             ? "Select a tier that fits your needs"
             : "Configure your resource settings for deployment"}
         </p>
-        {/* Show helpful message if coming from catalog */}
-        {selectedResourceType && (
+        {/* Show helpful message if resource type was preselected */}
+        {preselectedResourceType && selectedResourceType && (
           <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
-              <span className="font-medium">From Catalog:</span>{" "}
-              {selectedResourceType.label} pre-selected
+              <span className="font-medium">Pre-selected:</span>{" "}
+              {selectedResourceType.label} resource type
             </p>
           </div>
         )}
@@ -250,27 +249,75 @@ export default function CreateResourcePage() {
 
       {/* Progress Indicator */}
       <div className="flex items-center mb-8">
+        {/* Step 1: Resource Type */}
         <div
           className={`flex items-center ${
-            step === "tier" ? "text-primary" : "text-green-600"
+            step === "resourceType"
+              ? "text-primary"
+              : step === "tier" || step === "configuration"
+              ? "text-green-600"
+              : "text-muted-foreground"
+          }`}
+        >
+          <div
+            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
+              step === "resourceType"
+                ? "border-primary bg-primary text-primary-foreground"
+                : step === "tier" || step === "configuration"
+                ? "border-green-600 bg-green-600 text-white"
+                : "border-muted-foreground"
+            }`}
+          >
+            {step === "resourceType" ? "1" : <Check className="h-4 w-4" />}
+          </div>
+          <span className="ml-2 font-medium">Select Resource Type</span>
+        </div>
+
+        <div
+          className={`flex-1 h-0.5 mx-4 ${
+            step === "tier" || step === "configuration"
+              ? "bg-primary"
+              : "bg-muted"
+          }`}
+        />
+
+        {/* Step 2: Tier Selection */}
+        <div
+          className={`flex items-center ${
+            step === "tier"
+              ? "text-primary"
+              : step === "configuration"
+              ? "text-green-600"
+              : "text-muted-foreground"
           }`}
         >
           <div
             className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
               step === "tier"
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-green-600 bg-green-600 text-white"
+                : step === "configuration"
+                ? "border-green-600 bg-green-600 text-white"
+                : "border-muted-foreground"
             }`}
           >
-            {step === "tier" ? "1" : <Check className="h-4 w-4" />}
+            {step === "tier" ? (
+              "2"
+            ) : step === "configuration" ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              "2"
+            )}
           </div>
-          <span className="ml-2 font-medium">Select Tier & Basic Info</span>
+          <span className="ml-2 font-medium">Select Tier</span>
         </div>
+
         <div
           className={`flex-1 h-0.5 mx-4 ${
             step === "configuration" ? "bg-primary" : "bg-muted"
           }`}
         />
+
+        {/* Step 3: Configuration */}
         <div
           className={`flex items-center ${
             step === "configuration" ? "text-primary" : "text-muted-foreground"
@@ -283,13 +330,87 @@ export default function CreateResourcePage() {
                 : "border-muted-foreground"
             }`}
           >
-            2
+            3
           </div>
           <span className="ml-2 font-medium">Configuration</span>
         </div>
       </div>
 
       {/* Step Content */}
+      {step === "resourceType" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Select Resource Type</CardTitle>
+              <CardDescription>
+                Choose the type of resource you want to create for your project
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                {resourceTypes.map((resourceType) => {
+                  const IconComponent = resourceType.icon;
+                  const isSelected = basicData.type === resourceType.value;
+
+                  return (
+                    <div
+                      key={resourceType.value}
+                      className={`relative cursor-pointer rounded-lg border-2 p-4 transition-colors hover:border-primary/50 ${
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-muted"
+                      }`}
+                      onClick={() => {
+                        setBasicData((prev) => ({
+                          ...prev,
+                          type: resourceType.value,
+                        }));
+
+                        // Auto-select first available SKU for this resource type
+                        const catalogType = catalogResourceTypes.find(
+                          (rt) => rt.id === resourceType.value
+                        );
+                        if (catalogType && catalogType.skus.length > 0) {
+                          setBasicData((prev) => ({
+                            ...prev,
+                            sku: catalogType.skus[0].sku,
+                          }));
+                        }
+                      }}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <IconComponent className="h-6 w-6 text-primary mt-1" />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">
+                            {resourceType.label}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {resourceType.description}
+                          </p>
+                        </div>
+                        {isSelected && (
+                          <Check className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={handleBackClick}>
+              {getBackButtonText()}
+            </Button>
+            <Button onClick={() => setStep("tier")} disabled={!basicData.type}>
+              Continue to Tier Selection
+            </Button>
+          </div>
+        </div>
+      )}
+
       {step === "tier" && (
         <div className="space-y-6">
           {/* Resource Information */}
@@ -298,7 +419,7 @@ export default function CreateResourcePage() {
               <CardTitle>Resource Information</CardTitle>
               <CardDescription>
                 Choose a unique name and provide basic details for your{" "}
-                {preselectedResourceType}
+                {selectedResourceType?.label || basicData.type}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -355,14 +476,6 @@ export default function CreateResourcePage() {
               <CardDescription>
                 Choose the tier that best fits your needs. You can upgrade or
                 downgrade at any time.
-                {isFromCatalog && (
-                  <>
-                    <br />
-                    <span className="inline-block mt-2 px-2 py-1 bg-blue-50 text-blue-800 text-xs rounded-md">
-                      📋 From Catalog: Review pricing and features below
-                    </span>
-                  </>
-                )}
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -12,10 +12,8 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.01 240);
   --primary: oklch(0.35 0.08 240);
-  /* #2D4263 equivalent */
   --primary-foreground: oklch(0.98 0.001 240);
   --secondary: oklch(0.55 0.12 180);
-  /* #1E9E95 equivalent */
   --secondary-foreground: oklch(0.98 0.001 240);
   --muted: oklch(0.96 0.005 240);
   --muted-foreground: oklch(0.47 0.01 240);
@@ -38,6 +36,13 @@
   --sidebar-accent-foreground: oklch(0.15 0.01 240);
   --sidebar-border: oklch(0.91 0.01 240);
   --sidebar-ring: oklch(0.35 0.08 240);
+
+  /* Konnektr Brand Colors */
+  --brand-dark: oklch(0.12 0.02 240); /* #0B111D equivalent - Dark Background */
+  --brand-blue: oklch(0.35 0.08 240); /* #2D4263 equivalent - Primary Blue */
+  --brand-teal: oklch(0.55 0.12 180); /* #1E9E95 equivalent - Secondary Teal */
+  --brand-gray: oklch(0.45 0.01 240); /* Neutral gray */
+  --brand-light: oklch(0.98 0.001 240); /* Light text/backgrounds */
 }
 
 .dark {
@@ -51,22 +56,23 @@
   --primary: oklch(0.65 0.12 180);
   /* Lighter secondary color for dark mode */
   --primary-foreground: oklch(0.12 0.02 240);
-  --secondary: oklch(0.45 0.08 240);
-  /* Lighter primary color for dark mode */
+  --secondary: oklch(0.55 0.08 240);
+  /* Lighter primary color for dark mode - increased for better contrast */
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.2 0.02 240);
-  --muted-foreground: oklch(0.7 0.01 240);
+  --muted-foreground: oklch(0.75 0.01 240);
+  /* Increased lightness for better contrast on muted backgrounds */
   --accent: oklch(0.2 0.02 240);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.62 0.278 29.234);
   --border: oklch(0.25 0.02 240);
   --input: oklch(0.25 0.02 240);
   --ring: oklch(0.65 0.12 180);
-  --chart-1: oklch(0.785 0.239 50.361);
-  --chart-2: oklch(0.659 0.134 172.047);
-  --chart-3: oklch(0.478 0.09 213.844);
-  --chart-4: oklch(0.848 0.209 77.425);
-  --chart-5: oklch(0.831 0.208 74.675);
+  --chart-1: oklch(0.82 0.239 50.361);
+  --chart-2: oklch(0.70 0.134 172.047);
+  --chart-3: oklch(0.55 0.09 213.844);
+  --chart-4: oklch(0.85 0.209 77.425);
+  --chart-5: oklch(0.84 0.208 74.675);
   --sidebar: oklch(0.08 0.02 240);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.65 0.12 180);
@@ -75,6 +81,13 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.25 0.02 240);
   --sidebar-ring: oklch(0.65 0.12 180);
+
+  /* Konnektr Brand Colors for dark mode */
+  --brand-dark: oklch(0.12 0.02 240); /* Same as background in dark mode */
+  --brand-blue: oklch(0.55 0.08 240); /* Increased lightness for better contrast */
+  --brand-teal: oklch(0.70 0.12 180); /* Increased lightness for better contrast */
+  --brand-gray: oklch(0.75 0.01 240); /* Increased lightness for better contrast */
+  --brand-light: oklch(0.985 0 0); /* Same as foreground in dark mode */
 }
 
 @theme inline {
