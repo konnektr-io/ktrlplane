@@ -21,7 +21,10 @@ const apiClient = axios.create({
 // }
 
 // Function to setup auth interceptor with Auth0 token
-export const setupAuthInterceptor = (getAccessTokenSilently: () => Promise<string>) => {
+export const setupAuthInterceptor = (
+  getAccessTokenSilently: () => Promise<string>,
+  getAccessTokenWithPopup: () => Promise<string>
+) => {
   // Clear any existing auth interceptors
   apiClient.interceptors.request.clear();
 
@@ -29,15 +32,18 @@ export const setupAuthInterceptor = (getAccessTokenSilently: () => Promise<strin
   apiClient.interceptors.request.use(
     async (config) => {
       try {
-        const token = await getAccessTokenSilently();
+        let token = await getAccessTokenSilently();
         if (!token) {
-          // If token cannot be retrieved, force logout
-          // getAuth0Logout()();
-          throw new Error('Could not retrieve token');
+          // If token cannot be retrieved, try with popup as fallback
+          token = await getAccessTokenWithPopup();
+        }
+        if (!token) {
+          // If token cannot be retrieved throw error
+          throw new Error("Could not retrieve token");
         }
         config.headers.Authorization = `Bearer ${token}`;
       } catch (error) {
-        console.warn('Failed to get access token:', error);
+        console.warn("Failed to get access token:", error);
         // getAuth0Logout()();
       }
       return config;
