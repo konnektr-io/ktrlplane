@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -66,8 +67,12 @@ func runMigrations(pool *pgxpool.Pool) error {
 		if err := rows.Scan(&version); err != nil {
 			return fmt.Errorf("failed to scan migration version: %w", err)
 		}
+		version = trimString(version)
 		appliedMigrations[version] = true
 	}
+
+	// Debug: print applied migrations
+	log.Printf("Applied migrations: %v", appliedMigrations)
 
 	// Get list of migration files
 	migrationFiles, err := filepath.Glob("migrations/*.sql")
@@ -77,10 +82,13 @@ func runMigrations(pool *pgxpool.Pool) error {
 
 	sort.Strings(migrationFiles)
 
+	// Debug: print migration files found
+	log.Printf("Migration files found: %v", migrationFiles)
+
 	// Apply pending migrations
 	for _, file := range migrationFiles {
 		filename := filepath.Base(file)
-		version := filename[:3] // Extract version from filename (e.g., "001" from "001_initial_schema.sql")
+		version := trimString(filename[:3]) // Extract version from filename (e.g., "001" from "001_initial_schema.sql")
 
 		if appliedMigrations[version] {
 			fmt.Printf("Migration %s already applied, skipping\n", filename)
@@ -113,4 +121,9 @@ func runMigrations(pool *pgxpool.Pool) error {
 	}
 
 	return nil
+}
+
+// trimString trims whitespace and newlines from a string
+func trimString(s string) string {
+	return strings.TrimSpace(s)
 }
