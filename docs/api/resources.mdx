@@ -52,16 +52,12 @@ GET /projects/{projectId}/resources
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `projectId` | string | Yes | Project identifier |
-| `type` | string | No | Filter by resource type |
-| `status` | string | No | Filter by resource status |
-| `limit` | number | No | Maximum results (default: 50, max: 100) |
-| `offset` | number | No | Pagination offset (default: 0) |
 
 ### Example Request
 
 ```bash
 curl -X GET \
-  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources?type=Konnektr.Graph" \
+  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
@@ -299,59 +295,40 @@ curl -X DELETE \
 
 ## Resource Configuration Schemas
 
-### Konnektr.Graph Settings
+### Resource Configuration
 
-```typescript
-interface GraphSettings {
-  database_name: string;
-  enable_analytics?: boolean;
-  backup_retention_days?: number;
-  query_timeout_seconds?: number;
-  max_concurrent_connections?: number;
-  enable_audit_logging?: boolean;
-  performance_tier?: "basic" | "standard" | "premium";
-  auto_scaling?: {
-    enabled: boolean;
-    min_capacity: number;
-    max_capacity: number;
-  };
+Each resource type accepts a flexible `settings_json` object. The specific schema depends on the resource type and is validated by the respective Konnektr product.
+
+**Example Graph Settings:**
+```json
+{
+  "database_name": "my-graph-db",
+  "enable_analytics": true,
+  "backup_retention_days": 30
 }
 ```
 
-### Konnektr.Flow Settings
-
-```typescript
-interface FlowSettings {
-  max_concurrent_flows?: number;
-  retention_days?: number;
-  enable_dead_letter_queue?: boolean;
-  processing_mode?: "batch" | "streaming" | "hybrid";
-  error_handling?: "fail_fast" | "retry" | "retry_with_backoff";
-  auto_scaling?: {
-    enabled: boolean;
-    min_instances: number;
-    max_instances: number;
-    target_cpu_utilization: number;
-  };
+**Example Flow Settings:**
+```json
+{
+  "max_concurrent_flows": 10,
+  "retention_days": 7,
+  "processing_mode": "streaming"
 }
 ```
 
-### Konnektr.Assembler Settings
-
-```typescript
-interface AssemblerSettings {
-  model_complexity?: "basic" | "standard" | "advanced";
-  auto_validation?: boolean;
-  output_format?: "dtdl_v2" | "json_schema" | "custom";
-  training_data_retention?: "7_days" | "30_days" | "90_days" | "1_year";
-  ai_model?: "gpt-3.5" | "gpt-4" | "custom";
-  confidence_threshold?: number;
-  batch_processing?: {
-    enabled: boolean;
-    max_batch_size: number;
-  };
+**Example Assembler Settings:**
+```json
+{
+  "model_complexity": "standard",
+  "output_format": "dtdl_v2",
+  "confidence_threshold": 0.8
 }
 ```
+
+<Callout type="info">
+Settings are stored as flexible JSON and passed to the respective Konnektr product for validation and processing. Refer to each product's documentation for supported configuration options.
+</Callout>
 
 ## Resource Status Codes
 
@@ -359,11 +336,8 @@ interface AssemblerSettings {
 |--------|-------------|
 | `creating` | Resource is being provisioned |
 | `running` | Resource is operational and available |
-| `updating` | Resource configuration is being updated |
-| `scaling` | Resource is scaling up or down |
 | `error` | Resource encountered an error (check error_message) |
 | `deleting` | Resource is being deleted |
-| `terminated` | Resource has been successfully deleted |
 
 ## Error Handling
 
@@ -372,144 +346,28 @@ interface AssemblerSettings {
 #### 400 Bad Request
 ```json
 {
-  "error": "validation_failed",
-  "message": "Invalid resource configuration",
-  "details": {
-    "field": "settings_json.database_name",
-    "issue": "must be alphanumeric and start with a letter"
-  }
+  "error": "Failed to create resource",
+  "details": "Invalid resource configuration"
 }
 ```
 
 #### 403 Forbidden
 ```json
 {
-  "error": "insufficient_permissions",
-  "message": "User does not have permission to create resources in this project",
-  "required_permission": "project:editor"
+  "error": "Insufficient permissions to create resource"
 }
 ```
 
 #### 404 Not Found
 ```json
 {
-  "error": "resource_not_found",
-  "message": "Resource res-xyz789 not found",
-  "resource_id": "res-xyz789"
+  "error": "Resource not found"
 }
 ```
 
-#### 409 Conflict
-```json
-{
-  "error": "resource_conflict",
-  "message": "Resource with ID 'my-graph-db' already exists in this project",
-  "existing_resource_id": "res-graph-abc123"
-}
-```
+## SDK Support
 
-#### 422 Unprocessable Entity
-```json
-{
-  "error": "invalid_tier_change",
-  "message": "Cannot downgrade from enterprise to free tier with current usage",
-  "current_usage": {
-    "nodes": 150000,
-    "tier_limit": 1000
-  }
-}
-
-## Webhooks
-
-Subscribe to resource events using webhooks:
-
-### Webhook Events
-
-- `resource.created` - Resource successfully created
-- `resource.updated` - Resource configuration updated
-- `resource.deleted` - Resource permanently deleted
-- `resource.error` - Resource encountered an error
-- `resource.status_changed` - Resource status changed
-
-### Webhook Payload
-
-```json
-{
-  "event": "resource.created",
-  "timestamp": "2025-01-15T14:20:00Z",
-  "resource": {
-    "resource_id": "res-graph-abc456",
-    "project_id": "proj-abc123",
-    "name": "Customer Analytics Graph",
-    "type": "Konnektr.Graph",
-    "status": "running"
-  }
-}
-```
-
-## SDK Examples
-
-### JavaScript/TypeScript
-
-```typescript
-import { KtrlPlaneClient } from '@konnektr/ktrlplane-sdk';
-
-const client = new KtrlPlaneClient({
-  apiKey: process.env.KTRLPLANE_API_KEY
-});
-
-// Create a new Graph resource
-const resource = await client.resources.create('proj-abc123', {
-  id: 'analytics-graph',
-  name: 'Analytics Graph Database',
-  type: 'Konnektr.Graph',
-  sku: 'pro',
-  settings_json: {
-    database_name: 'analytics',
-    enable_analytics: true,
-    backup_retention_days: 30
-  }
-});
-
-console.log('Resource created:', resource.resource_id);
-```
-
-### Python
-
-```python
-from ktrlplane import KtrlPlaneClient
-
-client = KtrlPlaneClient(api_key=os.environ['KTRLPLANE_API_KEY'])
-
-# List all resources in a project
-resources = client.resources.list('proj-abc123')
-
-for resource in resources:
-    print(f"{resource.name} ({resource.type}): {resource.status}")
-```
-
-### Go
-
-```go
-package main
-
-import (
-    "context"
-    "github.com/konnektr-io/ktrlplane-go"
-)
-
-func main() {
-    client := ktrlplane.NewClient(os.Getenv("KTRLPLANE_API_KEY"))
-    
-    // Get resource details
-    resource, err := client.Resources.Get(context.Background(), "proj-abc123", "res-graph-xyz789")
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    fmt.Printf("Resource: %s (Status: %s)\n", resource.Name, resource.Status)
-}
-```
+KtrlPlane SDKs are planned for future releases. Currently, you can interact with the API directly using HTTP clients in your preferred programming language.
 
 ## Next Steps
 

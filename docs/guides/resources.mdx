@@ -60,14 +60,13 @@ Select the appropriate tier based on your needs:
 
 | Feature | Free | Pro | Enterprise |
 |---------|------|-----|------------|
-| **Cost** | $0/month | $99/month | Custom pricing |
-| **Usage Limits** | Development limits | Production ready | Unlimited |
-| **Support** | Community | Email + docs | Dedicated support |
-| **SLA** | Best effort | 99.9% uptime | 99.99% uptime |
-| **Features** | Basic | Advanced | Enterprise + custom |
+| **Cost** | $0/month | Custom pricing | Custom pricing |
+| **Use Case** | Development & testing | Production workloads | Enterprise scale |
+| **Support** | Community | Email support | Dedicated support |
+| **Features** | Full functionality | Full functionality + SLA | Custom features + SLA |
 
-<Callout type="tip">
-Start with the Free tier for development and testing. You can upgrade to Pro or Enterprise when you're ready for production deployment.
+<Callout type="info">
+All tiers currently provide full functionality for development and testing. Tier-specific limits and billing enforcement are planned features.
 </Callout>
 
 ### Step 4: Configuration
@@ -112,16 +111,9 @@ Configure your resource settings based on your requirements:
 #### Assembler Configuration Example
 ```json
 {
-  "model_complexity": "advanced",
-  "auto_validation": true,
+  "model_complexity": "standard",
   "output_format": "dtdl_v2",
-  "training_data_retention": "90_days",
-  "ai_model": "gpt-4",
-  "confidence_threshold": 0.85,
-  "batch_processing": {
-    "enabled": true,
-    "max_batch_size": 100
-  }
+  "confidence_threshold": 0.8
 }
 ```
 
@@ -175,27 +167,8 @@ Adjust resource capacity based on current needs:
 3. Adjust capacity limits or performance tiers
 4. Apply changes
 
-#### Auto-Scaling
-Configure automatic scaling based on metrics:
-
-```json
-{
-  "auto_scaling": {
-    "enabled": true,
-    "metrics": {
-      "cpu_target": 70,
-      "memory_target": 80,
-      "request_rate_target": 1000
-    },
-    "scaling_policy": {
-      "scale_up_cooldown": 300,
-      "scale_down_cooldown": 900,
-      "min_capacity": 2,
-      "max_capacity": 20
-    }
-  }
-}
-```
+#### Auto-Scaling (Future Feature)
+Automatic scaling based on resource metrics is planned for future releases. Currently, you can manually adjust resource configuration through the dashboard or API.
 
 ## Resource Integration
 

@@ -17,18 +17,33 @@ KtrlPlane serves as the **Control Plane** for the Konnektr Platform - managing u
 - [x] Database migrations and schema
 - [x] API endpoints and handlers
 - [x] Basic frontend UI components
+- [x] Resource forms for all 4 product types (Graph, Assembler, Flow, Compass)
+- [x] Access control UI with role management
+- [x] Comprehensive billing UI with Stripe integration
 
 ### 🔄 In Progress
 
-- [ ] Enhanced resource management with dynamic schemas
-- [ ] Billing inheritance and workflow improvements
-- [ ] UI/UX polish and consistency
+- [ ] Documentation accuracy improvements
+- [ ] Enhanced API features and validation
+
+### 📋 Priority Features (Previously Documented)
+
+Based on documentation audit, these features were described but not fully implemented:
+
+- [ ] **API Enhancements**: Pagination, filtering, advanced query parameters
+- [ ] **Webhook System**: Event notifications for resource lifecycle events
+- [ ] **Auto-scaling**: Automatic resource scaling based on metrics
+- [ ] **Tier Enforcement**: Usage limits and billing enforcement per tier
+- [ ] **Advanced Configuration Validation**: Schema-based settings validation
+- [ ] **Sophisticated Status Management**: Complex resource state transitions
+- [ ] **Advanced Error Handling**: Detailed error codes and validation responses
+- [ ] **SDK Development**: Official SDKs for JavaScript, Python, Go
 
 ### 📋 Backlog
 
 - [ ] Advanced observability and monitoring
 - [ ] Performance optimization
-- [ ] Advanced billing features
+- [ ] Resource usage tracking and analytics
 
 ## 🏗️ Architecture Overview
 
@@ -50,7 +65,42 @@ We use the [db-query-operator](https://github.com/konnektr-io/db-query-operator)
 - **Payments**: Stripe
 - **Deployment**: Kubernetes with db-query-operator
 
-## 🎯 Phase 1: Enhanced Resource Management (Current Priority)
+## 🎯 Phase 0: Documentation Accuracy & API Enhancement (Current Priority)
+
+**Goal**: Ensure documentation matches actual implementation and prioritize valuable missing features
+
+### Recently Completed: Documentation Audit ✅
+
+- [x] **Full functionality audit** comparing docs vs actual code
+- [x] **Removed overstated features** from documentation
+  - Removed webhook system (not implemented)
+  - Simplified API parameters (no pagination/filtering)
+  - Removed auto-scaling features
+  - Simplified tier enforcement descriptions
+  - Updated configuration schemas to match JSON storage
+- [x] **Marked future features** as planned rather than available
+- [x] **Updated development plan** with realistic priorities
+
+### Next Phase: API Enhancement Features
+
+**Priority 1: Core API Improvements**
+- [ ] **Add pagination support** to list endpoints (limit, offset parameters)
+- [ ] **Add filtering capabilities** (by type, status, etc.)
+- [ ] **Enhance error handling** with structured error responses
+- [ ] **Add API request validation** with detailed error messages
+
+**Priority 2: Resource Management Features**  
+- [ ] **Implement tier enforcement** with usage limits
+- [ ] **Add configuration validation** against schemas
+- [ ] **Implement resource status transitions** (creating → running → updating)
+- [ ] **Add usage tracking** for billing and limits
+
+**Priority 3: Event System**
+- [ ] **Design webhook system** for resource lifecycle events
+- [ ] **Implement event logging** for audit trails
+- [ ] **Add notification system** for status changes
+
+## 🎯 Phase 1: Enhanced Resource Management (Future Phase)
 
 **Goal**: Create flexible resource management with JSON schema-driven forms
 
