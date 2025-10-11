@@ -418,23 +418,6 @@ interface AssemblerSettings {
     "tier_limit": 1000
   }
 }
-```
-
-## Rate Limits
-
-The Resources API is subject to rate limiting:
-
-- **Standard tier**: 100 requests per minute per user
-- **Pro tier**: 500 requests per minute per user  
-- **Enterprise tier**: 2000 requests per minute per user
-
-Rate limit headers are included in all responses:
-
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 85
-X-RateLimit-Reset: 1642678800
-```
 
 ## Webhooks
 
