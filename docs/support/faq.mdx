@@ -1,0 +1,254 @@
+---
+title: Frequently Asked Questions
+description: Common questions and answers about KtrlPlane
+---
+
+# Frequently Asked Questions
+
+Find answers to common questions about KtrlPlane, the Control Plane for the Konnektr Platform.
+
+## General Questions
+
+### What is KtrlPlane?
+
+KtrlPlane is the centralized Control Plane for the Konnektr Platform. It manages organizations, projects, resources, billing, and access control for all Konnektr products (Graph, Flow, Assembler, and Compass).
+
+### How does KtrlPlane relate to other Konnektr products?
+
+KtrlPlane serves as the management layer for the entire Konnektr ecosystem:
+
+- **KtrlPlane**: Control Plane - manages users, projects, billing, and deployments
+- **Konnektr.Graph**: Graph database and API layer for digital twin data
+- **Konnektr.Flow**: Real-time data and event processing
+- **Konnektr.Assembler**: AI-powered digital twin builder
+- **Konnektr.Compass**: Navigation and discovery tools (coming soon)
+
+### Is KtrlPlane free to use?
+
+KtrlPlane itself is free - you only pay for the resources you deploy. Each resource type (Graph, Flow, Assembler) offers free tiers perfect for development and small projects.
+
+## Account and Authentication
+
+### How do I create an account?
+
+Simply visit the KtrlPlane web interface and click "Sign Up". You'll need to provide an email address and create a password. Email verification is required before you can start using the platform.
+
+### Can I use single sign-on (SSO)?
+
+Yes, KtrlPlane supports Auth0-based authentication, which can be configured for various SSO providers including Google, Microsoft, SAML, and more.
+
+### How do I reset my password?
+
+Click "Forgot Password" on the login page and enter your email address. You'll receive a password reset link via email.
+
+### Can I change my email address?
+
+Currently, email address changes must be done through your Auth0 profile. Contact support if you need assistance with this.
+
+## Organizations and Projects
+
+### What's the difference between organizations and projects?
+
+- **Organizations**: Top-level containers representing your company or team. Handle billing, team management, and company-wide policies.
+- **Projects**: Workspaces within organizations where you deploy and manage resources. Each project can have its own team members and access controls.
+
+### How many organizations can I create?
+
+There's no limit on the number of organizations you can create. Most users start with one organization and create additional ones only when needed for business separation.
+
+### Can I transfer projects between organizations?
+
+Currently, projects cannot be transferred between organizations. However, you can create a new project in the target organization and migrate your resources individually.
+
+### How do I invite team members?
+
+Go to your organization or project settings, click "Access Control", then "Invite User". Enter their email address and select the appropriate role. They'll receive an invitation email with instructions to join.
+
+## Resources and Billing
+
+### What resource types are available?
+
+KtrlPlane supports four main resource types:
+
+1. **Konnektr.Graph**: Graph database for connected data and digital twins
+2. **Konnektr.Flow**: Real-time event and data processing
+3. **Konnektr.Assembler**: AI-powered digital twin model builder
+4. **Konnektr.Compass**: Navigation and discovery (coming soon)
+
+### How is billing calculated?
+
+Billing is resource-based with three components:
+- **Base tier cost**: Monthly fee for your selected tier (Free, Pro, Enterprise)
+- **Usage charges**: Additional costs for usage beyond tier limits
+- **Storage costs**: Data storage charges for persistent data
+
+### Can I change resource tiers after creation?
+
+Yes, you can upgrade or downgrade resource tiers at any time. Changes take effect immediately, and billing is prorated to reflect the change.
+
+### What happens if I exceed my tier limits?
+
+- **Free tier**: Your resource may be temporarily throttled or paused
+- **Paid tiers**: You'll be charged for additional usage beyond your tier limits
+- **All tiers**: You'll receive email notifications when approaching limits
+
+### How do I set up billing alerts?
+
+Go to your organization or project billing settings and configure alert thresholds. You can set alerts for:
+- Monthly spending limits
+- Usage approaching tier limits
+- Unexpected billing increases
+
+## Technical Questions
+
+### What are the system requirements for KtrlPlane?
+
+KtrlPlane is a web-based platform with no local installation required. You just need:
+- A modern web browser (Chrome, Firefox, Safari, Edge)
+- Internet connection
+- JavaScript enabled
+
+### Can I use KtrlPlane APIs programmatically?
+
+Yes! KtrlPlane provides comprehensive REST APIs for all functionality. You can:
+- Manage organizations, projects, and resources
+- Control access and permissions
+- Monitor usage and billing
+- Automate deployments
+
+API documentation is available at `/api/` in this documentation.
+
+### Is there a command-line interface (CLI)?
+
+Yes, we provide a CLI tool for KtrlPlane that allows you to manage resources from the command line. Install it with:
+
+```bash
+npm install -g @konnektr/ktrlplane-cli
+# or
+pip install ktrlplane-cli
+```
+
+### How do I integrate KtrlPlane with my CI/CD pipeline?
+
+Use the KtrlPlane API or CLI in your deployment scripts:
+
+```yaml
+# GitHub Actions example
+- name: Deploy to KtrlPlane
+  run: |
+    ktrlplane resource create \
+      --project $PROJECT_ID \
+      --type Konnektr.Graph \
+      --config @graph-config.json
+  env:
+    KTRLPLANE_API_KEY: ${{ secrets.KTRLPLANE_API_KEY }}
+```
+
+## Troubleshooting
+
+### I can't log in to KtrlPlane
+
+Common solutions:
+1. Check your email address and password
+2. Try resetting your password
+3. Clear your browser cache and cookies
+4. Try a different browser or incognito mode
+5. Check if you're using the correct login URL
+
+### My resource deployment failed
+
+Check the resource status page for error details. Common causes:
+- Invalid configuration settings
+- Insufficient tier limits
+- Network connectivity issues
+- Billing account problems
+
+### I'm getting API authentication errors
+
+Verify that:
+- Your API key is valid and not expired
+- You're using the correct API endpoint
+- Your account has the required permissions
+- The API key is properly included in the Authorization header
+
+### How do I report a bug or request a feature?
+
+You can:
+1. Create an issue on our [GitHub repository](https://github.com/konnektr-io/ktrlplane)
+2. Contact support through the platform
+3. Join our community forums
+4. Reach out on Discord
+
+## Data and Privacy
+
+### Where is my data stored?
+
+Data is stored in secure, SOC 2 compliant data centers. The specific location depends on your chosen region during resource creation.
+
+### Is my data encrypted?
+
+Yes, all data is encrypted:
+- **In transit**: All API calls and web traffic use TLS 1.2+
+- **At rest**: All stored data is encrypted using AES-256
+- **In processing**: Memory encryption for sensitive operations
+
+### Can I export my data?
+
+Yes, you can export your data at any time:
+- **Configuration data**: Use the API to export project and resource configurations
+- **Resource data**: Each resource type provides data export capabilities
+- **Billing data**: Download invoices and usage reports from billing settings
+
+### What is your data retention policy?
+
+- **Active accounts**: Data is retained as long as your account is active
+- **Deleted resources**: Data is permanently deleted within 30 days
+- **Closed accounts**: Data is retained for 90 days then permanently deleted
+- **Billing data**: Retained for 7 years for compliance purposes
+
+## Limits and Quotas
+
+### Are there any usage limits?
+
+Yes, limits vary by tier and resource type:
+
+**Organization limits:**
+- Free: 3 projects per organization
+- Pro: 50 projects per organization  
+- Enterprise: Unlimited projects
+
+**Resource limits:**
+- Vary by resource type and tier
+- Detailed in each resource type's documentation
+- Can be increased by upgrading tiers
+
+### How do I request limit increases?
+
+For limits beyond the Enterprise tier, contact our sales team. We can provide custom quotas for large deployments.
+
+## Support and Community
+
+### How do I get help?
+
+Multiple support options are available:
+1. **Documentation**: Comprehensive guides and API references
+2. **Community Forums**: Get help from other users
+3. **Discord**: Real-time chat with the community
+4. **Email Support**: For Pro and Enterprise customers
+5. **Dedicated Support**: For Enterprise customers
+
+### What are your support hours?
+
+- **Community Support**: 24/7 via forums and Discord
+- **Email Support**: Business hours (9 AM - 6 PM PST, Monday-Friday)
+- **Enterprise Support**: 24/7 for critical issues
+
+### Do you offer training or consulting?
+
+Yes, we offer:
+- **Documentation and tutorials**: Self-service learning
+- **Webinars**: Regular training sessions
+- **Professional services**: Custom training and consulting (Enterprise)
+- **Partner program**: Certified implementation partners
+
+Still have questions? Check our [community forums](/support/community) or [contact support](/support/contact).

@@ -1,0 +1,242 @@
+---
+title: Creating Your First Project
+description: Learn how to create and configure your first project in KtrlPlane
+---
+
+# Creating Your First Project
+
+Projects are the core workspaces in KtrlPlane where you organize and deploy your resources. This guide will walk you through creating, configuring, and managing your first project.
+
+## Understanding Projects
+
+A project in KtrlPlane is:
+
+- **A workspace** for related resources and applications
+- **A billing boundary** where costs can be tracked separately
+- **An access control scope** where you can grant team members specific permissions
+- **A deployment environment** for your Konnektr resources
+
+<Callout type="info">
+Projects belong to organizations. If you haven't created an organization yet, follow the [Quick Start Guide](/getting-started/quick-start) first.
+</Callout>
+
+## Step 1: Navigate to Project Creation
+
+1. Log in to KtrlPlane and select your organization
+2. From the organization dashboard, you'll see your projects (if any)
+3. Click the **"New Project"** button or **"Create Your First Project"** if this is your first one
+
+## Step 2: Basic Project Information
+
+Fill out the project creation form:
+
+### Project Name
+- Choose a descriptive name that reflects the project's purpose
+- Examples: "IoT Sensor Network", "Customer Analytics Platform", "Smart Building Management"
+- Names must be unique within your organization
+
+### Description (Optional)
+- Add a brief description explaining the project's goals
+- This helps team members understand the project's purpose
+- Examples: "Real-time monitoring system for manufacturing equipment", "Customer behavior analysis for e-commerce platform"
+
+### Project ID
+- Automatically generated based on your project name
+- Used in URLs and API calls
+- Can be customized if needed (must be unique)
+
+## Step 3: Advanced Configuration
+
+### Billing Configuration
+
+You have two options for project billing:
+
+#### Option 1: Inherit from Organization (Recommended)
+- Uses your organization's billing account and payment method
+- Simplifies billing management
+- All project costs appear on the organization's invoice
+- **Choose this if**: You want centralized billing management
+
+#### Option 2: Separate Project Billing
+- Set up dedicated billing for this project
+- Requires separate payment method configuration
+- Useful for client projects or cost center tracking
+- **Choose this if**: You need separate invoicing or charge-backs
+
+### Access Control Template
+
+Choose who can access your project initially:
+
+- **Private**: Only you have access (you can invite others later)
+- **Organization Members**: All organization members get viewer access
+- **Custom**: Define specific roles for organization members
+
+<Callout type="tip">
+You can always modify access permissions later through the project's Access Control settings.
+</Callout>
+
+## Step 4: Create the Project
+
+1. Review your configuration
+2. Click **"Create Project"**
+3. Wait for the project to be created (usually takes a few seconds)
+4. You'll be redirected to your new project dashboard
+
+## Step 5: Project Dashboard Overview
+
+Your project dashboard provides:
+
+### Quick Stats
+- Number of resources deployed
+- Current monthly usage and costs
+- Active team members
+- Project health status
+
+### Recent Activity
+- Recent resource deployments
+- Team member access changes
+- Configuration updates
+- Billing events
+
+### Quick Actions
+- **Add Resource**: Deploy a new Konnektr service
+- **Invite Team Member**: Grant project access to someone
+- **View Billing**: Check usage and costs
+- **Project Settings**: Modify project configuration
+
+## Step 6: Deploy Your First Resource
+
+Now that your project is created, let's deploy your first resource:
+
+1. Click **"Add Resource"** from the project dashboard
+2. Choose a resource type based on your needs:
+
+### Konnektr.Graph
+- **Best for**: Storing and querying connected data
+- **Use cases**: Digital twin data models, relationship mapping, IoT device networks
+- **Free tier**: Up to 1,000 nodes and 10,000 relationships
+
+### Konnektr.Flow  
+- **Best for**: Real-time data processing and event handling
+- **Use cases**: Sensor data processing, alert systems, data transformation pipelines
+- **Free tier**: Up to 1,000 events per hour
+
+### Konnektr.Assembler
+- **Best for**: AI-powered digital twin creation
+- **Use cases**: Automated model generation, data source integration, intelligent mapping
+- **Free tier**: 5 AI generations per month
+
+3. Select your preferred tier (Free, Pro, or Enterprise)
+4. Configure the resource settings
+5. Click **"Create Resource"**
+
+## Step 7: Configure Resource Settings
+
+Each resource type has specific configuration options:
+
+### Graph Database Settings
+```json
+{
+  "database_name": "my-digital-twins",
+  "enable_analytics": true,
+  "backup_retention_days": 7,
+  "access_control": {
+    "enable_row_level_security": false
+  }
+}
+```
+
+### Flow Processing Settings
+```json
+{
+  "max_concurrent_flows": 10,
+  "retention_days": 30,
+  "enable_dead_letter_queue": true,
+  "auto_scaling": {
+    "enabled": true,
+    "max_instances": 5
+  }
+}
+```
+
+### Assembler AI Settings
+```json
+{
+  "model_complexity": "standard",
+  "auto_validation": true,
+  "output_format": "dtdl_v2",
+  "training_data_retention": "30_days"
+}
+```
+
+<Callout type="info">
+Don't worry about getting all settings perfect initially. You can modify most configuration options after the resource is deployed.
+</Callout>
+
+## Step 8: Monitor Deployment
+
+After creating a resource:
+
+1. You'll see the deployment progress in real-time
+2. Deployment typically takes 2-5 minutes depending on the resource type
+3. You'll receive an email notification when deployment completes
+4. The resource will appear in your project dashboard with a "Running" status
+
+## Managing Your Project
+
+### Project Settings
+Access project settings to:
+- Change project name and description
+- Modify billing configuration
+- Update access control policies
+- Configure integrations and webhooks
+
+### Team Management
+Invite team members and manage permissions:
+- **Viewer**: Can see resources and their configurations
+- **Editor**: Can create, modify, and delete resources
+- **Admin**: Can manage billing and team access
+- **Owner**: Full project control (transferable)
+
+### Resource Management
+From your project dashboard you can:
+- View all deployed resources
+- Check resource health and status
+- Access resource configuration
+- Monitor usage and performance
+- Scale resources up or down
+
+## Next Steps
+
+Now that you have your first project set up:
+
+1. **[Explore Resource Management](/guides/resources)**: Learn advanced resource configuration
+2. **[Set Up Billing Alerts](/guides/billing)**: Monitor costs and set up notifications
+3. **[Configure Access Control](/guides/access-control)**: Fine-tune team permissions
+4. **[Connect External Services](/guides/integrations)**: Integrate with your existing tools
+
+## Project Best Practices
+
+### Naming Conventions
+- Use descriptive, consistent names
+- Include environment indicators (dev, staging, prod)
+- Consider using prefixes for different project types
+
+### Resource Organization
+- Group related resources in the same project
+- Use separate projects for different environments
+- Consider project size limits for better management
+
+### Access Control
+- Follow the principle of least privilege
+- Regularly review team access
+- Use temporary access for contractors or external collaborators
+
+### Cost Management
+- Set up billing alerts for your projects
+- Monitor resource usage regularly
+- Use free tiers for development and testing
+
+<Callout type="success">
+🎉 You've successfully created and configured your first project! You're now ready to build and deploy powerful digital twin solutions using the Konnektr Platform.
+</Callout>

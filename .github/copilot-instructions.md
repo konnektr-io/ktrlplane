@@ -122,10 +122,12 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 
 ### 9. Documentation Standards
 
-- Keep API documentation current in `docs/api-reference.md`
-- Update deployment guides when adding new environment variables
+- Keep API documentation current in MDX format in `docs/api/`
+- Update deployment guides in `docs/self-hosting/` when adding new environment variables
 - Maintain clear README files with setup instructions
-- Document all configuration options
+- Document all configuration options in MDX format with proper fumadocs structure
+- All documentation should use MDX format with proper meta.json files for navigation
+- Usage-focused docs in main sections, deployment/development docs in `self-hosting/` and `development/`
 
 ### 10. Resource Management & Forms
 
@@ -174,7 +176,7 @@ When updating these instructions, add entries here:
 
 - **2025-01-27**: Initial comprehensive instructions created
 - **2025-09-25**: Updated product names (DigitalTwins → Graph, added Assembler/Flow/Compass), added catalog strategy and dynamic forms guidance
-- **[Future Date]**: [Description of changes made]
+- **2025-10-11**: Refactored documentation to MDX format with fumadocs structure, separated usage vs self-hosting docs, added comprehensive API documentation
 
 ---
 

@@ -1,0 +1,229 @@
+---
+title: Understanding Organizations
+description: Learn about organizations, the top-level structure in KtrlPlane for managing teams and billing
+---
+
+# Understanding Organizations
+
+Organizations are the foundational structure in KtrlPlane. They represent your company, team, or personal workspace and serve as the top-level container for all your projects and resources.
+
+## What is an Organization?
+
+An organization in KtrlPlane is:
+
+- **The top-level entity** that contains all your projects and resources
+- **A billing boundary** where payment methods and subscriptions are managed
+- **A team workspace** where you collaborate with colleagues
+- **An administrative scope** for managing company-wide policies and settings
+
+<Callout type="info">
+Think of an organization like a company account on other platforms - it's where your team collaborates and where billing is centralized.
+</Callout>
+
+## Organization Structure
+
+```
+Organization (Acme Corp)
+├── Project A (IoT Platform)
+│   ├── Resource 1 (Graph Database)
+│   ├── Resource 2 (Flow Processor)
+│   └── Resource 3 (Assembler AI)
+├── Project B (Analytics Dashboard)
+│   ├── Resource 1 (Graph Database)
+│   └── Resource 2 (Flow Processor)
+└── Project C (Mobile App Backend)
+    └── Resource 1 (Graph Database)
+```
+
+## Creating Your Organization
+
+### First Organization
+When you first sign up for KtrlPlane, you'll be prompted to create your initial organization:
+
+1. **Organization Name**: Choose a name that represents your team or company
+2. **Description**: Optional description of your organization's purpose
+3. **Billing Email**: Email address for billing notifications (can be different from your account email)
+
+### Additional Organizations
+You can create multiple organizations if you:
+- Work with different companies or teams
+- Need separate billing for different business units
+- Manage client projects that require isolation
+
+To create additional organizations:
+1. Click your profile menu in the top right
+2. Select **"Switch Organization"**
+3. Click **"Create New Organization"**
+4. Fill out the organization details
+
+## Organization Settings
+
+### Basic Information
+Manage your organization's core details:
+
+- **Name**: The display name for your organization
+- **Description**: Brief description of your organization's purpose
+- **Organization ID**: Unique identifier used in URLs and APIs
+- **Contact Information**: Primary contact details
+
+### Billing Configuration
+Organizations handle billing for all contained projects (unless projects have separate billing):
+
+- **Payment Methods**: Credit cards, bank accounts, or invoicing
+- **Billing Address**: Address for tax calculations and invoices
+- **Tax Information**: VAT numbers, tax exemption certificates
+- **Billing Contacts**: Who receives billing notifications and invoices
+
+### Default Settings
+Set organization-wide defaults that apply to new projects:
+
+- **Default Resource Tiers**: Which tiers to suggest for new resources
+- **Access Control Policies**: Default permissions for organization members
+- **Compliance Settings**: Security and compliance requirements
+- **Integration Defaults**: Default connections to external services
+
+## Team Management
+
+### Organization Roles
+There are several roles available at the organization level:
+
+#### Owner
+- **Full control** over the organization
+- Can delete the organization
+- Manage billing and payment methods
+- Transfer ownership to another member
+- **Limit**: Only one owner per organization
+
+#### Admin
+- **Administrative access** to organization settings
+- Create and manage projects
+- Invite and remove team members
+- Configure billing (but not delete payment methods)
+- **Cannot**: Delete organization or transfer ownership
+
+#### Member
+- **Standard user access**
+- Can view projects they have access to
+- Can create new projects (if allowed by org policy)
+- Cannot modify organization settings
+- **Access**: Determined by individual project permissions
+
+#### Viewer
+- **Read-only access** to organization information
+- Can see organization projects (but not access them unless specifically granted)
+- Cannot create projects or modify settings
+- Useful for stakeholders who need visibility but not control
+
+### Inviting Team Members
+
+1. Go to **Organization Settings > Team Management**
+2. Click **"Invite Team Member"**
+3. Enter their email address
+4. Select their organization role
+5. Optionally set an expiration date for the invitation
+6. Click **"Send Invitation"**
+
+The invited user will receive an email with instructions to join your organization.
+
+### Managing Existing Members
+
+From the team management page, you can:
+
+- **Change roles**: Promote or demote team members
+- **Remove members**: Remove access to the organization
+- **View activity**: See when members last accessed the organization
+- **Manage invitations**: Cancel pending invitations or resend them
+
+## Billing and Subscriptions
+
+### Organization-Level Billing
+Organizations can have their own billing configuration:
+
+- **Primary payment method** for all projects in the organization
+- **Consolidated invoicing** for all resource usage
+- **Usage-based billing** across all projects
+- **Subscription management** for organization-wide features
+
+### Project Billing Inheritance
+Projects can either:
+1. **Inherit billing** from the organization (recommended)
+2. **Use separate billing** with their own payment methods
+
+Benefits of inheritance:
+- Simplified billing management
+- Consolidated invoices
+- Easier cost tracking across projects
+- Reduced administrative overhead
+
+### Setting Up Billing
+
+1. Go to **Organization Settings > Billing**
+2. Add a payment method (credit card, bank account, or request invoicing)
+3. Configure your billing address and tax information
+4. Set up billing notifications and contacts
+5. Choose your subscription plan (if applicable)
+
+## Organization Best Practices
+
+### Naming Strategy
+- Use your actual company or team name
+- Keep it professional and recognizable
+- Avoid abbreviations that might be confusing to team members
+
+### Team Structure
+- **Start small**: Begin with just essential team members
+- **Use appropriate roles**: Don't give everyone admin access
+- **Regular reviews**: Periodically review team access and roles
+- **Clear policies**: Document who can invite new members and create projects
+
+### Billing Management
+- **Centralized approach**: Use organization-level billing for most use cases
+- **Set up alerts**: Configure billing notifications to avoid surprises
+- **Regular monitoring**: Review usage and costs monthly
+- **Budget planning**: Use project-level cost tracking for budgeting
+
+### Security Considerations
+- **Enable two-factor authentication** for all team members
+- **Regular access reviews** to ensure only current team members have access
+- **Audit logs** to track important changes to the organization
+- **Compliance settings** based on your industry requirements
+
+## Multiple Organizations
+
+### When to Use Multiple Organizations
+
+Create separate organizations when you need:
+
+1. **Complete isolation** between different business units
+2. **Separate billing** for different companies or clients
+3. **Different compliance requirements** (e.g., HIPAA vs. non-HIPAA projects)
+4. **Distinct team structures** with no overlap
+
+### Managing Multiple Organizations
+
+- **Organization switching**: Use the organization switcher in the top navigation
+- **Unified billing**: Set up consolidated billing across organizations if needed
+- **Cross-organization collaboration**: Invite the same users to multiple organizations
+- **Consistent policies**: Apply similar security and compliance settings
+
+### Organization Consolidation
+
+If you find you have too many organizations:
+
+1. **Evaluate necessity**: Determine if separation is still needed
+2. **Plan migration**: Move projects between organizations if possible
+3. **Billing consideration**: Understand billing implications of consolidation
+4. **Team communication**: Inform all stakeholders about changes
+
+## Next Steps
+
+Now that you understand organizations:
+
+1. **[Create Your First Project](/getting-started/first-project)**: Set up a project within your organization
+2. **[Configure Team Access](/guides/access-control)**: Learn advanced permission management
+3. **[Set Up Billing](/guides/billing)**: Configure payment methods and billing policies
+4. **[Explore Projects](/concepts/projects)**: Deep dive into project management
+
+<Callout type="tip">
+Most teams should start with a single organization and create additional ones only when there's a clear business need for separation.
+</Callout>

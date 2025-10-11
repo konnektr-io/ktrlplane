@@ -1,0 +1,9 @@
+{
+    "pages": [
+        "setup",
+        "architecture",
+        "contributing",
+        "testing",
+        "api"
+    ]
+}

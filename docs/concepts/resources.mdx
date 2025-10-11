@@ -1,0 +1,314 @@
+---
+title: Resources
+description: Learn about resources, the deployable services and applications in the Konnektr Platform
+---
+
+# Resources
+
+Resources are the core deployable services and applications within the Konnektr Platform. They represent the actual functionality you're building and deploying - from graph databases to AI-powered builders.
+
+## What Are Resources?
+
+Resources in KtrlPlane are:
+
+- **Deployable services** that provide specific functionality
+- **Managed instances** of Konnektr products (Graph, Flow, Assembler, Compass)
+- **Configurable applications** with specific settings and tiers
+- **Billable entities** that consume compute, storage, and network resources
+
+## Available Resource Types
+
+### Konnektr.Graph
+**High-performance graph database and API layer**
+
+- **Purpose**: Store and query connected data for digital twin models
+- **Use Cases**: 
+  - IoT device networks and relationships
+  - Digital twin data models
+  - Knowledge graphs
+  - Social networks and organizational structures
+- **Key Features**:
+  - CRUD operations for nodes and relationships
+  - Advanced graph query capabilities
+  - Real-time data synchronization
+  - Built-in analytics and reporting
+
+**Configuration Options:**
+```json
+{
+  "database_name": "my-digital-twins",
+  "enable_analytics": true,
+  "backup_retention_days": 7,
+  "query_timeout_seconds": 30,
+  "max_concurrent_connections": 100,
+  "enable_audit_logging": false
+}
+```
+
+**Available Tiers:**
+- **Free**: Up to 1,000 nodes, 10,000 relationships
+- **Pro**: Up to 100,000 nodes, 1M relationships, advanced analytics
+- **Enterprise**: Unlimited scale, dedicated infrastructure, SLA
+
+### Konnektr.Flow
+**Real-time data and event processing**
+
+- **Purpose**: Process streaming data and handle events in real-time
+- **Use Cases**:
+  - Sensor data processing and transformation
+  - Event-driven workflows and automation
+  - Real-time analytics and alerting
+  - Data pipeline orchestration
+- **Key Features**:
+  - Visual flow design interface
+  - Pre-built connectors and transformations
+  - Error handling and retry mechanisms
+  - Scalable event processing
+
+**Configuration Options:**
+```json
+{
+  "max_concurrent_flows": 10,
+  "retention_days": 30,
+  "enable_dead_letter_queue": true,
+  "processing_mode": "streaming",
+  "auto_scaling": {
+    "enabled": true,
+    "min_instances": 1,
+    "max_instances": 5
+  }
+}
+```
+
+**Available Tiers:**
+- **Free**: Up to 1,000 events/hour, 5 concurrent flows
+- **Pro**: Up to 100,000 events/hour, 50 concurrent flows
+- **Enterprise**: Unlimited events, custom scaling, priority support
+
+### Konnektr.Assembler
+**AI-powered digital twin builder**
+
+- **Purpose**: Automatically generate digital twin models using AI
+- **Use Cases**:
+  - Automated DTDL model generation
+  - Data source integration and mapping
+  - Intelligent schema inference
+  - Model validation and optimization
+- **Key Features**:
+  - AI-powered model generation
+  - Multiple data source connectors
+  - Visual model editor
+  - Validation and testing tools
+
+**Configuration Options:**
+```json
+{
+  "model_complexity": "standard",
+  "auto_validation": true,
+  "output_format": "dtdl_v2",
+  "training_data_retention": "30_days",
+  "ai_model": "gpt-4",
+  "confidence_threshold": 0.8
+}
+```
+
+**Available Tiers:**
+- **Free**: 5 AI generations/month, basic models
+- **Pro**: 100 AI generations/month, advanced models, custom training
+- **Enterprise**: Unlimited generations, custom AI models, dedicated support
+
+### Konnektr.Compass (Coming Soon)
+**Navigation and discovery tools**
+
+- **Purpose**: Intelligent navigation and discovery for digital twin networks
+- **Use Cases**:
+  - Intelligent search and discovery
+  - Automated relationship mapping
+  - Navigation optimization
+  - Recommendation systems
+
+## Resource Lifecycle
+
+### 1. Creation
+When you create a resource:
+
+1. **Selection**: Choose the resource type and tier
+2. **Configuration**: Set up resource-specific settings
+3. **Validation**: KtrlPlane validates your configuration
+4. **Provisioning**: Infrastructure is allocated and configured
+5. **Deployment**: The resource is deployed and becomes available
+
+### 2. Running State
+Once deployed, resources provide:
+
+- **Service endpoints** for accessing functionality
+- **Configuration management** for updating settings
+- **Monitoring and logging** for operational visibility
+- **Scaling capabilities** based on usage patterns
+
+### 3. Management
+Throughout their lifecycle, you can:
+
+- **Update configuration** to modify behavior
+- **Scale up or down** to handle changing demands
+- **Monitor performance** and usage metrics
+- **Access logs and diagnostics** for troubleshooting
+
+### 4. Termination
+When you no longer need a resource:
+
+1. **Backup data** if needed (some services have automatic backups)
+2. **Remove dependencies** from other resources
+3. **Delete the resource** through the KtrlPlane interface
+4. **Billing stops** when the resource is fully terminated
+
+## Resource Configuration
+
+### Settings Schema
+Each resource type has a specific JSON schema for configuration:
+
+```typescript
+// Example: Graph Resource Settings
+interface GraphSettings {
+  database_name: string;
+  enable_analytics: boolean;
+  backup_retention_days: number;
+  query_timeout_seconds: number;
+  max_concurrent_connections: number;
+  enable_audit_logging: boolean;
+}
+```
+
+### Configuration Best Practices
+
+1. **Start Conservative**: Begin with modest resource limits and scale up as needed
+2. **Use Descriptive Names**: Choose clear, descriptive names for your resources
+3. **Plan for Growth**: Consider future scaling needs when setting initial configuration
+4. **Security First**: Enable security features like audit logging when available
+5. **Regular Reviews**: Periodically review and optimize your resource configurations
+
+### Dynamic Configuration
+Many settings can be updated without recreating the resource:
+
+- **Scaling parameters** (memory, CPU, connections)
+- **Retention policies** (backup, logging, data retention)
+- **Security settings** (access control, audit logging)
+- **Performance tuning** (timeouts, caching, optimization)
+
+## Resource Tiers and Billing
+
+### Understanding Tiers
+Each resource type offers multiple tiers:
+
+- **Free Tier**: Perfect for development, testing, and small projects
+- **Pro Tier**: Production-ready with higher limits and additional features
+- **Enterprise Tier**: Maximum performance, dedicated infrastructure, and SLA
+
+### Billing Model
+Resources are billed based on:
+
+1. **Base tier cost**: Monthly subscription for the selected tier
+2. **Usage-based charges**: Additional costs for usage beyond tier limits
+3. **Storage costs**: Data storage charges for persistent data
+4. **Network egress**: Charges for data transfer out of the platform
+
+### Cost Optimization
+
+- **Right-sizing**: Choose appropriate tiers based on actual usage
+- **Monitoring**: Use built-in monitoring to track resource utilization
+- **Scaling**: Configure auto-scaling to optimize costs
+- **Cleanup**: Remove unused resources to avoid ongoing charges
+
+## Resource Access and Security
+
+### Access URLs
+Each resource provides secure access endpoints:
+
+```
+https://graph-abc123.konnektr.io/api/v1
+https://flow-def456.konnektr.io/webhooks
+https://assembler-ghi789.konnektr.io/models
+```
+
+### Authentication
+Resources use multiple authentication methods:
+
+- **API Keys**: For programmatic access
+- **JWT Tokens**: For user-based authentication
+- **OAuth 2.0**: For third-party integrations
+- **Service Accounts**: For service-to-service communication
+
+### Network Security
+- **TLS Encryption**: All traffic is encrypted in transit
+- **VPC Isolation**: Enterprise tiers offer network isolation
+- **IP Whitelisting**: Restrict access to specific IP ranges
+- **Private Endpoints**: Direct private connectivity options
+
+## Resource Integration
+
+### Inter-Resource Communication
+Resources within the same project can communicate securely:
+
+```json
+{
+  "flow_config": {
+    "graph_endpoint": "graph://my-graph-resource/api/v1",
+    "assembler_endpoint": "assembler://my-assembler-resource/models"
+  }
+}
+```
+
+### External Integrations
+Connect resources to external services:
+
+- **Webhooks**: Receive notifications from external systems
+- **API Connectors**: Pull data from external APIs
+- **Database Connections**: Connect to external databases
+- **Message Queues**: Integrate with messaging systems
+
+### SDK and Libraries
+Each resource type provides:
+
+- **REST APIs**: Standard HTTP-based interfaces
+- **SDKs**: Language-specific client libraries
+- **GraphQL**: Query-based APIs where applicable
+- **WebSocket**: Real-time bidirectional communication
+
+## Monitoring and Observability
+
+### Built-in Metrics
+All resources provide standard metrics:
+
+- **Performance**: Response times, throughput, error rates
+- **Resource Utilization**: CPU, memory, storage usage
+- **Business Metrics**: Custom metrics specific to each resource type
+- **Cost Metrics**: Resource consumption and billing information
+
+### Logging
+Comprehensive logging capabilities:
+
+- **Application Logs**: Resource-specific operational logs
+- **Access Logs**: All API calls and user interactions
+- **Audit Logs**: Security and configuration changes
+- **Performance Logs**: Detailed performance and debugging information
+
+### Alerting
+Set up alerts for:
+
+- **Performance Issues**: High response times or error rates
+- **Resource Limits**: Approaching tier limits or quotas
+- **Security Events**: Unauthorized access attempts
+- **Cost Thresholds**: Unexpected billing increases
+
+## Next Steps
+
+Now that you understand resources:
+
+1. **[Create Your First Resource](/getting-started/first-project)**: Deploy a resource in your project
+2. **[Resource Management Guide](/guides/resources)**: Learn advanced resource management
+3. **[Billing and Optimization](/guides/billing)**: Understand costs and optimization strategies
+4. **[API Integration](/api/resources)**: Learn how to integrate with resource APIs
+
+<Callout type="tip">
+Start with free tiers to experiment and learn. You can always upgrade to higher tiers as your needs grow and you become more familiar with each resource type.
+</Callout>

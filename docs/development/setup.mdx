@@ -1,0 +1,588 @@
+---
+title: Development Setup
+description: Set up your local development environment for contributing to KtrlPlane
+---
+
+# Development Setup
+
+This guide will help you set up a local development environment for contributing to KtrlPlane. Whether you're fixing bugs, adding features, or improving documentation, this guide will get you up and running quickly.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+### Required Software
+
+- **Go 1.21+**: Backend development
+- **Node.js 18+**: Frontend development
+- **pnpm**: Package management for frontend
+- **PostgreSQL 14+**: Local database
+- **Git**: Version control
+- **Docker** (optional): For containerized development
+
+### Development Tools (Recommended)
+
+- **VS Code**: With Go and TypeScript extensions
+- **Postman/Insomnia**: API testing
+- **pgAdmin/DBeaver**: Database administration
+- **GitHub CLI**: For easier contribution workflow
+
+## Quick Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/konnektr-io/ktrlplane.git
+cd ktrlplane
+```
+
+### 2. Database Setup
+
+**Option A: Local PostgreSQL**
+```bash
+# Create database and user
+sudo -u postgres psql
+CREATE USER ktrlplane_dev WITH ENCRYPTED PASSWORD 'dev_password';
+CREATE DATABASE ktrlplane_dev OWNER ktrlplane_dev;
+GRANT ALL PRIVILEGES ON DATABASE ktrlplane_dev TO ktrlplane_dev;
+\q
+```
+
+**Option B: Docker PostgreSQL**
+```bash
+cd deployments/docker
+docker-compose up -d postgres
+```
+
+### 3. Backend Setup
+
+```bash
+# Install Go dependencies
+go mod tidy
+
+# Copy example configuration
+cp config.yaml.example config.yaml
+
+# Edit config.yaml with your database settings
+nano config.yaml
+
+# Run database migrations
+go run cmd/migrate/main.go
+
+# Start the backend server
+go run cmd/server/main.go
+```
+
+The backend will be available at `http://localhost:8080`
+
+### 4. Frontend Setup
+
+```bash
+cd web
+
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+```
+
+The frontend will be available at `http://localhost:5173`
+
+### 5. Verify Setup
+
+1. Open your browser to `http://localhost:5173`
+2. You should see the KtrlPlane login page
+3. Backend health check: `curl http://localhost:8080/health`
+
+## Detailed Setup
+
+### Configuration
+
+The `config.yaml` file contains all application configuration:
+
+```yaml
+# config.yaml
+database:
+  host: "localhost"
+  port: 5432
+  username: "ktrlplane_dev"
+  password: "dev_password"
+  database: "ktrlplane_dev"
+  ssl_mode: "disable"
+
+auth:
+  domain: "your-dev-auth0-domain.auth0.com"
+  audience: "https://api.ktrlplane.localhost"
+  client_id: "your-auth0-client-id"
+
+server:
+  port: 8080
+  cors:
+    allowed_origins:
+      - "http://localhost:5173"
+      - "http://localhost:3000"
+
+logging:
+  level: "debug"
+  format: "text"
+```
+
+### Environment Variables
+
+For local development, you can also use environment variables:
+
+```bash
+# Create .env file
+cat > .env << EOF
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=ktrlplane_dev
+DB_PASSWORD=dev_password
+DB_NAME=ktrlplane_dev
+DB_SSL_MODE=disable
+
+AUTH_DOMAIN=your-dev-auth0-domain.auth0.com
+AUTH_AUDIENCE=https://api.ktrlplane.localhost
+AUTH_CLIENT_ID=your-auth0-client-id
+
+LOG_LEVEL=debug
+EOF
+
+# Source environment variables
+source .env
+```
+
+### Auth0 Development Setup
+
+For authentication to work, you'll need an Auth0 development account:
+
+1. Create a free Auth0 account at [auth0.com](https://auth0.com)
+2. Create a new Application (Single Page Application)
+3. Configure callback URLs:
+   - `http://localhost:5173/callback`
+   - `http://localhost:5173/silent-callback`
+4. Configure logout URLs: `http://localhost:5173`
+5. Create an API with identifier: `https://api.ktrlplane.localhost`
+6. Update your `config.yaml` with Auth0 settings
+
+## Project Structure
+
+Understanding the codebase structure:
+
+```
+ktrlplane/
+├── cmd/                    # Application entry points
+│   ├── migrate/           # Database migration tool
+│   └── server/            # HTTP server
+├── internal/              # Private application code
+│   ├── api/              # HTTP handlers and routes
+│   ├── auth/             # Authentication logic
+│   ├── config/           # Configuration management
+│   ├── db/               # Database layer
+│   ├── models/           # Data models
+│   └── service/          # Business logic
+├── migrations/           # SQL migration files
+├── web/                  # React frontend
+│   ├── src/
+│   │   ├── components/   # Reusable UI components
+│   │   ├── features/     # Feature-specific code
+│   │   ├── hooks/        # Custom React hooks
+│   │   ├── lib/          # Utility libraries
+│   │   ├── pages/        # Page components
+│   │   └── store/        # State management
+├── deployments/          # Deployment configurations
+├── docs/                 # Documentation
+└── README.md
+```
+
+## Development Workflow
+
+### 1. Backend Development
+
+**Starting the backend:**
+```bash
+# Development with auto-reload (install air first)
+go install github.com/cosmtrek/air@latest
+air
+
+# Or run directly
+go run cmd/server/main.go
+```
+
+**Running tests:**
+```bash
+# All tests
+go test ./...
+
+# Specific package
+go test ./internal/service/...
+
+# With coverage
+go test -cover ./...
+```
+
+**Database migrations:**
+```bash
+# Create new migration
+migrate create -ext sql -dir migrations -seq add_new_feature
+
+# Run migrations
+go run cmd/migrate/main.go
+
+# Or use make
+make migrate
+```
+
+### 2. Frontend Development
+
+**Starting the frontend:**
+```bash
+cd web
+pnpm dev
+```
+
+**Running tests:**
+```bash
+# Unit tests
+pnpm test
+
+# E2E tests
+pnpm test:e2e
+
+# Test coverage
+pnpm test:coverage
+```
+
+**Linting and formatting:**
+```bash
+# Lint
+pnpm lint
+
+# Fix linting issues
+pnpm lint:fix
+
+# Format code
+pnpm format
+```
+
+### 3. Full Stack Development
+
+Use the provided VS Code tasks for efficient development:
+
+1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
+2. Type "Tasks: Run Task"
+3. Choose from:
+   - `go: run backend` - Start backend server
+   - `vite: dev` - Start frontend development server
+
+## Debugging
+
+### Backend Debugging
+
+**Using VS Code:**
+1. Install the Go extension
+2. Set breakpoints in your code
+3. Press F5 to start debugging
+4. The debugger will attach to the running process
+
+**Using Delve directly:**
+```bash
+# Install delve
+go install github.com/go-delve/delve/cmd/dlv@latest
+
+# Start debugging
+dlv debug cmd/server/main.go
+```
+
+### Frontend Debugging
+
+**Browser DevTools:**
+- Use Chrome DevTools or Firefox Developer Tools
+- React components are visible in React DevTools extension
+- Zustand store can be inspected with Redux DevTools
+
+**VS Code Debugging:**
+1. Install the "Debugger for Chrome" extension
+2. Set breakpoints in TypeScript/JavaScript files
+3. Use the debug configuration in `.vscode/launch.json`
+
+## Testing
+
+### Backend Tests
+
+**Unit Tests:**
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with verbose output
+go test -v ./...
+
+# Run tests for specific package
+go test -v ./internal/service/
+```
+
+**Integration Tests:**
+```bash
+# Start test database
+cd deployments/docker
+docker-compose -f docker-compose.test.yml up -d
+
+# Run integration tests
+go test -tags=integration ./...
+```
+
+**Test Coverage:**
+```bash
+# Generate coverage report
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out -o coverage.html
+open coverage.html
+```
+
+### Frontend Tests
+
+**Unit Tests:**
+```bash
+cd web
+
+# Run all tests
+pnpm test
+
+# Watch mode
+pnpm test:watch
+
+# Coverage
+pnpm test:coverage
+```
+
+**E2E Tests:**
+```bash
+# Install Playwright browsers
+pnpm exec playwright install
+
+# Run E2E tests
+pnpm test:e2e
+
+# Run in UI mode
+pnpm test:e2e:ui
+```
+
+## Database Development
+
+### Migrations
+
+Create new migrations for schema changes:
+
+```bash
+# Create migration file
+migrate create -ext sql -dir migrations -seq add_user_preferences
+
+# This creates:
+# migrations/001_add_user_preferences.up.sql
+# migrations/001_add_user_preferences.down.sql
+```
+
+**Migration best practices:**
+- Always create both up and down migrations
+- Test migrations on a copy of production data
+- Keep migrations small and focused
+- Never modify existing migrations in production
+
+### Schema Changes
+
+```sql
+-- Example migration: 005_add_user_preferences.up.sql
+CREATE TABLE user_preferences (
+    user_id VARCHAR(255) PRIMARY KEY,
+    preferences JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_preferences_user_id ON user_preferences(user_id);
+```
+
+```sql
+-- Example rollback: 005_add_user_preferences.down.sql
+DROP TABLE IF EXISTS user_preferences;
+```
+
+## API Development
+
+### Adding New Endpoints
+
+1. **Define the model** in `internal/models/models.go`
+2. **Add service methods** in `internal/service/`
+3. **Create handlers** in `internal/api/handlers.go`
+4. **Add routes** in `internal/api/routes.go`
+5. **Write tests** for all layers
+
+**Example:**
+```go
+// 1. Model (internal/models/models.go)
+type UserPreference struct {
+    UserID      string          `json:"user_id" db:"user_id"`
+    Preferences json.RawMessage `json:"preferences" db:"preferences"`
+    CreatedAt   time.Time       `json:"created_at" db:"created_at"`
+    UpdatedAt   time.Time       `json:"updated_at" db:"updated_at"`
+}
+
+// 2. Service (internal/service/user_service.go)
+func (s *UserService) GetPreferences(userID string) (*UserPreference, error) {
+    // Implementation
+}
+
+// 3. Handler (internal/api/handlers.go)
+func (h *APIHandler) GetUserPreferences(c *gin.Context) {
+    // Implementation
+}
+
+// 4. Route (internal/api/routes.go)
+apiV1.GET("/users/:userId/preferences", handler.GetUserPreferences)
+```
+
+## Code Quality
+
+### Go Standards
+
+Follow Go best practices:
+
+```bash
+# Format code
+go fmt ./...
+
+# Vet code
+go vet ./...
+
+# Run linters (install golangci-lint first)
+golangci-lint run
+```
+
+### TypeScript Standards
+
+Follow TypeScript and React best practices:
+
+```bash
+cd web
+
+# Type checking
+pnpm type-check
+
+# Linting
+pnpm lint
+
+# Formatting
+pnpm format
+```
+
+## Git Workflow
+
+### Branch Naming
+
+- `feature/add-user-preferences` - New features
+- `bugfix/fix-login-issue` - Bug fixes
+- `docs/update-api-docs` - Documentation updates
+- `refactor/optimize-database-queries` - Code refactoring
+
+### Commit Messages
+
+Use conventional commits:
+
+```
+feat: add user preferences endpoint
+fix: resolve authentication timeout issue
+docs: update API documentation
+refactor: optimize database connection pooling
+test: add unit tests for billing service
+```
+
+### Pull Request Process
+
+1. Create feature branch from `main`
+2. Make your changes
+3. Add tests for new functionality
+4. Update documentation if needed
+5. Ensure all tests pass
+6. Create pull request with descriptive title and description
+7. Request review from maintainers
+
+## Troubleshooting Development Issues
+
+### Common Backend Issues
+
+**Database connection errors:**
+```bash
+# Check PostgreSQL is running
+sudo systemctl status postgresql
+
+# Check connection
+psql -h localhost -U ktrlplane_dev -d ktrlplane_dev -c "SELECT version();"
+```
+
+**Port conflicts:**
+```bash
+# Check what's using port 8080
+lsof -i :8080
+sudo netstat -tulpn | grep :8080
+```
+
+### Common Frontend Issues
+
+**Node/pnpm version conflicts:**
+```bash
+# Check versions
+node --version
+pnpm --version
+
+# Use Node Version Manager if needed
+nvm use 18
+```
+
+**Module resolution issues:**
+```bash
+# Clear cache and reinstall
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+```
+
+## VS Code Configuration
+
+Recommended VS Code settings for the project:
+
+```json
+// .vscode/settings.json
+{
+  "go.toolsManagement.checkForUpdates": "local",
+  "go.useLanguageServer": true,
+  "go.lintOnSave": "package",
+  "go.formatTool": "goimports",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
+}
+```
+
+Recommended extensions:
+- Go (Google)
+- TypeScript and JavaScript (Microsoft)
+- ES7+ React/Redux/React-Native snippets
+- Prettier - Code formatter
+- ESLint
+- GitLens
+
+## Next Steps
+
+After setting up your development environment:
+
+1. **[Read the Architecture Guide](/development/architecture)** - Understand the system design
+2. **[Review Contributing Guidelines](/development/contributing)** - Learn how to contribute effectively
+3. **[Explore the API](/development/api)** - Understand the API design patterns
+4. **[Write Tests](/development/testing)** - Learn the testing strategy
+
+<Callout type="tip">
+Join our developer community on Discord to get help, share ideas, and collaborate with other contributors!
+</Callout>

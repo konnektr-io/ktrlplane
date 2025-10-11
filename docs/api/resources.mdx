@@ -1,0 +1,536 @@
+---
+title: Resources API
+description: Complete API reference for managing resources in KtrlPlane
+---
+
+# Resources API
+
+The Resources API allows you to create, manage, and configure resources within your projects. Resources represent deployable services like Graph databases, Flow processors, and AI Assemblers.
+
+## Base URL
+
+```
+https://api.ktrlplane.com/api/v1
+```
+
+## Authentication
+
+All API requests require authentication using JWT tokens. Include the token in the Authorization header:
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+## Resource Object
+
+```typescript
+interface Resource {
+  resource_id: string;
+  project_id: string;
+  name: string;
+  type: string;           // "Konnektr.Graph" | "Konnektr.Flow" | "Konnektr.Assembler" | "Konnektr.Compass"
+  sku: string;            // "free" | "pro" | "enterprise"
+  status: string;         // "creating" | "running" | "updating" | "error" | "terminated"
+  settings_json: object;  // Resource-specific configuration
+  created_at: string;     // ISO 8601 timestamp
+  updated_at: string;     // ISO 8601 timestamp
+  error_message?: string; // Present when status is "error"
+  access_url?: string;    // Service endpoint URL
+}
+```
+
+## List Resources
+
+Retrieve all resources in a project.
+
+```http
+GET /projects/{projectId}/resources
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `type` | string | No | Filter by resource type |
+| `status` | string | No | Filter by resource status |
+| `limit` | number | No | Maximum results (default: 50, max: 100) |
+| `offset` | number | No | Pagination offset (default: 0) |
+
+### Example Request
+
+```bash
+curl -X GET \
+  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources?type=Konnektr.Graph" \
+  -H "Authorization: Bearer $JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "resources": [
+    {
+      "resource_id": "res-graph-xyz789",
+      "project_id": "proj-abc123",
+      "name": "Production Graph DB",
+      "type": "Konnektr.Graph",
+      "sku": "pro",
+      "status": "running",
+      "settings_json": {
+        "database_name": "production-twins",
+        "enable_analytics": true,
+        "backup_retention_days": 30
+      },
+      "created_at": "2025-01-15T10:30:00Z",
+      "updated_at": "2025-01-15T10:35:00Z",
+      "access_url": "https://graph-xyz789.konnektr.io/api/v1"
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+## Create Resource
+
+Create a new resource in a project.
+
+```http
+POST /projects/{projectId}/resources
+```
+
+### Request Body
+
+```typescript
+interface CreateResourceRequest {
+  id: string;                    // Unique resource identifier
+  name: string;                  // Display name
+  type: string;                  // Resource type
+  sku?: string;                  // Billing tier (default: "free")
+  settings_json?: object;        // Resource configuration
+}
+```
+
+### Example Request
+
+```bash
+curl -X POST \
+  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources" \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "my-graph-db",
+    "name": "Customer Analytics Graph",
+    "type": "Konnektr.Graph",
+    "sku": "pro",
+    "settings_json": {
+      "database_name": "customer-analytics",
+      "enable_analytics": true,
+      "backup_retention_days": 30,
+      "max_concurrent_connections": 100
+    }
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "resource_id": "res-graph-abc456",
+  "project_id": "proj-abc123",
+  "name": "Customer Analytics Graph",
+  "type": "Konnektr.Graph",
+  "sku": "pro",
+  "status": "creating",
+  "settings_json": {
+    "database_name": "customer-analytics",
+    "enable_analytics": true,
+    "backup_retention_days": 30,
+    "max_concurrent_connections": 100
+  },
+  "created_at": "2025-01-15T14:20:00Z",
+  "updated_at": "2025-01-15T14:20:00Z"
+}
+```
+
+## Get Resource
+
+Retrieve a specific resource by ID.
+
+```http
+GET /projects/{projectId}/resources/{resourceId}
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `resourceId` | string | Yes | Resource identifier |
+
+### Example Request
+
+```bash
+curl -X GET \
+  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
+  -H "Authorization: Bearer $JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "resource_id": "res-graph-xyz789",
+  "project_id": "proj-abc123",
+  "name": "Production Graph DB",
+  "type": "Konnektr.Graph",
+  "sku": "pro",
+  "status": "running",
+  "settings_json": {
+    "database_name": "production-twins",
+    "enable_analytics": true,
+    "backup_retention_days": 30,
+    "max_concurrent_connections": 200,
+    "enable_audit_logging": true
+  },
+  "created_at": "2025-01-15T10:30:00Z",
+  "updated_at": "2025-01-15T12:45:00Z",
+  "access_url": "https://graph-xyz789.konnektr.io/api/v1"
+}
+```
+
+## Update Resource
+
+Update an existing resource's configuration.
+
+```http
+PUT /projects/{projectId}/resources/{resourceId}
+```
+
+### Request Body
+
+```typescript
+interface UpdateResourceRequest {
+  name?: string;                 // Update display name
+  sku?: string;                  // Change billing tier
+  settings_json?: object;        // Update configuration
+}
+```
+
+### Example Request
+
+```bash
+curl -X PUT \
+  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Graph Database",
+    "settings_json": {
+      "database_name": "production-twins",
+      "enable_analytics": true,
+      "backup_retention_days": 60,
+      "max_concurrent_connections": 300,
+      "enable_audit_logging": true
+    }
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "resource_id": "res-graph-xyz789",
+  "project_id": "proj-abc123",
+  "name": "Updated Graph Database",
+  "type": "Konnektr.Graph",
+  "sku": "pro",
+  "status": "updating",
+  "settings_json": {
+    "database_name": "production-twins",
+    "enable_analytics": true,
+    "backup_retention_days": 60,
+    "max_concurrent_connections": 300,
+    "enable_audit_logging": true
+  },
+  "created_at": "2025-01-15T10:30:00Z",
+  "updated_at": "2025-01-15T15:20:00Z"
+}
+```
+
+## Delete Resource
+
+Delete a resource permanently.
+
+```http
+DELETE /projects/{projectId}/resources/{resourceId}
+```
+
+<Callout type="warning">
+This action is irreversible. All data associated with the resource will be permanently deleted.
+</Callout>
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `resourceId` | string | Yes | Resource identifier |
+
+### Example Request
+
+```bash
+curl -X DELETE \
+  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
+  -H "Authorization: Bearer $JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "message": "Resource deletion initiated",
+  "resource_id": "res-graph-xyz789",
+  "status": "deleting"
+}
+```
+
+## Resource Configuration Schemas
+
+### Konnektr.Graph Settings
+
+```typescript
+interface GraphSettings {
+  database_name: string;
+  enable_analytics?: boolean;
+  backup_retention_days?: number;
+  query_timeout_seconds?: number;
+  max_concurrent_connections?: number;
+  enable_audit_logging?: boolean;
+  performance_tier?: "basic" | "standard" | "premium";
+  auto_scaling?: {
+    enabled: boolean;
+    min_capacity: number;
+    max_capacity: number;
+  };
+}
+```
+
+### Konnektr.Flow Settings
+
+```typescript
+interface FlowSettings {
+  max_concurrent_flows?: number;
+  retention_days?: number;
+  enable_dead_letter_queue?: boolean;
+  processing_mode?: "batch" | "streaming" | "hybrid";
+  error_handling?: "fail_fast" | "retry" | "retry_with_backoff";
+  auto_scaling?: {
+    enabled: boolean;
+    min_instances: number;
+    max_instances: number;
+    target_cpu_utilization: number;
+  };
+}
+```
+
+### Konnektr.Assembler Settings
+
+```typescript
+interface AssemblerSettings {
+  model_complexity?: "basic" | "standard" | "advanced";
+  auto_validation?: boolean;
+  output_format?: "dtdl_v2" | "json_schema" | "custom";
+  training_data_retention?: "7_days" | "30_days" | "90_days" | "1_year";
+  ai_model?: "gpt-3.5" | "gpt-4" | "custom";
+  confidence_threshold?: number;
+  batch_processing?: {
+    enabled: boolean;
+    max_batch_size: number;
+  };
+}
+```
+
+## Resource Status Codes
+
+| Status | Description |
+|--------|-------------|
+| `creating` | Resource is being provisioned |
+| `running` | Resource is operational and available |
+| `updating` | Resource configuration is being updated |
+| `scaling` | Resource is scaling up or down |
+| `error` | Resource encountered an error (check error_message) |
+| `deleting` | Resource is being deleted |
+| `terminated` | Resource has been successfully deleted |
+
+## Error Handling
+
+### Common Error Responses
+
+#### 400 Bad Request
+```json
+{
+  "error": "validation_failed",
+  "message": "Invalid resource configuration",
+  "details": {
+    "field": "settings_json.database_name",
+    "issue": "must be alphanumeric and start with a letter"
+  }
+}
+```
+
+#### 403 Forbidden
+```json
+{
+  "error": "insufficient_permissions",
+  "message": "User does not have permission to create resources in this project",
+  "required_permission": "project:editor"
+}
+```
+
+#### 404 Not Found
+```json
+{
+  "error": "resource_not_found",
+  "message": "Resource res-xyz789 not found",
+  "resource_id": "res-xyz789"
+}
+```
+
+#### 409 Conflict
+```json
+{
+  "error": "resource_conflict",
+  "message": "Resource with ID 'my-graph-db' already exists in this project",
+  "existing_resource_id": "res-graph-abc123"
+}
+```
+
+#### 422 Unprocessable Entity
+```json
+{
+  "error": "invalid_tier_change",
+  "message": "Cannot downgrade from enterprise to free tier with current usage",
+  "current_usage": {
+    "nodes": 150000,
+    "tier_limit": 1000
+  }
+}
+```
+
+## Rate Limits
+
+The Resources API is subject to rate limiting:
+
+- **Standard tier**: 100 requests per minute per user
+- **Pro tier**: 500 requests per minute per user  
+- **Enterprise tier**: 2000 requests per minute per user
+
+Rate limit headers are included in all responses:
+
+```http
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 85
+X-RateLimit-Reset: 1642678800
+```
+
+## Webhooks
+
+Subscribe to resource events using webhooks:
+
+### Webhook Events
+
+- `resource.created` - Resource successfully created
+- `resource.updated` - Resource configuration updated
+- `resource.deleted` - Resource permanently deleted
+- `resource.error` - Resource encountered an error
+- `resource.status_changed` - Resource status changed
+
+### Webhook Payload
+
+```json
+{
+  "event": "resource.created",
+  "timestamp": "2025-01-15T14:20:00Z",
+  "resource": {
+    "resource_id": "res-graph-abc456",
+    "project_id": "proj-abc123",
+    "name": "Customer Analytics Graph",
+    "type": "Konnektr.Graph",
+    "status": "running"
+  }
+}
+```
+
+## SDK Examples
+
+### JavaScript/TypeScript
+
+```typescript
+import { KtrlPlaneClient } from '@konnektr/ktrlplane-sdk';
+
+const client = new KtrlPlaneClient({
+  apiKey: process.env.KTRLPLANE_API_KEY
+});
+
+// Create a new Graph resource
+const resource = await client.resources.create('proj-abc123', {
+  id: 'analytics-graph',
+  name: 'Analytics Graph Database',
+  type: 'Konnektr.Graph',
+  sku: 'pro',
+  settings_json: {
+    database_name: 'analytics',
+    enable_analytics: true,
+    backup_retention_days: 30
+  }
+});
+
+console.log('Resource created:', resource.resource_id);
+```
+
+### Python
+
+```python
+from ktrlplane import KtrlPlaneClient
+
+client = KtrlPlaneClient(api_key=os.environ['KTRLPLANE_API_KEY'])
+
+# List all resources in a project
+resources = client.resources.list('proj-abc123')
+
+for resource in resources:
+    print(f"{resource.name} ({resource.type}): {resource.status}")
+```
+
+### Go
+
+```go
+package main
+
+import (
+    "context"
+    "github.com/konnektr-io/ktrlplane-go"
+)
+
+func main() {
+    client := ktrlplane.NewClient(os.Getenv("KTRLPLANE_API_KEY"))
+    
+    // Get resource details
+    resource, err := client.Resources.Get(context.Background(), "proj-abc123", "res-graph-xyz789")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Resource: %s (Status: %s)\n", resource.Name, resource.Status)
+}
+```
+
+## Next Steps
+
+- **[Authentication API](/api/authentication)**: Learn about API authentication
+- **[Projects API](/api/projects)**: Manage projects that contain resources
+- **[RBAC API](/api/rbac)**: Control access to resources
+- **[Billing API](/api/billing)**: Monitor resource costs and usage

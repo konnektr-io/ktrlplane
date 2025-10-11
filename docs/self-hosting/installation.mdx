@@ -1,0 +1,583 @@
+---
+title: Installation Guide
+description: Complete guide for installing and deploying KtrlPlane in your own environment
+---
+
+# Self-Hosting Installation Guide
+
+This guide covers how to install and deploy KtrlPlane in your own environment, whether that's on-premises, in your own cloud account, or in a private cloud.
+
+## Overview
+
+KtrlPlane can be deployed in several ways:
+
+- **Docker Compose** (Development/Testing)
+- **Kubernetes** (Production - Recommended)
+- **Helm Chart** (Kubernetes with simplified configuration)
+- **Manual Installation** (Advanced users)
+
+## Prerequisites
+
+### System Requirements
+
+**Minimum Requirements:**
+- 2 CPU cores
+- 4 GB RAM
+- 20 GB storage
+- PostgreSQL 14+
+- Docker or Kubernetes cluster
+
+**Recommended for Production:**
+- 4+ CPU cores
+- 8+ GB RAM
+- 100+ GB storage (depending on usage)
+- PostgreSQL 14+ with high availability
+- Kubernetes cluster with multiple nodes
+
+### Software Dependencies
+
+- **Container Runtime**: Docker 20.10+ or containerd 1.5+
+- **Database**: PostgreSQL 14+ 
+- **Authentication**: Auth0 account (or compatible OIDC provider)
+- **TLS Certificates**: For HTTPS in production
+- **Load Balancer**: For high availability deployments
+
+## Quick Start with Docker Compose
+
+For development or testing environments:
+
+### Step 1: Clone Repository
+
+```bash
+git clone https://github.com/konnektr-io/ktrlplane.git
+cd ktrlplane
+```
+
+### Step 2: Configure Environment
+
+Create a `.env` file:
+
+```bash
+# Database Configuration
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=ktrlplane_dev
+DB_USER=ktrlplane
+DB_PASSWORD=change_this_password
+
+# Auth0 Configuration  
+AUTH_DOMAIN=your-domain.auth0.com
+AUTH_AUDIENCE=https://api.ktrlplane.yourdomain.com
+
+# Application Configuration
+API_BASE_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:5173
+```
+
+### Step 3: Start Services
+
+```bash
+cd deployments/docker
+docker-compose up -d
+```
+
+This will start:
+- PostgreSQL database
+- KtrlPlane backend (port 8080)
+- KtrlPlane frontend (port 5173)
+
+### Step 4: Run Database Migrations
+
+```bash
+docker-compose exec backend /app/migrate
+```
+
+### Step 5: Access KtrlPlane
+
+Open your browser to `http://localhost:5173` to access the KtrlPlane interface.
+
+## Production Kubernetes Deployment
+
+For production environments, we recommend using Kubernetes:
+
+### Step 1: Prerequisites
+
+Ensure you have:
+- Kubernetes cluster 1.21+
+- kubectl configured
+- Helm 3.0+
+- PostgreSQL database (managed service recommended)
+
+### Step 2: Add Helm Repository
+
+```bash
+helm repo add konnektr https://charts.konnektr.io
+helm repo update
+```
+
+### Step 3: Create Configuration
+
+Create a `values.yaml` file:
+
+```yaml
+# values.yaml
+global:
+  domain: "ktrlplane.yourdomain.com"
+  
+# Database configuration (external managed database recommended)
+postgresql:
+  enabled: false  # Using external database
+  
+database:
+  external: true
+  host: "your-postgres-host.amazonaws.com"
+  port: 5432
+  name: "ktrlplane_production"
+  username: "ktrlplane"
+  password: "your-secure-password"
+  
+# Auth0 configuration
+auth:
+  domain: "your-domain.auth0.com"
+  audience: "https://api.ktrlplane.yourdomain.com"
+  clientId: "your-auth0-client-id"
+  
+# Backend configuration
+backend:
+  image:
+    repository: ghcr.io/konnektr-io/ktrlplane-backend
+    tag: "v1.0.0"
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+      
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    
+# Frontend configuration
+frontend:
+  image:
+    repository: ghcr.io/konnektr-io/ktrlplane-frontend
+    tag: "v1.0.0"
+    
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  tls:
+    - secretName: ktrlplane-tls
+      hosts:
+        - ktrlplane.yourdomain.com
+
+# Security configuration  
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
+```
+
+### Step 4: Install KtrlPlane
+
+```bash
+helm install ktrlplane konnektr/ktrlplane \
+  --namespace ktrlplane \
+  --create-namespace \
+  --values values.yaml
+```
+
+### Step 5: Run Database Migrations
+
+```bash
+kubectl run migrate --rm -i --tty \
+  --image=ghcr.io/konnektr-io/ktrlplane-backend:v1.0.0 \
+  --restart=Never \
+  --env="DATABASE_URL=postgresql://user:pass@host:5432/dbname" \
+  -- /app/migrate
+```
+
+### Step 6: Verify Installation
+
+```bash
+# Check pod status
+kubectl get pods -n ktrlplane
+
+# Check ingress
+kubectl get ingress -n ktrlplane
+
+# Check logs
+kubectl logs -f deployment/ktrlplane-backend -n ktrlplane
+```
+
+## Manual Installation
+
+For environments where Docker/Kubernetes isn't available:
+
+### Step 1: Install Dependencies
+
+**Ubuntu/Debian:**
+```bash
+# Install PostgreSQL
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Install Go 1.21+
+wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+
+# Install Node.js 18+
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install pnpm
+npm install -g pnpm
+```
+
+**CentOS/RHEL:**
+```bash
+# Install PostgreSQL
+sudo dnf install postgresql postgresql-server postgresql-contrib
+sudo postgresql-setup --initdb
+sudo systemctl enable --now postgresql
+
+# Install Go and Node.js (similar to above)
+```
+
+### Step 2: Setup Database
+
+```bash
+# Switch to postgres user
+sudo -u postgres psql
+
+# Create database and user
+CREATE USER ktrlplane WITH ENCRYPTED PASSWORD 'your-secure-password';
+CREATE DATABASE ktrlplane_production OWNER ktrlplane;
+GRANT ALL PRIVILEGES ON DATABASE ktrlplane_production TO ktrlplane;
+\q
+```
+
+### Step 3: Build Backend
+
+```bash
+git clone https://github.com/konnektr-io/ktrlplane.git
+cd ktrlplane
+
+# Build backend
+go build -o ktrlplane-server ./cmd/server
+
+# Run migrations
+export DATABASE_URL="postgresql://ktrlplane:your-password@localhost/ktrlplane_production?sslmode=disable"
+go run ./cmd/migrate
+```
+
+### Step 4: Build Frontend
+
+```bash
+cd web
+pnpm install
+pnpm build
+```
+
+### Step 5: Configure Systemd Services
+
+Create `/etc/systemd/system/ktrlplane-backend.service`:
+
+```ini
+[Unit]
+Description=KtrlPlane Backend
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=ktrlplane
+WorkingDirectory=/opt/ktrlplane
+ExecStart=/opt/ktrlplane/ktrlplane-server
+Restart=always
+RestartSec=10
+
+Environment=DB_HOST=localhost
+Environment=DB_PORT=5432
+Environment=DB_NAME=ktrlplane_production
+Environment=DB_USER=ktrlplane
+Environment=DB_PASSWORD=your-secure-password
+Environment=AUTH_DOMAIN=your-domain.auth0.com
+Environment=AUTH_AUDIENCE=https://api.ktrlplane.yourdomain.com
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start the service:
+
+```bash
+sudo systemctl enable --now ktrlplane-backend
+sudo systemctl status ktrlplane-backend
+```
+
+### Step 6: Setup Web Server
+
+Configure nginx to serve the frontend and proxy API requests:
+
+```nginx
+server {
+    listen 80;
+    server_name ktrlplane.yourdomain.com;
+    
+    # Redirect to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name ktrlplane.yourdomain.com;
+    
+    ssl_certificate /etc/letsencrypt/live/ktrlplane.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ktrlplane.yourdomain.com/privkey.pem;
+    
+    # Frontend
+    location / {
+        root /opt/ktrlplane/web/dist;
+        try_files $uri $uri/ /index.html;
+    }
+    
+    # API proxy
+    location /api {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Health check
+    location /health {
+        proxy_pass http://localhost:8080;
+    }
+}
+```
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `DB_HOST` | Yes | PostgreSQL hostname | - |
+| `DB_PORT` | Yes | PostgreSQL port | 5432 |
+| `DB_NAME` | Yes | Database name | - |
+| `DB_USER` | Yes | Database username | - |
+| `DB_PASSWORD` | Yes | Database password | - |
+| `AUTH_DOMAIN` | Yes | Auth0 domain | - |
+| `AUTH_AUDIENCE` | Yes | Auth0 API audience | - |
+| `PORT` | No | Server port | 8080 |
+| `LOG_LEVEL` | No | Logging level | info |
+
+### Security Configuration
+
+For production deployments:
+
+```yaml
+security:
+  # Enable HTTPS only
+  tls:
+    enabled: true
+    cert_file: /etc/ssl/certs/ktrlplane.crt
+    key_file: /etc/ssl/private/ktrlplane.key
+    
+  # CORS configuration
+  cors:
+    allowed_origins:
+      - "https://ktrlplane.yourdomain.com"
+    allowed_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+    allowed_headers:
+      - Authorization
+      - Content-Type
+      
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 100
+    burst_size: 20
+```
+
+## High Availability Setup
+
+For production environments requiring high availability:
+
+### Database High Availability
+
+Use PostgreSQL with read replicas:
+
+```yaml
+database:
+  primary:
+    host: "pg-primary.yourdomain.com"
+    port: 5432
+  read_replicas:
+    - host: "pg-replica1.yourdomain.com"
+      port: 5432
+    - host: "pg-replica2.yourdomain.com"
+      port: 5432
+```
+
+### Application High Availability
+
+Deploy multiple backend instances behind a load balancer:
+
+```yaml
+backend:
+  replicas: 3
+  antiAffinity:
+    enabled: true
+  
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+```
+
+## Monitoring and Observability
+
+### Health Checks
+
+KtrlPlane provides health check endpoints:
+
+- `/health` - Basic health check
+- `/health/ready` - Readiness check (database connectivity)
+- `/health/live` - Liveness check
+
+### Metrics
+
+Enable Prometheus metrics:
+
+```yaml
+monitoring:
+  metrics:
+    enabled: true
+    port: 9090
+    path: /metrics
+```
+
+### Logging
+
+Configure structured logging:
+
+```yaml
+logging:
+  level: info
+  format: json
+  output: stdout
+```
+
+## Backup and Recovery
+
+### Database Backups
+
+Set up automated PostgreSQL backups:
+
+```bash
+# Daily backup script
+#!/bin/bash
+BACKUP_DIR="/backups/ktrlplane"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME > "$BACKUP_DIR/ktrlplane_$DATE.sql"
+
+# Compress backup
+gzip "$BACKUP_DIR/ktrlplane_$DATE.sql"
+
+# Clean up old backups (keep 30 days)
+find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
+```
+
+### Configuration Backups
+
+Backup your configuration files:
+
+```bash
+# Backup Kubernetes configs
+kubectl get secret,configmap -n ktrlplane -o yaml > ktrlplane-config-backup.yaml
+
+# Backup Helm values
+helm get values ktrlplane -n ktrlplane > values-backup.yaml
+```
+
+## Troubleshooting Installation
+
+### Common Issues
+
+**Database Connection Failed**
+```bash
+# Check connectivity
+telnet $DB_HOST $DB_PORT
+
+# Verify credentials
+psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "SELECT version();"
+```
+
+**Auth0 Configuration Issues**
+```bash
+# Verify Auth0 settings
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  https://$AUTH_DOMAIN/.well-known/jwks.json
+```
+
+**Port Conflicts**
+```bash
+# Check what's using port 8080
+sudo lsof -i :8080
+sudo netstat -tulpn | grep :8080
+```
+
+### Getting Help
+
+If you encounter issues:
+
+1. Check the [troubleshooting guide](/self-hosting/troubleshooting)
+2. Review application logs
+3. Verify all prerequisites are met
+4. Check the [community forums](/support/community)
+
+## Next Steps
+
+After successful installation:
+
+1. **[Configure Authentication](/self-hosting/authentication)**: Set up Auth0 integration
+2. **[Database Setup](/self-hosting/database)**: Optimize database configuration
+3. **[Monitoring](/self-hosting/monitoring)**: Set up comprehensive monitoring
+4. **[Security Hardening](/self-hosting/security)**: Implement security best practices
+
+<Callout type="success">
+🎉 Congratulations! You have successfully installed KtrlPlane. You can now access the web interface and start creating organizations, projects, and resources.
+</Callout>

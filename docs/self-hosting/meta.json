@@ -1,0 +1,11 @@
+{
+    "pages": [
+        "installation",
+        "configuration",
+        "database",
+        "authentication",
+        "deployment",
+        "monitoring",
+        "troubleshooting"
+    ]
+}
