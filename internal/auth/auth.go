@@ -55,7 +55,8 @@ func SetupAuth(audience, issuer string) error {
 		[]string{audience},
 		validator.WithCustomClaims(
 			func() validator.CustomClaims {
-				return &CustomClaims{}
+				   // Intentionally returns an empty CustomClaims struct to satisfy the validator.CustomClaims interface.
+				   return &CustomClaims{}
 			},
 		),
 		validator.WithAllowedClockSkew(time.Minute),

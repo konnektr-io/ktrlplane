@@ -11,6 +11,7 @@ import (
 )
 
 // RBACService handles role-based access control operations.
+// Intentionally empty: all methods are stateless and operate on the database.
 type RBACService struct{}
 
 // NewRBACService creates a new RBACService.

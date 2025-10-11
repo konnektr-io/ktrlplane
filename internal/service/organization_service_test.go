@@ -113,7 +113,8 @@ func TestOrganizationService_PermissionValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRBAC := &MockRBACService{}
+			   // Intentionally empty: mockRBAC is a mock for test setup.
+			   mockRBAC := &MockRBACService{}
 			tt.mockSetup(mockRBAC)
 
 			// Test the permission check logic
