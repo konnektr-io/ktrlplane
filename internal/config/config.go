@@ -61,18 +61,27 @@ func LoadConfig(path string) (config Config, err error) {
 	viper.AutomaticEnv()
 
 	// Explicitly bind env vars to config keys
-	viper.BindEnv("server.port")
-	viper.BindEnv("database.host")
-	viper.BindEnv("database.port")
-	viper.BindEnv("database.user")
-	viper.BindEnv("database.password")
-	viper.BindEnv("database.dbname")
-	viper.BindEnv("database.sslmode")
-	viper.BindEnv("auth.issuer")
-	viper.BindEnv("auth.audience")
-	viper.BindEnv("stripe.secret_key")
-	viper.BindEnv("stripe.publishable_key")
-	viper.BindEnv("stripe.webhook_secret")
+
+       // Bind environment variables and check for errors
+       envVars := []string{
+	       "server.port",
+	       "database.host",
+	       "database.port",
+	       "database.user",
+	       "database.password",
+	       "database.dbname",
+	       "database.sslmode",
+	       "auth.issuer",
+	       "auth.audience",
+	       "stripe.secret_key",
+	       "stripe.publishable_key",
+	       "stripe.webhook_secret",
+       }
+       for _, key := range envVars {
+	       if err := viper.BindEnv(key); err != nil {
+		       return Config{}, fmt.Errorf("failed to bind env var %s: %w", key, err)
+	       }
+       }
 
 	err = viper.ReadInConfig()
 	if err != nil {
