@@ -21,17 +21,17 @@ func TestCreateProjectRequest_Validation(t *testing.T) {
 		Name:        "Test Project",
 		Description: "A project for testing purposes",
 	}
-	
+
 	assert.Equal(t, "Test Project", req.Name, "Project name should match")
 	assert.Equal(t, "A project for testing purposes", req.Description, "Project description should match")
 }
 
 func TestProjectService_CreateProject_ParameterValidation(t *testing.T) {
 	tests := []struct {
-		name               string
-		projectRequest     models.CreateProjectRequest
-		userID             string
-		validInput         bool
+		name           string
+		projectRequest models.CreateProjectRequest
+		userID         string
+		validInput     bool
 	}{
 		{
 			name: "valid project creation parameters",
@@ -66,7 +66,7 @@ func TestProjectService_CreateProject_ParameterValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test parameter validation logic
 			hasInvalidParams := tt.projectRequest.Name == "" || tt.userID == ""
-			
+
 			if tt.validInput {
 				assert.False(t, hasInvalidParams, "Valid input should not have empty parameters")
 			} else {

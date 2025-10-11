@@ -19,8 +19,8 @@ func TestCreateResourceRequest_Validation(t *testing.T) {
 	// Test that we can create valid resource requests
 	settingsJSON := json.RawMessage(`{"test": "values"}`)
 	req := models.CreateResourceRequest{
-		Name:       "Test Resource",
-		Type:       "kubernetes",
+		Name:         "Test Resource",
+		Type:         "kubernetes",
 		SettingsJSON: settingsJSON,
 	}
 
@@ -43,8 +43,8 @@ func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
 			name:      "valid resource creation parameters",
 			projectID: "project123",
 			resourceRequest: models.CreateResourceRequest{
-				Name:       "Test Resource",
-				Type:       "kubernetes",
+				Name:         "Test Resource",
+				Type:         "kubernetes",
 				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
@@ -54,8 +54,8 @@ func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
 			name:      "empty project ID",
 			projectID: "",
 			resourceRequest: models.CreateResourceRequest{
-				Name:       "Test Resource",
-				Type:       "kubernetes",
+				Name:         "Test Resource",
+				Type:         "kubernetes",
 				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
@@ -65,8 +65,8 @@ func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
 			name:      "empty resource name",
 			projectID: "project123",
 			resourceRequest: models.CreateResourceRequest{
-				Name:       "",
-				Type:       "kubernetes",
+				Name:         "",
+				Type:         "kubernetes",
 				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
@@ -76,8 +76,8 @@ func TestResourceService_CreateResource_ParameterValidation(t *testing.T) {
 			name:      "empty user ID",
 			projectID: "project123",
 			resourceRequest: models.CreateResourceRequest{
-				Name:       "Test Resource",
-				Type:       "kubernetes",
+				Name:         "Test Resource",
+				Type:         "kubernetes",
 				SettingsJSON: settingsJSON,
 			},
 			userID:     "",
@@ -159,7 +159,7 @@ func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 			projectID:  "project123",
 			resourceID: "resource123",
 			updateRequest: models.UpdateResourceRequest{
-				Name:       strPtr("Updated Resource"),
+				Name:         strPtr("Updated Resource"),
 				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
@@ -170,7 +170,7 @@ func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 			projectID:  "",
 			resourceID: "resource123",
 			updateRequest: models.UpdateResourceRequest{
-				Name:       strPtr("Updated Resource"),
+				Name:         strPtr("Updated Resource"),
 				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
@@ -181,7 +181,7 @@ func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 			projectID:  "project123",
 			resourceID: "",
 			updateRequest: models.UpdateResourceRequest{
-				Name:       strPtr("Updated Resource"),
+				Name:         strPtr("Updated Resource"),
 				SettingsJSON: settingsJSON,
 			},
 			userID:     "user123",
@@ -192,7 +192,7 @@ func TestResourceService_UpdateResource_ParameterValidation(t *testing.T) {
 			projectID:  "project123",
 			resourceID: "resource123",
 			updateRequest: models.UpdateResourceRequest{
-				Name:       strPtr("Updated Resource"),
+				Name:         strPtr("Updated Resource"),
 				SettingsJSON: settingsJSON,
 			},
 			userID:     "",

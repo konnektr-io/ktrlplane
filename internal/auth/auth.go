@@ -20,7 +20,7 @@ import (
 // CustomClaims contains custom data we want to get from the token.
 type CustomClaims struct {
 	Email string `json:"email"`
-	Name string `json:"name"`
+	Name  string `json:"name"`
 }
 
 // Validate does nothing for this example, but we need
@@ -32,7 +32,7 @@ func (c CustomClaims) Validate(ctx context.Context) error {
 // Placeholder for Auth0 configuration needed by middleware
 var (
 	jwtValidator *validator.Validator
-	
+
 	// Cache for processed users to avoid repeated DB checks
 	processedUsers = make(map[string]bool)
 	userCacheMutex sync.RWMutex
@@ -94,12 +94,12 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// Extract claims
 		claims := token.(*validator.ValidatedClaims)
-		
+
 		// Extract user information from token
 		userID := claims.RegisteredClaims.Subject
 		email := extractEmailFromClaims(claims)
 		name := extractNameFromClaims(claims)
-		
+
 		// Ensure user exists in database (create or update)
 		err = ensureUserExists(c.Request.Context(), userID, email, name)
 		if err != nil {
@@ -108,7 +108,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		// Create user object for context
 		user := models.User{
 			ID:    userID,
@@ -131,12 +131,12 @@ func extractEmailFromClaims(claims *validator.ValidatedClaims) string {
 			}
 		}
 	}
-	
+
 	// Fallback: Try to get email from subject if it looks like an email
 	if claims.RegisteredClaims.Subject != "" && strings.Contains(claims.RegisteredClaims.Subject, "@") {
 		return claims.RegisteredClaims.Subject
 	}
-	
+
 	return "" // Return empty if email not found
 }
 
@@ -150,7 +150,7 @@ func extractNameFromClaims(claims *validator.ValidatedClaims) string {
 			}
 		}
 	}
-	
+
 	// Fallback: extract name from email if available
 	email := extractEmailFromClaims(claims)
 	if email != "" {
@@ -202,7 +202,7 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 		// User exists, check if we need to update email or name
 		needsUpdate := false
 		updateFields := []string{}
-		
+
 		if email != "" && (existingEmail == "" || existingEmail != email) {
 			err = db.ExecQuery(ctx, db.UpdateUserEmailQuery, userID, email)
 			if err != nil {
@@ -211,7 +211,7 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 			updateFields = append(updateFields, "email")
 			needsUpdate = true
 		}
-		
+
 		if name != "" && (existingName == "" || existingName != name) {
 			err = db.ExecQuery(ctx, db.UpdateUserNameQuery, userID, name)
 			if err != nil {
@@ -220,7 +220,7 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 			updateFields = append(updateFields, "name")
 			needsUpdate = true
 		}
-		
+
 		if needsUpdate {
 			log.Printf("Updated user %s: %v", userID, updateFields)
 		}

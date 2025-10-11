@@ -10,7 +10,10 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// RBACService handles role-based access control operations.
 type RBACService struct{}
+
+// NewRBACService creates a new RBACService.
 func NewRBACService() *RBACService {
 	return &RBACService{}
 }
@@ -103,7 +106,7 @@ func (s *RBACService) GetUserRoles(ctx context.Context, userID string) ([]models
 	}
 	defer rows.Close()
 
-	assignments := make([]models.RoleAssignment,0)
+	assignments := make([]models.RoleAssignment, 0)
 	for rows.Next() {
 		var assignment models.RoleAssignment
 		err := rows.Scan(&assignment.AssignmentID, &assignment.UserID, &assignment.RoleID,
@@ -128,12 +131,12 @@ func (s *RBACService) GetRoleAssignmentsForScope(ctx context.Context, scopeType,
 	}
 	defer rows.Close()
 
-	assignments := make([]models.RoleAssignmentWithDetails,0)
+	assignments := make([]models.RoleAssignmentWithDetails, 0)
 	for rows.Next() {
 		var assignment models.RoleAssignmentWithDetails
 		var userEmail, userName string
 		err := rows.Scan(
-			&assignment.AssignmentID, &assignment.UserID, &assignment.RoleID, &assignment.ScopeType, &assignment.ScopeID, 
+			&assignment.AssignmentID, &assignment.UserID, &assignment.RoleID, &assignment.ScopeType, &assignment.ScopeID,
 			&assignment.AssignedBy, &assignment.CreatedAt, &assignment.ExpiresAt,
 			&assignment.Role.Name, &assignment.Role.DisplayName, &assignment.Role.Description, &assignment.Role.IsSystem,
 			&userEmail, &userName,
@@ -141,17 +144,17 @@ func (s *RBACService) GetRoleAssignmentsForScope(ctx context.Context, scopeType,
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan role assignment: %w", err)
 		}
-		
+
 		// Set role ID for the embedded role
 		assignment.Role.RoleID = assignment.RoleID
 		assignment.Role.CreatedAt = assignment.CreatedAt // Approximate
 		assignment.Role.UpdatedAt = assignment.CreatedAt // Approximate
-		
+
 		// Populate user details with real data from database
 		assignment.User.ID = assignment.UserID
 		assignment.User.Email = userEmail
 		assignment.User.Name = userName
-		
+
 		assignments = append(assignments, assignment)
 	}
 
@@ -168,12 +171,12 @@ func (s *RBACService) GetRoleAssignmentsWithInheritance(ctx context.Context, sco
 	}
 	defer rows.Close()
 
-	assignments := make([]models.RoleAssignmentWithDetails,0)
+	assignments := make([]models.RoleAssignmentWithDetails, 0)
 	for rows.Next() {
 		var assignment models.RoleAssignmentWithDetails
 		var userEmail, userName string
 		err := rows.Scan(
-			&assignment.AssignmentID, &assignment.UserID, &assignment.RoleID, &assignment.ScopeType, &assignment.ScopeID, 
+			&assignment.AssignmentID, &assignment.UserID, &assignment.RoleID, &assignment.ScopeType, &assignment.ScopeID,
 			&assignment.AssignedBy, &assignment.CreatedAt, &assignment.ExpiresAt,
 			&assignment.Role.Name, &assignment.Role.DisplayName, &assignment.Role.Description, &assignment.Role.IsSystem,
 			&userEmail, &userName,
@@ -182,23 +185,22 @@ func (s *RBACService) GetRoleAssignmentsWithInheritance(ctx context.Context, sco
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan role assignment with inheritance: %w", err)
 		}
-		
+
 		// Set role ID for the embedded role
 		assignment.Role.RoleID = assignment.RoleID
 		assignment.Role.CreatedAt = assignment.CreatedAt // Approximate
 		assignment.Role.UpdatedAt = assignment.CreatedAt // Approximate
-		
+
 		// Populate user details with real data from database
 		assignment.User.ID = assignment.UserID
 		assignment.User.Email = userEmail
 		assignment.User.Name = userName
-		
+
 		assignments = append(assignments, assignment)
 	}
 
 	return assignments, nil
 }
-
 
 // SearchUsers returns users matching the query string (by email or name)
 func (s *RBACService) SearchUsers(ctx context.Context, query string) ([]models.User, error) {
@@ -210,7 +212,7 @@ func (s *RBACService) SearchUsers(ctx context.Context, query string) ([]models.U
 	}
 	defer rows.Close()
 
-	users := make([]models.User,0)
+	users := make([]models.User, 0)
 	for rows.Next() {
 		var user models.User
 		if err := rows.Scan(&user.ID, &user.Email, &user.Name); err == nil {
@@ -219,7 +221,6 @@ func (s *RBACService) SearchUsers(ctx context.Context, query string) ([]models.U
 	}
 	return users, nil
 }
-
 
 // DeleteRoleAssignment deletes a role assignment by assignment ID (unique)
 func (s *RBACService) DeleteRoleAssignment(ctx context.Context, assignmentID string) error {

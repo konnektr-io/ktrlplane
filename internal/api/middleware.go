@@ -10,33 +10,33 @@ import (
 
 // ErrorLoggerMiddleware logs all errors attached to the Gin context (not just panics)
 func ErrorLoggerMiddleware() gin.HandlerFunc {
-  return func(c *gin.Context) {
-    c.Next()
-    // Log all errors that occurred during the request
-    for _, err := range c.Errors {
-      fmt.Printf("[GIN][ERROR] %v\n", err.Err)
-    }
-  }
+	return func(c *gin.Context) {
+		c.Next()
+		// Log all errors that occurred during the request
+		for _, err := range c.Errors {
+			fmt.Printf("[GIN][ERROR] %v\n", err.Err)
+		}
+	}
 }
 
 func CustomRecoveryMiddleWare() gin.HandlerFunc {
-  return func(c *gin.Context) {
-    defer func() {
-      if err := recover(); err != nil {
-        // Log the error
-        fmt.Printf("Panic occurred: %v\n", err)
+	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				// Log the error
+				fmt.Printf("Panic occurred: %v\n", err)
 
-        // Return a unified error response
-        c.JSON(500, gin.H{
-          "code":    500,
-          "message": "Internal Server Error",
-          "error":   fmt.Sprintf("%v", err),
-        })
-        c.Abort() // Stop further execution
-      }
-    }()
-    c.Next()
-  }
+				// Return a unified error response
+				c.JSON(500, gin.H{
+					"code":    500,
+					"message": "Internal Server Error",
+					"error":   fmt.Sprintf("%v", err),
+				})
+				c.Abort() // Stop further execution
+			}
+		}()
+		c.Next()
+	}
 }
 
 func CORSMiddleware() gin.HandlerFunc {

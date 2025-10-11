@@ -8,11 +8,13 @@ import (
 	"ktrlplane/internal/utils"
 )
 
+// ProjectService handles project-related operations.
 type ProjectService struct {
 	rbacService *RBACService
 	orgService  *OrganizationService
 }
 
+// NewProjectService creates a new ProjectService.
 func NewProjectService() *ProjectService {
 	return &ProjectService{
 		rbacService: NewRBACService(),

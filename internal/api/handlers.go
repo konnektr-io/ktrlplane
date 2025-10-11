@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// APIHandler handles all API requests for the control plane.
 type APIHandler struct {
 	ProjectService      *service.ProjectService
 	ResourceService     *service.ResourceService
@@ -17,6 +18,7 @@ type APIHandler struct {
 	BillingService      *service.BillingService
 }
 
+// NewAPIHandler creates a new APIHandler with the provided services.
 func NewAPIHandler(ps *service.ProjectService, rs *service.ResourceService, os *service.OrganizationService, rbac *service.RBACService, bs *service.BillingService) *APIHandler {
 	return &APIHandler{
 		ProjectService:      ps,
@@ -42,6 +44,7 @@ func (h *APIHandler) getUserFromContext(c *gin.Context) (*models.User, error) {
 
 // --- Organization Handlers ---
 
+// CreateOrganization handles the creation of a new organization.
 func (h *APIHandler) CreateOrganization(c *gin.Context) {
 	var req models.CreateOrganizationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -63,6 +66,7 @@ func (h *APIHandler) CreateOrganization(c *gin.Context) {
 	c.JSON(http.StatusCreated, org)
 }
 
+// ListOrganizations returns a list of organizations for the current user.
 func (h *APIHandler) ListOrganizations(c *gin.Context) {
 	user, err := h.getUserFromContext(c)
 	if err != nil {
@@ -78,6 +82,7 @@ func (h *APIHandler) ListOrganizations(c *gin.Context) {
 	c.JSON(http.StatusOK, orgs)
 }
 
+// GetOrganization retrieves an organization by ID for the current user.
 func (h *APIHandler) GetOrganization(c *gin.Context) {
 	orgID := c.Param("orgId")
 	user, err := h.getUserFromContext(c)
@@ -94,6 +99,7 @@ func (h *APIHandler) GetOrganization(c *gin.Context) {
 	c.JSON(http.StatusOK, org)
 }
 
+// UpdateOrganization updates an organization's details.
 func (h *APIHandler) UpdateOrganization(c *gin.Context) {
 	orgID := c.Param("orgId")
 	var req models.UpdateOrganizationRequest
@@ -116,6 +122,7 @@ func (h *APIHandler) UpdateOrganization(c *gin.Context) {
 	c.JSON(http.StatusOK, org)
 }
 
+// DeleteOrganization deletes an organization by ID.
 func (h *APIHandler) DeleteOrganization(c *gin.Context) {
 	orgID := c.Param("orgId")
 	user, err := h.getUserFromContext(c)
@@ -134,6 +141,7 @@ func (h *APIHandler) DeleteOrganization(c *gin.Context) {
 
 // --- Project Handlers ---
 
+// CreateProject handles the creation of a new project.
 func (h *APIHandler) CreateProject(c *gin.Context) {
 	var req models.CreateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -155,6 +163,7 @@ func (h *APIHandler) CreateProject(c *gin.Context) {
 	c.JSON(http.StatusCreated, project)
 }
 
+// GetProject retrieves a project by ID for the current user.
 func (h *APIHandler) GetProject(c *gin.Context) {
 	projectID := c.Param("projectId")
 	user, err := h.getUserFromContext(c)
@@ -171,6 +180,7 @@ func (h *APIHandler) GetProject(c *gin.Context) {
 	c.JSON(http.StatusOK, project)
 }
 
+// ListProjects returns a list of projects for the current user.
 func (h *APIHandler) ListProjects(c *gin.Context) {
 	user, err := h.getUserFromContext(c)
 	if err != nil {
@@ -186,6 +196,7 @@ func (h *APIHandler) ListProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, projects)
 }
 
+// UpdateProject updates a project's details.
 func (h *APIHandler) UpdateProject(c *gin.Context) {
 	projectID := c.Param("projectId")
 	var req models.UpdateProjectRequest
@@ -208,6 +219,7 @@ func (h *APIHandler) UpdateProject(c *gin.Context) {
 	c.JSON(http.StatusOK, project)
 }
 
+// DeleteProject deletes a project by ID.
 func (h *APIHandler) DeleteProject(c *gin.Context) {
 	projectID := c.Param("projectId")
 	user, err := h.getUserFromContext(c)
@@ -226,6 +238,7 @@ func (h *APIHandler) DeleteProject(c *gin.Context) {
 
 // --- Resource Handlers ---
 
+// CreateResource handles the creation of a new resource in a project.
 func (h *APIHandler) CreateResource(c *gin.Context) {
 	projectID := c.Param("projectId")
 	var req models.CreateResourceRequest
@@ -252,6 +265,7 @@ func (h *APIHandler) CreateResource(c *gin.Context) {
 	c.JSON(http.StatusCreated, resource)
 }
 
+// GetResource retrieves a resource by ID for the current user.
 func (h *APIHandler) GetResource(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
@@ -271,6 +285,7 @@ func (h *APIHandler) GetResource(c *gin.Context) {
 	c.JSON(http.StatusOK, resource)
 }
 
+// ListResources returns a list of resources for a project.
 func (h *APIHandler) ListResources(c *gin.Context) {
 	projectID := c.Param("projectId")
 
@@ -288,6 +303,7 @@ func (h *APIHandler) ListResources(c *gin.Context) {
 	c.JSON(http.StatusOK, resources)
 }
 
+// UpdateResource updates a resource's details.
 func (h *APIHandler) UpdateResource(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
@@ -315,6 +331,7 @@ func (h *APIHandler) UpdateResource(c *gin.Context) {
 	c.JSON(http.StatusOK, resource)
 }
 
+// DeleteResource deletes a resource by ID.
 func (h *APIHandler) DeleteResource(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
@@ -339,7 +356,7 @@ func (h *APIHandler) DeleteResource(c *gin.Context) {
 
 // --- RBAC Handlers ---
 
-// ListRoles returns all available roles in the system
+// ListRoles returns all available roles in the system.
 func (h *APIHandler) ListRoles(c *gin.Context) {
 	// For now, return hardcoded system roles
 	// In a real implementation, you'd fetch from database
@@ -370,7 +387,7 @@ func (h *APIHandler) ListRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, roles)
 }
 
-// SearchUsers searches for users by query string
+// SearchUsers searches for users by query string.
 func (h *APIHandler) SearchUsers(c *gin.Context) {
 	query := c.Query("q")
 	if query == "" || len(query) < 2 {
@@ -388,6 +405,7 @@ func (h *APIHandler) SearchUsers(c *gin.Context) {
 
 // --- Project RBAC Handlers ---
 
+// ListProjectRoleAssignments lists all role assignments for a project.
 func (h *APIHandler) ListProjectRoleAssignments(c *gin.Context) {
 	projectID := c.Param("projectId")
 
@@ -400,6 +418,7 @@ func (h *APIHandler) ListProjectRoleAssignments(c *gin.Context) {
 	c.JSON(http.StatusOK, assignments)
 }
 
+// CreateProjectRoleAssignment assigns a role to a user for a project.
 func (h *APIHandler) CreateProjectRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 
@@ -444,6 +463,7 @@ func (h *APIHandler) CreateProjectRoleAssignment(c *gin.Context) {
 	})
 }
 
+// DeleteProjectRoleAssignment deletes a role assignment from a project.
 func (h *APIHandler) DeleteProjectRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	assignmentID := c.Param("assignmentId")
@@ -480,6 +500,7 @@ func (h *APIHandler) DeleteProjectRoleAssignment(c *gin.Context) {
 
 // --- Resource RBAC Handlers ---
 
+// ListResourceRoleAssignments lists all role assignments for a resource.
 func (h *APIHandler) ListResourceRoleAssignments(c *gin.Context) {
 	_ = c.Param("projectId") // TODO: use projectID for additional validation
 	resourceID := c.Param("resourceId")
@@ -493,6 +514,7 @@ func (h *APIHandler) ListResourceRoleAssignments(c *gin.Context) {
 	c.JSON(http.StatusOK, assignments)
 }
 
+// CreateResourceRoleAssignment assigns a role to a user for a resource.
 func (h *APIHandler) CreateResourceRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
@@ -538,6 +560,7 @@ func (h *APIHandler) CreateResourceRoleAssignment(c *gin.Context) {
 	})
 }
 
+// DeleteResourceRoleAssignment deletes a role assignment from a resource.
 func (h *APIHandler) DeleteResourceRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 	resourceID := c.Param("resourceId")
@@ -575,6 +598,7 @@ func (h *APIHandler) DeleteResourceRoleAssignment(c *gin.Context) {
 
 // --- Organization RBAC Handlers ---
 
+// ListOrganizationRoleAssignments lists all role assignments for an organization.
 func (h *APIHandler) ListOrganizationRoleAssignments(c *gin.Context) {
 	orgID := c.Param("orgId")
 
@@ -587,6 +611,7 @@ func (h *APIHandler) ListOrganizationRoleAssignments(c *gin.Context) {
 	c.JSON(http.StatusOK, assignments)
 }
 
+// CreateOrganizationRoleAssignment assigns a role to a user for an organization.
 func (h *APIHandler) CreateOrganizationRoleAssignment(c *gin.Context) {
 	orgID := c.Param("orgId")
 
@@ -630,6 +655,7 @@ func (h *APIHandler) CreateOrganizationRoleAssignment(c *gin.Context) {
 	})
 }
 
+// DeleteOrganizationRoleAssignment deletes a role assignment from an organization.
 func (h *APIHandler) DeleteOrganizationRoleAssignment(c *gin.Context) {
 	orgID := c.Param("orgId")
 	assignmentID := c.Param("assignmentId")
@@ -665,7 +691,7 @@ func (h *APIHandler) DeleteOrganizationRoleAssignment(c *gin.Context) {
 
 // --- Billing Handlers ---
 
-// GetBillingInfo retrieves billing information for organization or project
+// GetBillingInfo retrieves billing information for organization or project.
 func (h *APIHandler) GetBillingInfo(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
@@ -708,7 +734,7 @@ func (h *APIHandler) GetBillingInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, billingInfo)
 }
 
-// UpdateBillingInfo updates billing settings
+// UpdateBillingInfo updates billing settings for organization or project.
 func (h *APIHandler) UpdateBillingInfo(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
@@ -757,7 +783,7 @@ func (h *APIHandler) UpdateBillingInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
-// CreateStripeCustomer creates a Stripe customer
+// CreateStripeCustomer creates a Stripe customer for organization or project.
 func (h *APIHandler) CreateStripeCustomer(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
@@ -806,7 +832,7 @@ func (h *APIHandler) CreateStripeCustomer(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
-// CreateStripeSubscription creates a Stripe subscription
+// CreateStripeSubscription creates a Stripe subscription for organization or project.
 func (h *APIHandler) CreateStripeSubscription(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
@@ -860,7 +886,7 @@ func (h *APIHandler) CreateStripeSubscription(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
-// CreateStripeCustomerPortal creates a Stripe customer portal session
+// CreateStripeCustomerPortal creates a Stripe customer portal session for organization or project.
 func (h *APIHandler) CreateStripeCustomerPortal(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
@@ -914,7 +940,7 @@ func (h *APIHandler) CreateStripeCustomerPortal(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"portal_url": portalURL})
 }
 
-// CancelSubscription cancels a Stripe subscription
+// CancelSubscription cancels a Stripe subscription for organization or project.
 func (h *APIHandler) CancelSubscription(c *gin.Context) {
 	// Determine scope type and ID from URL
 	var scopeType, scopeID string
@@ -957,7 +983,7 @@ func (h *APIHandler) CancelSubscription(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
-// ListPermissionsHandler returns all permissions (actions) the current user has for a given scope
+// ListPermissionsHandler returns all permissions (actions) the current user has for a given scope.
 func (h *APIHandler) ListPermissionsHandler(c *gin.Context) {
 	scopeType := c.Query("scopeType")
 	scopeID := c.Query("scopeId")

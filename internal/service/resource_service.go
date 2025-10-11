@@ -8,10 +8,12 @@ import (
 	"ktrlplane/internal/utils"
 )
 
+// ResourceService handles resource-related operations.
 type ResourceService struct {
 	rbacService *RBACService
 }
 
+// NewResourceService creates a new ResourceService.
 func NewResourceService() *ResourceService {
 	return &ResourceService{
 		rbacService: NewRBACService(),
@@ -62,7 +64,7 @@ func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string,
 
 	if rows.Next() {
 		var resource models.Resource
-	if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		return &resource, nil
@@ -92,7 +94,7 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string, u
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
 		var resource models.Resource
-	if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		resources = append(resources, resource)

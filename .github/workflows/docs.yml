@@ -73,8 +73,8 @@ jobs:
             This PR updates the Konnektr KtrlPlane documentation with the latest changes from the ktrlplane repository.
 
             **Changes:**
-            - Updated documentation content in `/content/docs/graph/`
+            - Updated documentation content in `/content/docs/ktrlplane/`
 
             **Source:** ${{ github.repository }}@${{ github.sha }}
-          branch: update-graph-docs
+          branch: update-ktrlplane-docs
           delete-branch: true
