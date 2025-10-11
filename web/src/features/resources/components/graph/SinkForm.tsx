@@ -7,7 +7,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Trash2 } from 'lucide-react';
 
 interface SinkFormProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<Record<string, unknown>>;
   sinkIndex: number;
   onRemove: () => void;
 }
@@ -21,7 +21,9 @@ export function SinkForm({ form, sinkIndex, onRemove }: SinkFormProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-lg">Sink Configuration</CardTitle>
-            <CardDescription>Configure a data sink for event processing</CardDescription>
+            <CardDescription>
+              Configure a data sink for event processing
+            </CardDescription>
           </div>
           <Button
             type="button"
@@ -75,13 +77,13 @@ export function SinkForm({ form, sinkIndex, onRemove }: SinkFormProps) {
         />
 
         {/* Type-specific configuration */}
-        {sinkType === 'kafka' && (
+        {sinkType === "kafka" && (
           <KafkaConfigForm form={form} sinkIndex={sinkIndex} />
         )}
-        {sinkType === 'webhook' && (
+        {sinkType === "webhook" && (
           <WebhookConfigForm form={form} sinkIndex={sinkIndex} />
         )}
-        {sinkType === 'database' && (
+        {sinkType === "database" && (
           <DatabaseConfigForm form={form} sinkIndex={sinkIndex} />
         )}
       </CardContent>
@@ -89,11 +91,17 @@ export function SinkForm({ form, sinkIndex, onRemove }: SinkFormProps) {
   );
 }
 
-function KafkaConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sinkIndex: number }) {
+function KafkaConfigForm({
+  form,
+  sinkIndex,
+}: {
+  form: UseFormReturn<Record<string, unknown>>;
+  sinkIndex: number;
+}) {
   return (
     <div className="space-y-4 pt-4 border-t">
       <h4 className="font-medium">Kafka Configuration</h4>
-      
+
       <FormField
         control={form.control}
         name={`sinks.${sinkIndex}.config.bootstrapServers`}
@@ -146,8 +154,10 @@ function KafkaConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sinkIn
         )}
       />
 
-      {(form.watch(`sinks.${sinkIndex}.config.securityProtocol`) === 'SASL_PLAINTEXT' || 
-        form.watch(`sinks.${sinkIndex}.config.securityProtocol`) === 'SASL_SSL') && (
+      {(form.watch(`sinks.${sinkIndex}.config.securityProtocol`) ===
+        "SASL_PLAINTEXT" ||
+        form.watch(`sinks.${sinkIndex}.config.securityProtocol`) ===
+          "SASL_SSL") && (
         <>
           <FormField
             control={form.control}
@@ -182,7 +192,13 @@ function KafkaConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sinkIn
   );
 }
 
-function WebhookConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sinkIndex: number }) {
+function WebhookConfigForm({
+  form,
+  sinkIndex,
+}: {
+  form: UseFormReturn<Record<string, unknown>>;
+  sinkIndex: number;
+}) {
   return (
     <div className="space-y-4 pt-4 border-t">
       <h4 className="font-medium">Webhook Configuration</h4>
@@ -248,7 +264,8 @@ function WebhookConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sink
         )}
       />
 
-      {form.watch(`sinks.${sinkIndex}.config.authentication.type`) === 'bearer' && (
+      {form.watch(`sinks.${sinkIndex}.config.authentication.type`) ===
+        "bearer" && (
         <FormField
           control={form.control}
           name={`sinks.${sinkIndex}.config.authentication.token`}
@@ -264,7 +281,8 @@ function WebhookConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sink
         />
       )}
 
-      {form.watch(`sinks.${sinkIndex}.config.authentication.type`) === 'basic' && (
+      {form.watch(`sinks.${sinkIndex}.config.authentication.type`) ===
+        "basic" && (
         <>
           <FormField
             control={form.control}
@@ -298,7 +316,13 @@ function WebhookConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sink
   );
 }
 
-function DatabaseConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sinkIndex: number }) {
+function DatabaseConfigForm({
+  form,
+  sinkIndex,
+}: {
+  form: UseFormReturn<Record<string, unknown>>;
+  sinkIndex: number;
+}) {
   return (
     <div className="space-y-4 pt-4 border-t">
       <h4 className="font-medium">Database Configuration</h4>
@@ -348,8 +372,8 @@ function DatabaseConfigForm({ form, sinkIndex }: { form: UseFormReturn<any>, sin
             <FormItem>
               <FormLabel>Port *</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
+                <Input
+                  type="number"
                   placeholder="5432"
                   {...field}
                   onChange={(e) => field.onChange(parseInt(e.target.value))}

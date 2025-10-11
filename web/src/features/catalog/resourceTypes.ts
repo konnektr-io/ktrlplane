@@ -13,7 +13,7 @@ export interface ResourceType {
   name: string;
   description: string;
   longDescription: string;
-  icon: any;
+  icon: React.ComponentType<Record<string, unknown>>; // Accepts any props, required for React components
   category: string;
   features: string[];
   skus: ResourceTier[];

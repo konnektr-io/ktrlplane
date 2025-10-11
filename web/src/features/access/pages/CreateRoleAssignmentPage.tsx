@@ -1,99 +1,108 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import UserSelector from '../components/UserSelector';
-import RolePermissionsTooltip from '../components/RolePermissionsTooltip';
-import { useAccessStore } from '../store/accessStore';
-import { AccessControlContextType } from '../types';
+import { useCallback, useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import UserSelector from "../components/UserSelector";
+import RolePermissionsTooltip from "../components/RolePermissionsTooltip";
+import { useAccessStore } from "../store/accessStore";
+import { AccessControlContextType } from "../types";
 
 const CreateRoleAssignmentPage: React.FC = () => {
   const navigate = useNavigate();
   const params = useParams();
-  const [selectedUser, setSelectedUser] = useState<string>('');
-  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [selectedUser, setSelectedUser] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<string>("");
   const { roles, inviteUser, isInviting, setContext } = useAccessStore();
 
   // Determine context from route
-  const getContextFromRoute = (): AccessControlContextType | null => {
-    if (params.projectId && params.resourceId) {
-      // Resource context
-      return {
-        scopeType: 'resource',
-        scopeId: params.resourceId,
-        scopeName: `Resource ${params.resourceId}`,
-      };
-    } else if (params.projectId) {
-      // Project context
-      return {
-        scopeType: 'project',
-        scopeId: params.projectId,
-        scopeName: `Project ${params.projectId}`,
-      };
-    } else if (params.orgId) {
-      // Organization context
-      return {
-        scopeType: 'organization',
-        scopeId: params.orgId,
-        scopeName: `Organization ${params.orgId}`,
-      };
-    }
-    return null;
-  };
+  const getContextFromRoute =
+    useCallback((): AccessControlContextType | null => {
+      if (params.projectId && params.resourceId) {
+        // Resource context
+        return {
+          scopeType: "resource",
+          scopeId: params.resourceId,
+          scopeName: `Resource ${params.resourceId}`,
+        };
+      } else if (params.projectId) {
+        // Project context
+        return {
+          scopeType: "project",
+          scopeId: params.projectId,
+          scopeName: `Project ${params.projectId}`,
+        };
+      } else if (params.orgId) {
+        // Organization context
+        return {
+          scopeType: "organization",
+          scopeId: params.orgId,
+          scopeName: `Organization ${params.orgId}`,
+        };
+      }
+      return null;
+    }, [params]);
 
   useEffect(() => {
     const context = getContextFromRoute();
     if (context) {
       setContext(context);
     }
-  }, [params, setContext]);
+  }, [params, setContext, getContextFromRoute]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedUser || !selectedRole) {
-      toast.error('Please select both a user and a role');
+      toast.error("Please select both a user and a role");
       return;
     }
 
     try {
       await inviteUser(selectedUser, selectedRole);
-      toast.success('User access granted successfully');
-      
+      toast.success("User access granted successfully");
+
       // Navigate back to access page
       const context = getContextFromRoute();
       if (context) {
         switch (context.scopeType) {
-          case 'project':
+          case "project":
             navigate(`/projects/${context.scopeId}/access`);
             break;
-          case 'resource':
-            navigate(`/projects/${params.projectId}/resources/${context.scopeId}/access`);
+          case "resource":
+            navigate(
+              `/projects/${params.projectId}/resources/${context.scopeId}/access`
+            );
             break;
-          case 'organization':
+          case "organization":
             navigate(`/organizations/${context.scopeId}/access`);
             break;
         }
       }
-    } catch (error) {
-      toast.error('Failed to grant access');
+    } catch {
+      toast.error("Failed to grant access");
     }
   };
 
   const getPageTitle = () => {
     const context = getContextFromRoute();
-    if (!context) return 'Grant Access';
-    
+    if (!context) return "Grant Access";
+
     switch (context.scopeType) {
-      case 'project':
-        return 'Grant Project Access';
-      case 'resource':
-        return 'Grant Resource Access';
-      case 'organization':
-        return 'Grant Organization Access';
+      case "project":
+        return "Grant Project Access";
+      case "resource":
+        return "Grant Resource Access";
+      case "organization":
+        return "Grant Organization Access";
       default:
-        return 'Grant Access';
+        return "Grant Access";
     }
   };
 
@@ -104,7 +113,7 @@ const CreateRoleAssignmentPage: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">{getPageTitle()}</h1>
         <p className="text-muted-foreground">
-          Grant a user access to this {currentContext?.scopeType || 'resource'}
+          Grant a user access to this {currentContext?.scopeType || "resource"}
         </p>
       </div>
 
@@ -137,10 +146,10 @@ const CreateRoleAssignmentPage: React.FC = () => {
           <CardContent>
             <div className="grid gap-3">
               {roles.map((role) => (
-                <Card 
+                <Card
                   key={role.role_id}
                   className={`cursor-pointer transition-colors hover:bg-accent ${
-                    selectedRole === role.name ? 'ring-2 ring-primary' : ''
+                    selectedRole === role.name ? "ring-2 ring-primary" : ""
                   }`}
                   onClick={() => setSelectedRole(role.name)}
                 >
@@ -163,9 +172,9 @@ const CreateRoleAssignmentPage: React.FC = () => {
                         </p>
                       </div>
                       {currentContext && (
-                        <RolePermissionsTooltip 
-                          role={role} 
-                          scopeType={currentContext.scopeType} 
+                        <RolePermissionsTooltip
+                          role={role}
+                          scopeType={currentContext.scopeType}
                         />
                       )}
                     </div>
@@ -178,18 +187,14 @@ const CreateRoleAssignmentPage: React.FC = () => {
 
         {/* Actions */}
         <div className="flex gap-3">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!selectedUser || !selectedRole || isInviting}
             className="flex-1"
           >
-            {isInviting ? 'Granting Access...' : 'Grant Access'}
+            {isInviting ? "Granting Access..." : "Grant Access"}
           </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => navigate(-1)}
-          >
+          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
         </div>

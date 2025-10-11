@@ -25,9 +25,9 @@ import ResourceSettingsPage from '@/features/resources/pages/ResourceSettingsPag
 import BillingPage from "@/features/billing/pages/BillingPage";
 
 function App() {
-  const onRedirectCallback = (appState?: any) => {
+  const onRedirectCallback = (appState?: { returnTo?: string }) => {
     // Navigate to the return URL or default to projects
-    window.location.replace(appState?.returnTo || '/projects');
+    window.location.replace(appState?.returnTo || "/projects");
   };
 
   return (

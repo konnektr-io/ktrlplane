@@ -81,8 +81,12 @@ export function GraphForm({
   // Get all available sink names for the route dropdown
   const allSinks = form.watch();
   const availableSinkNames = [
-    ...(allSinks.eventSinks?.kafka?.map((sink: any) => sink.name) || []),
-    ...(allSinks.eventSinks?.kusto?.map((sink: any) => sink.name) || []),
+    ...(allSinks.eventSinks?.kafka?.map(
+      (sink: { name: string }) => sink.name
+    ) || []),
+    ...(allSinks.eventSinks?.kusto?.map(
+      (sink: { name: string }) => sink.name
+    ) || []),
   ].filter(Boolean);
 
   const handleAddKafkaSink = () => {

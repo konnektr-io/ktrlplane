@@ -19,7 +19,12 @@ type ProjectListPageProps = {
 export default function ProjectListPage(props: ProjectListPageProps = {}) {
   const { orgId } = useParams<{ orgId?: string }>();
   const organizationId = props.organizationId || orgId;
-  const { projects: allProjects, isLoadingList, fetchProjects, createProject, error } = useProjectStore();
+  const {
+    projects: allProjects,
+    isLoadingList,
+    fetchProjects,
+    createProject,
+  } = useProjectStore();
   const navigate = useNavigate();
 
   // Filter projects by organization if organizationId is present
@@ -28,17 +33,23 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
     : allProjects;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ id: '', name: '', description: '' });
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
+    description: "",
+  });
   const [isCreating, setIsCreating] = useState(false);
 
   const handleNameChange = (name: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData((prev) => ({
+      ...prev,
       name,
       // Auto-generate ID from name if ID is empty or was auto-generated
-      id: prev.id === '' || prev.id === slugify(prev.name) + '-' + prev.id.slice(-4) 
-          ? generateDNSId(name) 
-          : prev.id
+      id:
+        prev.id === "" ||
+        prev.id === slugify(prev.name) + "-" + prev.id.slice(-4)
+          ? generateDNSId(name)
+          : prev.id,
     }));
   };
 
@@ -49,12 +60,12 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      toast.error('Project name is required');
+      toast.error("Project name is required");
       return;
     }
 
     if (!formData.id.trim()) {
-      toast.error('Project ID is required');
+      toast.error("Project ID is required");
       return;
     }
 
@@ -73,13 +84,13 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
       });
 
       if (newProject) {
-        toast.success('Project created successfully!');
+        toast.success("Project created successfully!");
         setIsDialogOpen(false);
-        setFormData({ id: '', name: '', description: '' });
+        setFormData({ id: "", name: "", description: "" });
         fetchProjects(); // Refresh the list
       }
-    } catch (error) {
-      toast.error('Failed to create project');
+    } catch {
+      toast.error("Failed to create project");
     } finally {
       setIsCreating(false);
     }
@@ -89,9 +100,7 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
     return <div>Loading projects...</div>;
   }
 
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
-  }
+
 
   return (
     <div className="space-y-6">

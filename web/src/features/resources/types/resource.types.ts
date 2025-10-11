@@ -5,7 +5,7 @@ export interface Resource {
   type: string;
   sku: string; // Billing tier/sku
   status: string;
-  settings_json: Record<string, any>; // Always an object
+  settings_json: Record<string, unknown>; // Always an object
   created_at: Date;
   updated_at: Date;
   error_message?: string;
@@ -17,11 +17,11 @@ export interface CreateResourceData {
   name: string;
   type: string;
   sku?: string; // Optional, defaults to 'free'
-  settings_json?: Record<string, any>;
+  settings_json?: Record<string, unknown>;
 }
 
 export interface UpdateResourceData {
   name?: string;
   sku?: string; // Allow updating the SKU/tier
-  settings_json?: Record<string, any>;
+  settings_json?: Record<string, unknown>;
 }

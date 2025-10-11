@@ -6,28 +6,52 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Trash2, Plus } from 'lucide-react';
 
+
+type Filter = {
+  field: string;
+  operator: string;
+  value: string;
+};
+
+type EventRoute = {
+  name: string;
+  source: string;
+  destination: string;
+  enabled: boolean;
+  filters: Filter[];
+};
+
 interface EventRouteFormProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<{ eventRoutes: EventRoute[] }>;
   routeIndex: number;
   onRemove: () => void;
   availableSinks: string[];
 }
 
-export function EventRouteForm({ form, routeIndex, onRemove, availableSinks }: EventRouteFormProps) {
-  const filters = form.watch(`eventRoutes.${routeIndex}.filters`) || [];
+export function EventRouteForm({
+  form,
+  routeIndex,
+  onRemove,
+  availableSinks,
+}: EventRouteFormProps) {
+  const filters =
+    (form.watch(`eventRoutes.${routeIndex}.filters`) as Filter[]) || [];
 
   const addFilter = () => {
-    const currentFilters = form.getValues(`eventRoutes.${routeIndex}.filters`) || [];
+    const currentFilters =
+      (form.getValues(`eventRoutes.${routeIndex}.filters`) as Filter[]) || [];
     form.setValue(`eventRoutes.${routeIndex}.filters`, [
       ...currentFilters,
-      { field: '', operator: 'eq', value: '' }
+      { field: "", operator: "eq", value: "" },
     ]);
   };
 
   const removeFilter = (filterIndex: number) => {
-    const currentFilters = form.getValues(`eventRoutes.${routeIndex}.filters`) || [];
-    form.setValue(`eventRoutes.${routeIndex}.filters`, 
-      currentFilters.filter((_: any, i: number) => i !== filterIndex)
+    const currentFilters =
+      (form.getValues(`eventRoutes.${routeIndex}.filters`) as Filter[]) || [];
+    form.setValue(
+      `eventRoutes.${routeIndex}.filters`,
+      currentFilters.filter((_, i) => i !== filterIndex)
     );
   };
 
@@ -37,7 +61,9 @@ export function EventRouteForm({ form, routeIndex, onRemove, availableSinks }: E
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-lg">Event Route</CardTitle>
-            <CardDescription>Configure routing and filtering for events</CardDescription>
+            <CardDescription>
+              Configure routing and filtering for events
+            </CardDescription>
           </div>
           <Button
             type="button"
@@ -89,7 +115,10 @@ export function EventRouteForm({ form, routeIndex, onRemove, availableSinks }: E
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Destination Sink *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select destination sink" />
@@ -118,7 +147,8 @@ export function EventRouteForm({ form, routeIndex, onRemove, availableSinks }: E
               <div className="space-y-0.5">
                 <FormLabel className="text-base">Enable Route</FormLabel>
                 <div className="text-sm text-muted-foreground">
-                  When disabled, events will not be routed through this configuration
+                  When disabled, events will not be routed through this
+                  configuration
                 </div>
               </div>
               <FormControl>
@@ -148,7 +178,7 @@ export function EventRouteForm({ form, routeIndex, onRemove, availableSinks }: E
             </Button>
           </div>
 
-          {filters.map((_: any, filterIndex: number) => (
+          {filters.map((_, filterIndex: number) => (
             <Card key={filterIndex} className="p-4">
               <div className="grid grid-cols-4 gap-4 items-end">
                 <FormField
@@ -171,7 +201,10 @@ export function EventRouteForm({ form, routeIndex, onRemove, availableSinks }: E
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Operator</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -181,11 +214,17 @@ export function EventRouteForm({ form, routeIndex, onRemove, availableSinks }: E
                           <SelectItem value="eq">Equals</SelectItem>
                           <SelectItem value="ne">Not Equals</SelectItem>
                           <SelectItem value="gt">Greater Than</SelectItem>
-                          <SelectItem value="gte">Greater Than or Equal</SelectItem>
+                          <SelectItem value="gte">
+                            Greater Than or Equal
+                          </SelectItem>
                           <SelectItem value="lt">Less Than</SelectItem>
-                          <SelectItem value="lte">Less Than or Equal</SelectItem>
+                          <SelectItem value="lte">
+                            Less Than or Equal
+                          </SelectItem>
                           <SelectItem value="contains">Contains</SelectItem>
-                          <SelectItem value="startsWith">Starts With</SelectItem>
+                          <SelectItem value="startsWith">
+                            Starts With
+                          </SelectItem>
                           <SelectItem value="endsWith">Ends With</SelectItem>
                         </SelectContent>
                       </Select>

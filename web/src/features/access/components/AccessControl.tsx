@@ -85,27 +85,28 @@ export default function AccessControl({ context }: AccessControlProps) {
   const handleRemoveUser = async (assignment: RoleAssignment) => {
     try {
       await removeUser(assignment.assignment_id);
-      toast.success('User access removed successfully');
+      toast.success("User access removed successfully");
       setRemoveConfirmation(null);
-    } catch (error) {
-      toast.error('Failed to remove user access');
+    } catch {
+      toast.error("Failed to remove user access");
     }
   };
 
   const getCreateAccessUrl = () => {
     switch (context.scopeType) {
-      case 'organization':
+      case "organization":
         return `/organizations/${context.scopeId}/access/grant`;
-      case 'project':
+      case "project":
         return `/projects/${context.scopeId}/access/grant`;
-      case 'resource':
+      case "resource": {
         // Need to extract project ID for resource routes
         const currentPath = window.location.pathname;
-        const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
-        const projectId = projectMatch ? projectMatch[1] : '';
+        const projectMatch = currentPath.match(/\/project\/([^/]+)/);
+        const projectId = projectMatch ? projectMatch[1] : "";
         return `/projects/${projectId}/resources/${context.scopeId}/access/grant`;
+      }
       default:
-        return '#';
+        return "#";
     }
   };
 

@@ -38,7 +38,7 @@ export const useProjectStore = create<ProjectState>()(
         set({ isLoadingList: true, error: null });
         try {
           const response = await apiClient.get<Project[]>("/projects");
-          const projectsWithDates = response.data.map((p: any) => ({
+          const projectsWithDates = response.data.map((p: Project) => ({
             ...p,
             created_at: new Date(p.created_at),
             updated_at: new Date(p.updated_at),

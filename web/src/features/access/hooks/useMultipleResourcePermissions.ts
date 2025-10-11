@@ -35,9 +35,18 @@ export function useMultipleResourcePermissions(resourceIds: string[]) {
           const p = await fetchUserPermissions("resource", id);
           perms[id] = p;
           errors[id] = null;
-        } catch (err: any) {
+        } catch (err: unknown) {
           perms[id] = [];
-          errors[id] = err?.message || "Failed to fetch permissions";
+          if (
+            err &&
+            typeof err === "object" &&
+            "message" in err &&
+            typeof (err as { message?: unknown }).message === "string"
+          ) {
+            errors[id] = (err as { message: string }).message;
+          } else {
+            errors[id] = "Failed to fetch permissions";
+          }
         }
         loading[id] = false;
       }
@@ -51,7 +60,7 @@ export function useMultipleResourcePermissions(resourceIds: string[]) {
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(resourceIds)]);
+  }, [resourceIds]);
 
   return { permissionsMap, loadingMap, errorMap };
 }

@@ -47,11 +47,13 @@ export const useOrganizationStore = create<OrganizationState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await apiClient.get<Organization[]>('/organizations');
-          const organizationsWithDates = response.data.map((org: any) => ({
-            ...org,
-            created_at: new Date(org.created_at),
-            updated_at: new Date(org.updated_at),
-          }));
+          const organizationsWithDates = response.data.map(
+            (org: Organization) => ({
+              ...org,
+              created_at: new Date(org.created_at),
+              updated_at: new Date(org.updated_at),
+            })
+          );
           set({ organizations: organizationsWithDates, isLoading: false });
           
           // Auto-select the first organization if none is selected

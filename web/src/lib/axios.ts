@@ -32,7 +32,7 @@ export const setupAuthInterceptor = (
   apiClient.interceptors.request.use(
     async (config) => {
       try {
-        let token = await getAccessTokenSilently();
+        const token = await getAccessTokenSilently();
         if (!token) {
           // If token cannot be retrieved redirect to login
           await loginWithRedirect();

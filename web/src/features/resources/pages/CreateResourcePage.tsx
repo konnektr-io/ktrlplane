@@ -132,7 +132,7 @@ export default function CreateResourcePage() {
     }));
   };
 
-  const handleConfigurationSubmit = async (configuration: any) => {
+  const handleConfigurationSubmit = async (configuration: unknown) => {
     if (!selectedProjectId) {
       toast.error("Please select a project before creating a resource.");
       return;
@@ -140,12 +140,16 @@ export default function CreateResourcePage() {
 
     setIsCreating(true);
     try {
+      let settings: Record<string, unknown> | undefined = undefined;
+      if (configuration && typeof configuration === "object") {
+        settings = configuration as Record<string, unknown>;
+      }
       const newResource = await createResource(selectedProjectId, {
         id: basicData.id.trim(),
         name: basicData.name.trim(),
         type: basicData.type as "Konnektr.Graph" | "Konnektr.Flow",
         sku: basicData.sku, // Include SKU in the resource creation
-        settings_json: configuration,
+        settings_json: settings,
       });
 
       if (newResource) {
@@ -634,9 +638,15 @@ export default function CreateResourcePage() {
           <ResourceSettingsForm
             resourceType={basicData.type}
             initialValues={
-              defaultConfigurations[
-                basicData.type as keyof typeof defaultConfigurations
-              ]
+              basicData.type === "Konnektr.Graph"
+                ? (defaultConfigurations[
+                    "Konnektr.Graph"
+                  ] as import("@/features/resources/schemas/GraphSchema").GraphSettings)
+                : basicData.type === "Konnektr.Flow"
+                ? (defaultConfigurations[
+                    "Konnektr.Flow"
+                  ] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
+                : undefined
             }
             onSubmit={handleConfigurationSubmit}
             disabled={isCreating}

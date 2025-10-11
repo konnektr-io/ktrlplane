@@ -8,8 +8,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar';
+} from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar.utils";
 import {
   Select,
   SelectContent,

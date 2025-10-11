@@ -57,25 +57,26 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
     try {
       let url = '';
       switch (context.scopeType) {
-        case 'organization':
+        case "organization":
           url = `/organizations/${context.scopeId}/rbac`;
           break;
-        case 'project':
+        case "project":
           url = `/projects/${context.scopeId}/rbac`;
           break;
-        case 'resource':
+        case "resource": {
           // For resources, we need to extract the project ID from the current path
           const currentPath = window.location.pathname;
-          const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
-          const projectId = projectMatch ? projectMatch[1] : '';
+          const projectMatch = currentPath.match(/\/project\/([^/]+)/);
+          const projectId = projectMatch ? projectMatch[1] : "";
           url = `/projects/${projectId}/resources/${context.scopeId}/rbac`;
           break;
+        }
       }
 
       const response = await apiClient.get(url);
       
       // Process the response to include populated user and role data
-      const assignments = response.data.map((assignment: any) => ({
+      const assignments = response.data.map((assignment: RoleAssignment) => ({
         ...assignment,
         created_at: assignment.created_at,
         expires_at: assignment.expires_at,
@@ -159,12 +160,13 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
         case 'project':
           url = `/projects/${context.scopeId}/rbac`;
           break;
-        case 'resource':
+        case 'resource': {
           const currentPath = window.location.pathname;
-          const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
+          const projectMatch = currentPath.match(/\/project\/([^/]+)/);
           const projectId = projectMatch ? projectMatch[1] : '';
           url = `/projects/${projectId}/resources/${context.scopeId}/rbac`;
           break;
+        }
       }
 
         await apiClient.post(url, {
@@ -196,12 +198,13 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
         case 'project':
           url = `/projects/${context.scopeId}/rbac/${assignmentId}`;
           break;
-        case 'resource':
+        case 'resource': {
           const currentPath = window.location.pathname;
-          const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
+          const projectMatch = currentPath.match(/\/project\/([^/]+)/);
           const projectId = projectMatch ? projectMatch[1] : '';
           url = `/projects/${projectId}/resources/${context.scopeId}/rbac/${assignmentId}`;
           break;
+        }
       }
 
       await apiClient.put(url, {
@@ -232,12 +235,13 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
         case 'project':
           url = `/projects/${context.scopeId}/rbac/${assignmentId}`;
           break;
-        case 'resource':
+        case 'resource': {
           const currentPath = window.location.pathname;
-          const projectMatch = currentPath.match(/\/project\/([^\/]+)/);
+          const projectMatch = currentPath.match(/\/project\/([^/]+)/);
           const projectId = projectMatch ? projectMatch[1] : '';
           url = `/projects/${projectId}/resources/${context.scopeId}/rbac/${assignmentId}`;
           break;
+        }
       }
 
       await apiClient.delete(url);
@@ -261,7 +265,7 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
     return get().roleAssignments.filter(assignment => assignment.user_id === userId);
   },
 
-  hasPermission: (_action) => {
+  hasPermission: () => {
     // Mock permission check - replace with actual implementation
     // This would check the current user's permissions in the current context
     return true;

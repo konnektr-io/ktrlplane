@@ -128,7 +128,7 @@ export const useResourceStore = create<ResourceState>((set) => ({
     if (!projectId || !resourceId) return null;
     set({ error: null });
     try {
-      const payload: any = { ...data };
+  const payload: Record<string, unknown> = { ...data };
       // Always send as object
       if (payload.settings_json === undefined) payload.settings_json = {};
       const response = await apiClient.put<Resource>(

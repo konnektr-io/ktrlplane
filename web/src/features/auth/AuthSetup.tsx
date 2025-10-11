@@ -7,7 +7,7 @@ export default function AuthSetup({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setupAuthInterceptor(getAccessTokenSilently, loginWithRedirect);
-  }, [getAccessTokenSilently]);
+  }, [getAccessTokenSilently, loginWithRedirect]);
 
   return <>{children}</>;
 }

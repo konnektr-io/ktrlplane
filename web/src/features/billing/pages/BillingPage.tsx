@@ -1,18 +1,43 @@
-import { useState, useEffect } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CreditCard, Download, Settings, AlertTriangle, Calendar, Package } from 'lucide-react';
-import axios from '@/lib/axios';
+import { useCallback, useState, useEffect } from "react";
+import { useParams, useLocation } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Loader2,
+  CreditCard,
+  Download,
+  Settings,
+  AlertTriangle,
+  Calendar,
+  Package,
+} from "lucide-react";
+import apiClient from "@/lib/axios";
+import { isAxiosError } from "axios";
 
 interface BillingAccount {
   billing_account_id: string;
-  scope_type: 'organization' | 'project';
+  scope_type: "organization" | "project";
   scope_id: string;
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
@@ -87,45 +112,61 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [billingEmail, setBillingEmail] = useState('');
+  const [billingEmail, setBillingEmail] = useState("");
   const [showSetupDialog, setShowSetupDialog] = useState(false);
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
 
   // Determine if this is an organization or project billing page
-  const scopeType = orgId ? 'organization' : 'project';
-  const scopeId = orgId || projectId || '';
+  const scopeType = orgId ? "organization" : "project";
+  const scopeId = orgId || projectId || "";
   const baseURL = orgId ? `/organizations/${orgId}` : `/projects/${projectId}`;
 
-  useEffect(() => {
-    fetchBillingInfo();
-  }, [scopeId, scopeType]);
-
-  const fetchBillingInfo = async () => {
+  const fetchBillingInfo = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching billing info from:', `${baseURL}/billing`);
-      const response = await axios.get(`${baseURL}/billing`);
+      console.log("Fetching billing info from:", `${baseURL}/billing`);
+      const response = await apiClient.get(`${baseURL}/billing`);
       setBillingInfo(response.data);
-      setBillingEmail(response.data.billing_account.billing_email || '');
-    } catch (err: any) {
-      console.error('Billing fetch error:', err);
-      setError(err.response?.data?.error || 'Failed to load billing information');
+      setBillingEmail(response.data.billing_account.billing_email || "");
+    } catch (err: unknown) {
+      console.error("Billing fetch error:", err);
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        typeof (err as { response?: { data?: { error?: unknown } } }).response
+          ?.data?.error === "string"
+      ) {
+        setError(
+          (err as { response: { data: { error: string } } }).response.data.error
+        );
+      } else {
+        setError("Failed to load billing information");
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [baseURL]);
+
+  useEffect(() => {
+    fetchBillingInfo();
+  }, [scopeId, scopeType, fetchBillingInfo]);
 
   const updateBillingEmail = async () => {
     try {
       setUpdating(true);
-      await axios.put(`${baseURL}/billing`, {
-        billing_email: billingEmail
+      await apiClient.put(`${baseURL}/billing`, {
+        billing_email: billingEmail,
       });
       await fetchBillingInfo();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to update billing email');
+    } catch (err: unknown) {
+      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
+        setError(err.response.data.error);
+      } else {
+        setError("Failed to update billing email");
+      }
     } finally {
       setUpdating(false);
     }
@@ -134,17 +175,21 @@ export default function BillingPage() {
   const setupStripeCustomer = async () => {
     try {
       setUpdating(true);
-      await axios.post(`${baseURL}/billing/customer`, {
+      await apiClient.post(`${baseURL}/billing/customer`, {
         email: customerEmail,
         name: customerName,
-        description: `${scopeType} ${scopeId}`
+        description: `${scopeType} ${scopeId}`,
       });
       await fetchBillingInfo();
       setShowSetupDialog(false);
-      setCustomerName('');
-      setCustomerEmail('');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to setup billing customer');
+      setCustomerName("");
+      setCustomerEmail("");
+    } catch (err: unknown) {
+      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
+        setError(err.response.data.error);
+      } else {
+        setError("Failed to setup billing customer");
+      }
     } finally {
       setUpdating(false);
     }
@@ -154,12 +199,16 @@ export default function BillingPage() {
     try {
       setUpdating(true);
       const returnUrl = `${window.location.origin}${location.pathname}`;
-      const response = await axios.post(`${baseURL}/billing/portal`, {
-        return_url: returnUrl
+      const response = await apiClient.post(`${baseURL}/billing/portal`, {
+        return_url: returnUrl,
       });
       window.location.href = response.data.portal_url;
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to open customer portal');
+    } catch (err: unknown) {
+      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
+        setError(err.response.data.error);
+      } else {
+        setError("Failed to open customer portal");
+      }
       setUpdating(false);
     }
   };
@@ -167,10 +216,14 @@ export default function BillingPage() {
   const createSubscription = async () => {
     try {
       setUpdating(true);
-      await axios.post(`${baseURL}/billing/subscription`, {});
+      await apiClient.post(`${baseURL}/billing/subscription`, {});
       await fetchBillingInfo();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create subscription');
+    } catch (err: unknown) {
+      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
+        setError(err.response.data.error);
+      } else {
+        setError("Failed to create subscription");
+      }
     } finally {
       setUpdating(false);
     }
@@ -179,18 +232,22 @@ export default function BillingPage() {
   const cancelSubscription = async () => {
     try {
       setUpdating(true);
-      await axios.post(`${baseURL}/billing/cancel`);
+      await apiClient.post(`${baseURL}/billing/cancel`);
       await fetchBillingInfo();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to cancel subscription');
+    } catch (err: unknown) {
+      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
+        setError(err.response.data.error);
+      } else {
+        setError("Failed to cancel subscription");
+      }
     } finally {
       setUpdating(false);
     }
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency.toUpperCase(),
     }).format(amount / 100);
   };
@@ -201,17 +258,17 @@ export default function BillingPage() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'trial':
-        return 'bg-blue-100 text-blue-800';
-      case 'canceled':
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'past_due':
-        return 'bg-yellow-100 text-yellow-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "trial":
+        return "bg-blue-100 text-blue-800";
+      case "canceled":
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "past_due":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -237,9 +294,17 @@ export default function BillingPage() {
     );
   }
 
-  const { billing_account: account, upcoming_invoice, payment_methods, subscription_items, subscription_details } = billingInfo;
+  const {
+    billing_account: account,
+    upcoming_invoice,
+    payment_methods,
+    subscription_items,
+    subscription_details,
+  } = billingInfo;
   const hasStripeCustomer = !!account.stripe_customer_id;
-  const hasActiveSubscription = !!account.stripe_subscription_id && account.subscription_status === 'active';
+  const hasActiveSubscription =
+    !!account.stripe_subscription_id &&
+    account.subscription_status === "active";
 
   return (
     <div className="space-y-6 p-6">
@@ -272,17 +337,17 @@ export default function BillingPage() {
           <div className="flex items-center justify-between">
             <span className="font-medium">Status:</span>
             <Badge className={getStatusColor(account.subscription_status)}>
-              {account.subscription_status || 'No subscription'}
+              {account.subscription_status || "No subscription"}
             </Badge>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-medium">Billing Email:</span>
-            <span>{account.billing_email || 'Not set'}</span>
+            <span>{account.billing_email || "Not set"}</span>
           </div>
           {/* Create subscription button if no subscription exists but customer exists */}
           {hasStripeCustomer && !hasActiveSubscription && (
             <div className="pt-2">
-              <Button 
+              <Button
                 onClick={createSubscription}
                 disabled={updating}
                 className="w-full"
@@ -310,7 +375,9 @@ export default function BillingPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="font-medium">Subscription ID:</span>
-              <span className="font-mono text-sm">{subscription_details.id}</span>
+              <span className="font-mono text-sm">
+                {subscription_details.id}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-medium">Status:</span>
@@ -321,12 +388,19 @@ export default function BillingPage() {
             <div className="flex items-center justify-between">
               <span className="font-medium">Current Period:</span>
               <span>
-                {formatDate(subscription_details.current_period_start)} - {formatDate(subscription_details.current_period_end)}
+                {formatDate(subscription_details.current_period_start)} -{" "}
+                {formatDate(subscription_details.current_period_end)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-medium">Cancel at Period End:</span>
-              <Badge variant={subscription_details.cancel_at_period_end ? "destructive" : "default"}>
+              <Badge
+                variant={
+                  subscription_details.cancel_at_period_end
+                    ? "destructive"
+                    : "default"
+                }
+              >
                 {subscription_details.cancel_at_period_end ? "Yes" : "No"}
               </Badge>
             </div>
@@ -335,62 +409,70 @@ export default function BillingPage() {
       )}
 
       {/* Subscription Items */}
-      {hasActiveSubscription && subscription_items && subscription_items.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Subscription Items
-            </CardTitle>
-            <CardDescription>
-              Products and services included in your subscription
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {subscription_items.map((item) => (
-                <div key={item.id} className="border rounded-lg p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">
-                        {item.price?.product?.name || 'Product'}
-                      </h4>
-                      {item.price?.product?.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {item.price.product.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">
-                        Quantity: {item.quantity}
+      {hasActiveSubscription &&
+        subscription_items &&
+        subscription_items.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Subscription Items
+              </CardTitle>
+              <CardDescription>
+                Products and services included in your subscription
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {subscription_items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="border rounded-lg p-4 space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">
+                          {item.price?.product?.name || "Product"}
+                        </h4>
+                        {item.price?.product?.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {item.price.product.description}
+                          </p>
+                        )}
                       </div>
-                      {item.price && (
-                        <div className="text-sm text-muted-foreground">
-                          {formatCurrency(item.price.unit_amount, item.price.currency)}
-                          {item.price.recurring && (
-                            <span>
-                              /{item.price.recurring.interval_count > 1 
-                                ? `${item.price.recurring.interval_count} ` 
-                                : ''}{item.price.recurring.interval}
-                            </span>
-                          )}
+                      <div className="text-right">
+                        <div className="font-medium">
+                          Quantity: {item.quantity}
                         </div>
-                      )}
+                        {item.price && (
+                          <div className="text-sm text-muted-foreground">
+                            {formatCurrency(
+                              item.price.unit_amount,
+                              item.price.currency
+                            )}
+                            {item.price.recurring && (
+                              <span>
+                                /
+                                {item.price.recurring.interval_count > 1
+                                  ? `${item.price.recurring.interval_count} `
+                                  : ""}
+                                {item.price.recurring.interval}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Item ID: {item.id}</span>
+                      {item.price && <span>Price ID: {item.price.id}</span>}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>Item ID: {item.id}</span>
-                    {item.price && (
-                      <span>Price ID: {item.price.id}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Billing Email Management */}
       <Card>
@@ -411,7 +493,7 @@ export default function BillingPage() {
               placeholder="billing@example.com"
             />
           </div>
-          <Button 
+          <Button
             onClick={updateBillingEmail}
             disabled={updating || billingEmail === account.billing_email}
           >
@@ -431,7 +513,10 @@ export default function BillingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <AlertDialog open={showSetupDialog} onOpenChange={setShowSetupDialog}>
+            <AlertDialog
+              open={showSetupDialog}
+              onOpenChange={setShowSetupDialog}
+            >
               <AlertDialogTrigger asChild>
                 <Button>Setup Billing Account</Button>
               </AlertDialogTrigger>
@@ -469,7 +554,9 @@ export default function BillingPage() {
                     onClick={setupStripeCustomer}
                     disabled={!customerName || !customerEmail || updating}
                   >
-                    {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {updating && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Setup Customer
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -491,7 +578,7 @@ export default function BillingPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
+              <Button
                 onClick={openCustomerPortal}
                 disabled={updating}
                 className="w-full"
@@ -500,8 +587,8 @@ export default function BillingPage() {
                 Open Payment Management Portal
               </Button>
               <p className="text-sm text-muted-foreground">
-                The customer portal allows you to update payment methods, download invoices, 
-                and manage your subscription settings.
+                The customer portal allows you to update payment methods,
+                download invoices, and manage your subscription settings.
               </p>
             </CardContent>
           </Card>
@@ -518,7 +605,10 @@ export default function BillingPage() {
               <CardContent>
                 <div className="space-y-2">
                   {payment_methods.map((pm) => (
-                    <div key={pm.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={pm.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div className="flex items-center gap-3">
                         <CreditCard className="h-4 w-4" />
                         <span className="capitalize">{pm.card?.brand}</span>
@@ -550,13 +640,17 @@ export default function BillingPage() {
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Amount Due:</span>
                   <span className="text-2xl font-bold">
-                    {formatCurrency(upcoming_invoice.amount_due, upcoming_invoice.currency)}
+                    {formatCurrency(
+                      upcoming_invoice.amount_due,
+                      upcoming_invoice.currency
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Billing Period:</span>
                   <span>
-                    {formatDate(upcoming_invoice.period_start)} - {formatDate(upcoming_invoice.period_end)}
+                    {formatDate(upcoming_invoice.period_start)} -{" "}
+                    {formatDate(upcoming_invoice.period_end)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -566,9 +660,11 @@ export default function BillingPage() {
                   </Badge>
                 </div>
                 {upcoming_invoice.hosted_invoice_url && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open(upcoming_invoice.hosted_invoice_url, '_blank')}
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      window.open(upcoming_invoice.hosted_invoice_url, "_blank")
+                    }
                     className="w-full"
                   >
                     <Download className="mr-2 h-4 w-4" />
@@ -584,9 +680,7 @@ export default function BillingPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Subscription Actions</CardTitle>
-                <CardDescription>
-                  Manage your subscription
-                </CardDescription>
+                <CardDescription>Manage your subscription</CardDescription>
               </CardHeader>
               <CardContent>
                 <AlertDialog>
@@ -597,8 +691,9 @@ export default function BillingPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to cancel your subscription? This action will 
-                        cancel your subscription at the end of the current billing period.
+                        Are you sure you want to cancel your subscription? This
+                        action will cancel your subscription at the end of the
+                        current billing period.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -608,7 +703,9 @@ export default function BillingPage() {
                         disabled={updating}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {updating && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
                         Cancel Subscription
                       </AlertDialogAction>
                     </AlertDialogFooter>
