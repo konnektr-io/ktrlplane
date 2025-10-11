@@ -30,6 +30,7 @@ func (s *RBACService) AssignRole(ctx context.Context, userID, roleName, scopeTyp
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Log rollback error but don't override the main error
+			fmt.Printf("[RBACService] transaction rollback error: %v\n", rollbackErr)
 		}
 	}()
 

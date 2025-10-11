@@ -36,6 +36,7 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, req models
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Log rollback error but don't override the main error
+			fmt.Printf("[OrganizationService] transaction rollback error: %v\n", rollbackErr)
 		}
 	}()
 

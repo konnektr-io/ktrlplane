@@ -79,6 +79,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Log rollback error but don't override the main error
+			fmt.Printf("[ProjectService] transaction rollback error: %v\n", rollbackErr)
 		}
 	}()
 
