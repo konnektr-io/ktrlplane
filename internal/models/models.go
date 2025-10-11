@@ -38,7 +38,6 @@ type Resource struct {
 	ErrorMessage *string         `json:"error_message,omitempty" agtype:"error_message"`
 }
 
-// Custom MarshalJSON to ensure settings_json is always a JSON object (never a string/null)
 // MarshalJSON ensures settings_json is always a JSON object (never a string/null).
 func (r Resource) MarshalJSON() ([]byte, error) {
 	type Alias Resource

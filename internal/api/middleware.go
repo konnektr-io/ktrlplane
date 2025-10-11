@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ErrorLoggerMiddleware logs all errors attached to the Gin context (not just panics)
+// ErrorLoggerMiddleware logs all errors attached to the Gin context (not just panics).
 func ErrorLoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
@@ -19,6 +19,7 @@ func ErrorLoggerMiddleware() gin.HandlerFunc {
 	}
 }
 
+// CustomRecoveryMiddleWare recovers from panics and returns a JSON error response.
 func CustomRecoveryMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
@@ -39,6 +40,7 @@ func CustomRecoveryMiddleWare() gin.HandlerFunc {
 	}
 }
 
+// CORSMiddleware configures CORS for the Gin router.
 func CORSMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
 		AllowAllOrigins:  true,

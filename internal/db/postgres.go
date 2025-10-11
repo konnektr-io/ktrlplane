@@ -10,8 +10,11 @@ import (
 )
 
 var (
+	// dbPool is the global database connection pool.
 	dbPool        *pgxpool.Pool
+	// MockExecQuery is a mockable function for ExecQuery.
 	MockExecQuery func(ctx context.Context, query string, args ...interface{}) error
+	// MockQuery is a mockable function for Query.
 	MockQuery     func(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error)
 )
 

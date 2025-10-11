@@ -8,7 +8,7 @@ import (
 )
 
 // SetupRouter configures the Gin router with all routes and middleware.
-func SetupRouter(handler *APIHandler) *gin.Engine {
+func SetupRouter(handler *Handler) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(CustomRecoveryMiddleWare())
@@ -27,7 +27,7 @@ func SetupRouter(handler *APIHandler) *gin.Engine {
 	apiV1 := r.Group("/api/v1")
 
 	// Apply Auth middleware to all /api/v1 routes
-	apiV1.Use(auth.AuthMiddleware()) // Enable Auth middleware
+	apiV1.Use(auth.Middleware()) // Enable Auth middleware
 	{
 		// --- Global RBAC Routes ---
 		apiV1.GET("/roles", handler.ListRoles)                          // List all available roles

@@ -25,6 +25,7 @@ type CustomClaims struct {
 
 // Validate does nothing for this example, but we need
 // it to satisfy validator.CustomClaims interface.
+// Validate does nothing for this example, but we need it to satisfy validator.CustomClaims interface.
 func (c CustomClaims) Validate(ctx context.Context) error {
 	return nil
 }
@@ -38,6 +39,7 @@ var (
 	userCacheMutex sync.RWMutex
 )
 
+// SetupAuth configures JWT validation for Auth0.
 func SetupAuth(audience, issuer string) error {
 	issuerURL, err := url.Parse(issuer)
 	if err != nil {
@@ -66,8 +68,8 @@ func SetupAuth(audience, issuer string) error {
 	return nil
 }
 
-// AuthMiddleware validates the JWT token.
-func AuthMiddleware() gin.HandlerFunc {
+// Middleware validates the JWT token.
+func Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Extract token from Authorization header
 		authHeader := c.GetHeader("Authorization")
@@ -121,7 +123,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// extractEmailFromClaims extracts email from JWT claims
+// extractEmailFromClaims extracts email from JWT claims.
 func extractEmailFromClaims(claims *validator.ValidatedClaims) string {
 	// First try to get email from custom claims (Auth0 email claim)
 	if claims.CustomClaims != nil {
@@ -140,7 +142,7 @@ func extractEmailFromClaims(claims *validator.ValidatedClaims) string {
 	return "" // Return empty if email not found
 }
 
-// extractNameFromClaims extracts name from JWT claims
+// extractNameFromClaims extracts name from JWT claims.
 func extractNameFromClaims(claims *validator.ValidatedClaims) string {
 	// First try to get name from custom claims (Auth0 name claim)
 	if claims.CustomClaims != nil {
@@ -163,7 +165,7 @@ func extractNameFromClaims(claims *validator.ValidatedClaims) string {
 	return "User" // Default name
 }
 
-// ensureUserExists creates or updates a user in the database
+// ensureUserExists creates or updates a user in the database.
 func ensureUserExists(ctx context.Context, userID, email, name string) error {
 	// Check cache first to avoid repeated DB calls
 	userCacheMutex.RLock()

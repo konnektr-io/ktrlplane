@@ -52,7 +52,7 @@ func main() {
 	billingService := service.NewBillingService(db.GetDB(), &cfg)
 
 	// --- API Handler Initialization ---
-	apiHandler := api.NewAPIHandler(projectService, resourceService, organizationService, rbacService, billingService)
+	apiHandler := api.NewHandler(projectService, resourceService, organizationService, rbacService, billingService)
 
 	// --- Router Setup ---
 	router := api.SetupRouter(apiHandler)

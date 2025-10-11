@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Config holds the application configuration.
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
@@ -14,10 +15,12 @@ type Config struct {
 	Stripe   StripeConfig   `mapstructure:"stripe"`
 }
 
+// ServerConfig holds server-related configuration.
 type ServerConfig struct {
 	Port string `mapstructure:"port"`
 }
 
+// DatabaseConfig holds database-related configuration.
 type DatabaseConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
@@ -27,11 +30,13 @@ type DatabaseConfig struct {
 	SSLMode  string `mapstructure:"sslmode"`
 }
 
+// AuthConfig holds authentication-related configuration.
 type AuthConfig struct {
 	Issuer   string `mapstructure:"issuer"`
 	Audience string `mapstructure:"audience"`
 }
 
+// StripeConfig holds Stripe-related configuration.
 type StripeConfig struct {
 	SecretKey      string          `mapstructure:"secret_key"`
 	PublishableKey string          `mapstructure:"publishable_key"`
@@ -39,12 +44,14 @@ type StripeConfig struct {
 	Products       []StripeProduct `mapstructure:"products"`
 }
 
+// StripeProduct represents a Stripe product configuration.
 type StripeProduct struct {
 	ResourceType string `mapstructure:"resource_type"`
 	SKU          string `mapstructure:"sku"`
 	ProductID    string `mapstructure:"product_id"`
 }
 
+// LoadConfig loads configuration from the given path.
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("config")
