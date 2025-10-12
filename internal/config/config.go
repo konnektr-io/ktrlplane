@@ -9,10 +9,11 @@ import (
 
 // Config holds the application configuration.
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	Database DatabaseConfig `mapstructure:"database"`
-	Auth     AuthConfig     `mapstructure:"auth"`
-	Stripe   StripeConfig   `mapstructure:"stripe"`
+	Server      ServerConfig      `mapstructure:"server"`
+	Database    DatabaseConfig    `mapstructure:"database"`
+	Auth        AuthConfig        `mapstructure:"auth"`
+	Stripe      StripeConfig      `mapstructure:"stripe"`
+	Observability ObservabilityConfig `mapstructure:"observability"`
 }
 
 // ServerConfig holds server-related configuration.
@@ -51,6 +52,24 @@ type StripeProduct struct {
 	ProductID    string `mapstructure:"product_id"`
 }
 
+// ObservabilityConfig holds observability backend configuration.
+type ObservabilityConfig struct {
+	Loki  LokiConfig  `mapstructure:"loki"`
+	Mimir MimirConfig `mapstructure:"mimir"`
+}
+
+// LokiConfig holds Loki (logging) backend configuration.
+type LokiConfig struct {
+	URL     string `mapstructure:"url"`
+	Enabled bool   `mapstructure:"enabled"`
+}
+
+// MimirConfig holds Mimir (metrics) backend configuration.
+type MimirConfig struct {
+	URL     string `mapstructure:"url"`
+	Enabled bool   `mapstructure:"enabled"`
+}
+
 // LoadConfig loads configuration from the given path.
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
@@ -76,6 +95,10 @@ func LoadConfig(path string) (config Config, err error) {
 	       "stripe.secret_key",
 	       "stripe.publishable_key",
 	       "stripe.webhook_secret",
+	       "observability.loki.url",
+	       "observability.loki.enabled",
+	       "observability.mimir.url",
+	       "observability.mimir.enabled",
        }
        for _, key := range envVars {
 	       if err := viper.BindEnv(key); err != nil {

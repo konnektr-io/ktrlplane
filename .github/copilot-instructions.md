@@ -143,7 +143,19 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - Support authentication flow: homepage → login → project selection → resource creation
 - URL pattern: `/projects/{projectId}/resources/create?resourceType={type}&tier={tier}`
 
-### 12. Deployment & Infrastructure
+
+### 14. Logging & Metrics Backend (Loki/Mimir Proxy)
+
+- All logs and metrics endpoints proxy to Loki and Mimir using Go's reverse proxy with custom Director logic.
+- Endpoints:
+	- Logs: `GET /api/v1/resources/{resourceId}/logs?query={logQL}&start={ts}&end={ts}&limit=1000`
+	- Metrics: `GET /api/v1/resources/{resourceId}/metrics/query_range?query={promQL}&start={ts}&end={ts}&step=15s`
+- All requests require Auth0 JWT authentication and RBAC check using `PermissionService.CanUserAccessResource(userID, resourceID)`.
+- Inject `X-Scope-OrgID` header using project ID for multi-tenancy.
+- LogQL/PromQL queries are rewritten to inject resource-specific label filters for security and pre-filtering.
+- Never forward requests without RBAC check and tenant header.
+- All proxy logic is dependency-injected for testability and security.
+
 
 - Uses db-query-operator for Kubernetes deployments
 - Database-driven configuration (operator queries DB for desired state)

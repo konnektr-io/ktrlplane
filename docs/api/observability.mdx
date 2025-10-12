@@ -1,0 +1,109 @@
+# Observability API
+
+KtrlPlane provides secure, multi-tenant proxy endpoints for accessing logs and metrics data from your resources.
+
+## Overview
+
+The observability endpoints allow you to query logs and metrics for resources within your projects. All requests are authenticated, authorized through RBAC, and automatically scoped to the correct organization tenant.
+
+## Authentication
+
+All observability endpoints require:
+- Valid Auth0 JWT token in the `Authorization` header
+- `read` permission on the project containing the resource
+
+## Endpoints
+
+### Logs
+
+```http
+GET /api/v1/projects/{projectId}/resources/{resourceId}/logs
+```
+
+Proxies log queries to Loki with automatic tenant scoping and resource filtering.
+
+**Parameters:**
+- `query` (string): LogQL query expression
+- `start` (string): Start time (RFC3339 format or Unix timestamp)
+- `end` (string): End time (RFC3339 format or Unix timestamp)
+- `limit` (integer): Maximum number of log lines to return (default: 1000)
+
+**Example:**
+```bash
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  "https://api.ktrlplane.com/api/v1/projects/my-project/resources/my-resource/logs?query={level=\"error\"}&start=2025-01-27T10:00:00Z&end=2025-01-27T11:00:00Z&limit=100"
+```
+
+### Metrics
+
+```http
+GET /api/v1/projects/{projectId}/resources/{resourceId}/metrics/query_range
+```
+
+Proxies metrics queries to Mimir with automatic tenant scoping and resource filtering.
+
+**Parameters:**
+- `query` (string): PromQL query expression
+- `start` (string): Start time (RFC3339 format or Unix timestamp)
+- `end` (string): End time (RFC3339 format or Unix timestamp)
+- `step` (string): Query step duration (e.g., "15s", "1m", "5m")
+
+**Example:**
+```bash
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  "https://api.ktrlplane.com/api/v1/projects/my-project/resources/my-resource/metrics/query_range?query=cpu_usage_percent&start=2025-01-27T10:00:00Z&end=2025-01-27T11:00:00Z&step=15s"
+```
+
+## Security & Multi-Tenancy
+
+### RBAC Enforcement
+- Users must have `read` permission on the project containing the resource
+- Resource access is validated for each request
+- Unauthorized requests return `403 Forbidden`
+
+### Automatic Tenant Scoping
+- All requests include the `X-Scope-OrgID` header for multi-tenancy
+- Tenant ID is set to the project ID for project-level isolation
+- Prevents cross-project data access
+
+### Query Filtering
+- **Logs**: LogQL queries are automatically prefixed with `{resource_id="resourceId"}`
+- **Metrics**: PromQL queries are automatically filtered with `{resource_id="resourceId"}`
+- Ensures users only see data from the requested resource
+
+## Configuration
+
+Enable observability backends in your `config.yaml`:
+
+```yaml
+observability:
+  loki:
+    enabled: true
+    url: "http://loki-gateway:3100"
+  mimir:
+    enabled: true
+    url: "http://mimir-gateway:8080"
+```
+
+## Environment Variables
+
+- `KTRLPLANE_OBSERVABILITY_LOKI_ENABLED`: Enable Loki logging backend
+- `KTRLPLANE_OBSERVABILITY_LOKI_URL`: Loki server URL
+- `KTRLPLANE_OBSERVABILITY_MIMIR_ENABLED`: Enable Mimir metrics backend
+- `KTRLPLANE_OBSERVABILITY_MIMIR_URL`: Mimir server URL
+
+## Error Responses
+
+- `401 Unauthorized`: Missing or invalid authentication token
+- `403 Forbidden`: Insufficient permissions to access resource
+- `404 Not Found`: Resource not found
+- `502 Bad Gateway`: Backend observability service unavailable
+- `503 Service Unavailable`: Observability backend not configured
+
+## Backend Integration
+
+The proxy forwards requests to:
+- **Loki**: `/loki/api/v1/query_range` endpoint
+- **Mimir**: `/prometheus/api/v1/query_range` endpoint
+
+Both backends must support multi-tenancy via the `X-Scope-OrgID` header (set to project ID).

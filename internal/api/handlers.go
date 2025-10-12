@@ -16,16 +16,18 @@ type Handler struct {
 	OrganizationService *service.OrganizationService
 	RBACService         *service.RBACService
 	BillingService      *service.BillingService
+	ProxyService        *ProxyService // For logs and metrics proxying
 }
 
 // NewHandler creates a new Handler with the provided services.
-func NewHandler(ps *service.ProjectService, rs *service.ResourceService, os *service.OrganizationService, rbac *service.RBACService, bs *service.BillingService) *Handler {
+func NewHandler(ps *service.ProjectService, rs *service.ResourceService, os *service.OrganizationService, rbac *service.RBACService, bs *service.BillingService, proxySvc *ProxyService) *Handler {
 	return &Handler{
 		ProjectService:      ps,
 		ResourceService:     rs,
 		OrganizationService: os,
 		RBACService:         rbac,
 		BillingService:      bs,
+		ProxyService:        proxySvc,
 	}
 }
 
@@ -1005,4 +1007,28 @@ func (h *Handler) ListPermissionsHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"permissions": permissions})
+}
+
+// --- Logging & Metrics Proxy Handlers ---
+
+// LogsProxyHandler proxies log requests to Loki with RBAC and multi-tenancy
+func (h *Handler) LogsProxyHandler(c *gin.Context) {
+	if h.ProxyService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Proxy service not available"})
+		return
+	}
+
+	// Convert Gin context to standard http.ResponseWriter and http.Request for proxy
+	h.ProxyService.LogsProxy().ServeHTTP(c.Writer, c.Request)
+}
+
+// MetricsProxyHandler proxies metrics requests to Mimir with RBAC and multi-tenancy
+func (h *Handler) MetricsProxyHandler(c *gin.Context) {
+	if h.ProxyService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Proxy service not available"})
+		return
+	}
+
+	// Convert Gin context to standard http.ResponseWriter and http.Request for proxy
+	h.ProxyService.MetricsProxy().ServeHTTP(c.Writer, c.Request)
 }
