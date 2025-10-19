@@ -1,0 +1,53 @@
+---
+title: Access Control
+description: Learn how role-based access control (RBAC) governs permissions across organizations, projects, and resources
+---
+# Access Control
+
+KtrlPlane uses Role-Based Access Control (RBAC) to manage permissions at three hierarchical scopes: organization, project, and resource.
+
+## Core Principles
+- **Scoped Roles**: Roles are always assigned within a scope (org, project, resource)
+- **Least Privilege**: Users should receive only the permissions necessary
+- **Composability**: Access can layer—organization visibility and project edit rights, for example
+- **Auditability**: Role assignments form the backbone of audit trails
+
+## Scopes
+| Scope | Example | Role Examples | Description |
+|-------|---------|---------------|-------------|
+| Organization | `org-abc123` | org_owner, org_admin, org_viewer | Top-level grouping boundary |
+| Project | `proj-xyz123` | project_owner, project_editor, project_viewer | Application/workspace boundary |
+| Resource | `res-graph-01` | resource_editor, resource_viewer | Individual deployable unit |
+
+## Roles (Conceptual)
+| Role | Typical Permissions |
+|------|---------------------|
+| org_owner | Manage organization + billing + projects |
+| org_admin | Manage organization configuration |
+| org_viewer | Read-only organization visibility |
+| project_owner | Full project control including billing override |
+| project_editor | Create/update resources |
+| project_viewer | Read-only project and resources |
+| resource_editor | Change resource configuration |
+| resource_viewer | View resource status, metrics, logs |
+
+## Permission Evaluation
+1. Authenticate user (JWT token)
+2. Identify scope from request path
+3. Load role assignments for user + scope
+4. Resolve permissions and compare against required action
+
+## Best Practices
+- Periodically audit high-privilege roles
+- Use resource-level roles only when finer granularity is required
+- Prefer project-level roles for most collaboration scenarios
+
+## Common Scenarios
+- A user needs to view logs: must have resource_viewer or project_viewer (with access) + logs feature enabled
+- A user needs to change resource settings: resource_editor or project_editor
+- A user needs to delete a project: project_owner
+
+## Next Steps
+- [RBAC API](/api/rbac)
+- [Projects](/concepts/projects)
+- [Resources](/concepts/resources)

@@ -1,0 +1,70 @@
+---
+title: Authentication API
+description: How to authenticate with KtrlPlane APIs using Auth0 JWT tokens and scopes
+---
+# Authentication API
+
+The Authentication API describes how clients obtain and use JWT tokens to interact securely with KtrlPlane.
+
+KtrlPlane relies on Auth0 for identity management. All API requests require a valid bearer token and proper scopes.
+
+## Overview
+
+Clients authenticate using Auth0's OAuth2/OIDC flows. The resulting access token must include the audience configured for KtrlPlane and appropriate scopes for platform access.
+
+## Required Headers
+
+Include the following header in every authenticated request:
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+## Token Acquisition
+
+Typical SPA / browser clients use Auth0's Authorization Code Flow with PKCE. Server-side scripts may use Client Credentials (if allowed) for backend automation.
+
+### Authorization Code Flow (PKCE)
+1. Redirect user to Auth0 authorization endpoint
+2. User logs in / consents
+3. Auth0 redirects back with authorization code
+4. Exchange code + PKCE verifier for tokens
+
+### Client Credentials Flow (Optional)
+Used for machine-to-machine communication. Tokens issued will reflect configured app-level permissions.
+
+## Scopes
+
+KtrlPlane defines the following high-level scope for platform access:
+
+- `access:platform` – Grants access to core control plane APIs (projects, resources, RBAC, billing)
+
+Additional fine-grained permission checks are enforced via RBAC at the project, resource, and organization levels.
+
+## Token Validation
+
+Tokens are validated by middleware that:
+- Verifies signature against Auth0 JSON Web Keys (JWKS)
+- Checks token expiration
+- Confirms audience matches configured API audience
+- Extracts user identity (sub, email) for context
+
+## Error Responses
+
+| Status | Description |
+|--------|-------------|
+| 401 Unauthorized | Missing or invalid token |
+| 403 Forbidden | Authenticated but lacks required RBAC permission |
+
+## Example Request
+
+```bash
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  https://ktrlplane.konnektr.io/api/v1/projects
+```
+
+## Next Steps
+
+- [Projects API](/api/projects) – Manage user workspaces
+- [RBAC API](/api/rbac) – Understand access control
+- [Resources API](/api/resources) – Deploy platform resources

@@ -189,6 +189,7 @@ When updating these instructions, add entries here:
 - **2025-01-27**: Initial comprehensive instructions created
 - **2025-09-25**: Updated product names (DigitalTwins → Graph, added Assembler/Flow/Compass), added catalog strategy and dynamic forms guidance
 - **2025-10-11**: Refactored documentation to MDX format with fumadocs structure, separated usage vs self-hosting docs, added comprehensive API documentation
+- **2025-10-19**: Added missing API documentation pages (authentication, organizations, projects, rbac, billing, observability) and concept pages (organizations, projects, access-control); updated `docs/api/meta.json` and ensured standardized frontmatter.
 
 ---
 

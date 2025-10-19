@@ -1,9 +1,6 @@
 {
+    "title": "Development",
     "pages": [
-        "setup",
-        "architecture",
-        "contributing",
-        "testing",
-        "api"
+        "setup"
     ]
 }

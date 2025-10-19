@@ -1,0 +1,42 @@
+---
+title: Projects
+description: Learn how projects organize resources and define operational workspaces in KtrlPlane
+---
+# Projects
+
+Projects are operational workspaces that group resources and define an RBAC boundary for day-to-day execution.
+
+## Purpose
+- Provide a focused context for an application or workload
+- Group related resources (Graph, Flow, Assembler, Compass)
+- Act as a billing scope (inherit or override organization billing)
+- Enable scoped role assignments (project_owner, project_editor, project_viewer)
+
+## When to Create a New Project
+Create a new project when:
+- You have a logical application boundary
+- Different teams manage separate workloads
+- You require isolated access control for a feature set
+- You want to segment billing or usage reporting
+
+## Project Lifecycle
+1. Initialization: Project defined with name and organization association
+2. Resource Provisioning: Platform resources created inside the project
+3. Expansion: Additional roles and monitoring added
+4. Evolution: Configuration updated based on scaling needs
+5. Archival: Project retired and resources terminated
+
+## RBAC Scope
+Project-level roles govern access to all resources within the project unless overridden by resource-specific roles.
+
+## Billing Inheritance
+Projects can inherit billing from the parent organization or specify their own subscription context.
+
+## Best Practices
+- Use consistent naming patterns (e.g., `data-analytics-prod`)
+- Keep resource count manageable for clarity
+- Regularly review resource health and RBAC assignments
+
+## Next Steps
+- [Resources](/concepts/resources)
+- [Access Control](/concepts/access-control)

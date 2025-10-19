@@ -1,0 +1,67 @@
+---
+title: Billing API
+description: Billing and subscription management endpoints for organizations and projects
+---
+# Billing API
+
+Billing endpoints manage Stripe customer creation, subscriptions, and portal sessions at both organization and project scopes.
+
+## Overview
+Billing can be configured at either the organization or project level. Projects may inherit billing from their parent organization.
+
+## Organization Billing Endpoints
+```http
+GET  /api/v1/organizations/{orgId}/billing
+PUT  /api/v1/organizations/{orgId}/billing
+POST /api/v1/organizations/{orgId}/billing/customer
+POST /api/v1/organizations/{orgId}/billing/subscription
+POST /api/v1/organizations/{orgId}/billing/portal
+POST /api/v1/organizations/{orgId}/billing/cancel
+```
+
+## Project Billing Endpoints
+```http
+GET  /api/v1/projects/{projectId}/billing
+PUT  /api/v1/projects/{projectId}/billing
+POST /api/v1/projects/{projectId}/billing/customer
+POST /api/v1/projects/{projectId}/billing/subscription
+POST /api/v1/projects/{projectId}/billing/portal
+POST /api/v1/projects/{projectId}/billing/cancel
+```
+
+## Billing Object (Conceptual)
+```typescript
+interface BillingSettings {
+  scope_type: "organization" | "project";
+  scope_id: string;
+  stripe_customer_id?: string;
+  subscription_status?: string; // active | canceled | past_due
+  inherited?: boolean; // true if project inherits from org
+}
+```
+
+## Subscription Lifecycle
+1. Customer created (Stripe customer ID stored)
+2. Subscription initiated (plan/tier configured)
+3. Portal session available for management
+4. Cancellation endpoint stops future billing
+
+## Error Responses
+| Status | Description |
+|--------|-------------|
+| 400 Bad Request | Invalid billing data |
+| 401 Unauthorized | Missing/invalid token |
+| 403 Forbidden | Insufficient permission |
+| 404 Not Found | Scope not found |
+
+## Environment Variables
+| Variable | Purpose |
+|----------|---------|
+| STRIPE_SECRET_KEY | Server-side Stripe API key |
+| STRIPE_PUBLISHABLE_KEY | Client-side Stripe key |
+| STRIPE_WEBHOOK_SECRET | Verify incoming Stripe webhooks |
+
+## Next Steps
+- [Organizations API](/api/organizations)
+- [Projects API](/api/projects)
+- [Resources API](/api/resources)

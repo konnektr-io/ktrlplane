@@ -1,0 +1,105 @@
+---
+title: Organizations API
+description: Manage organizations, their settings, billing, and access control within KtrlPlane
+---
+# Organizations API
+
+Organizations are top-level containers grouping projects, users, and billing contexts.
+
+Base URL:
+```text
+https://ktrlplane.konnektr.io/api/v1
+```
+
+All endpoints require a valid bearer token and appropriate RBAC permissions.
+
+## Organization Object
+
+```typescript
+interface Organization {
+  organization_id: string;
+  name: string;
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
+  billing_inherited?: boolean;
+  stripe_customer_id?: string;
+}
+```
+
+## List Organizations
+```http
+GET /api/v1/organizations
+```
+Returns organizations the current user can access.
+
+### Example
+```bash
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  https://ktrlplane.konnektr.io/api/v1/organizations
+```
+
+## Create Organization
+```http
+POST /api/v1/organizations
+```
+### Request Body
+```json
+{
+  "id": "org-abc123",
+  "name": "Acme Corp"
+}
+```
+
+## Get Organization
+```http
+GET /api/v1/organizations/{orgId}
+```
+
+## Update Organization
+```http
+PUT /api/v1/organizations/{orgId}
+```
+### Request Body
+```json
+{
+  "name": "Acme Corporation"
+}
+```
+
+## Delete Organization
+```http
+DELETE /api/v1/organizations/{orgId}
+```
+Irreversible. Projects under the organization must be handled prior to deletion.
+
+## RBAC: Role Assignments
+```http
+GET    /api/v1/organizations/{orgId}/rbac
+POST   /api/v1/organizations/{orgId}/rbac
+DELETE /api/v1/organizations/{orgId}/rbac/{assignmentId}
+```
+Manages organization-level roles (e.g., org_owner, org_admin, org_viewer).
+
+## Billing
+```http
+GET  /api/v1/organizations/{orgId}/billing
+PUT  /api/v1/organizations/{orgId}/billing
+POST /api/v1/organizations/{orgId}/billing/customer
+POST /api/v1/organizations/{orgId}/billing/subscription
+POST /api/v1/organizations/{orgId}/billing/portal
+POST /api/v1/organizations/{orgId}/billing/cancel
+```
+Controls billing settings and Stripe integration.
+
+## Error Responses
+| Status | Description |
+|--------|-------------|
+| 400 Bad Request | Invalid input |
+| 401 Unauthorized | Missing/invalid token |
+| 403 Forbidden | Insufficient permission |
+| 404 Not Found | Organization does not exist |
+
+## Next Steps
+- [Projects API](/api/projects)
+- [RBAC API](/api/rbac)
+- [Billing API](/api/billing)

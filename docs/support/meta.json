@@ -1,7 +1,6 @@
 {
+    "title": "Support",
     "pages": [
-        "faq",
-        "troubleshooting",
-        "community"
+        "faq"
     ]
 }

@@ -1,0 +1,81 @@
+---
+title: RBAC API
+description: Role-based access control endpoints for assigning and validating permissions
+---
+# RBAC API
+
+RBAC (Role-Based Access Control) governs access at organization, project, and resource scopes.
+
+## Overview
+
+Roles map to a collection of permissions. Users receive roles via assignments scoped to a specific organization, project, or resource.
+
+## Global Roles Listing
+```http
+GET /api/v1/roles
+```
+Returns all system-defined roles.
+
+## Permissions Check
+```http
+GET /api/v1/permissions/check?scopeType=project&scopeId=proj-abc123
+```
+Returns actions the current user can perform within the specified scope.
+
+## Role Assignments
+
+### Organization Level
+```http
+GET    /api/v1/organizations/{orgId}/rbac
+POST   /api/v1/organizations/{orgId}/rbac
+DELETE /api/v1/organizations/{orgId}/rbac/{assignmentId}
+```
+
+### Project Level
+```http
+GET    /api/v1/projects/{projectId}/rbac
+POST   /api/v1/projects/{projectId}/rbac
+DELETE /api/v1/projects/{projectId}/rbac/{assignmentId}
+```
+
+### Resource Level
+```http
+GET    /api/v1/projects/{projectId}/resources/{resourceId}/rbac
+POST   /api/v1/projects/{projectId}/resources/{resourceId}/rbac
+DELETE /api/v1/projects/{projectId}/resources/{resourceId}/rbac/{assignmentId}
+```
+
+## Role Assignment Object
+```typescript
+interface RoleAssignment {
+  assignment_id: string;
+  user_id: string;
+  role: string; // e.g. project_viewer, project_editor, project_owner
+  scope_type: "organization" | "project" | "resource";
+  scope_id: string;
+  created_at: string;
+}
+```
+
+## Common Roles (Examples)
+| Role | Description |
+|------|-------------|
+| org_owner | Full organization control |
+| project_owner | Manage project + billing |
+| project_editor | Create/update resources |
+| project_viewer | Read-only project access |
+| resource_editor | Modify resource configuration |
+| resource_viewer | Read-only resource access |
+
+## Error Responses
+| Status | Description |
+|--------|-------------|
+| 400 Bad Request | Invalid role or scope |
+| 401 Unauthorized | Missing/invalid token |
+| 403 Forbidden | Insufficient permission |
+| 404 Not Found | Scope does not exist |
+
+## Next Steps
+- [Projects API](/api/projects)
+- [Resources API](/api/resources)
+- [Authentication API](/api/authentication)

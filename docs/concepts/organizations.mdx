@@ -1,0 +1,39 @@
+---
+title: Organizations
+description: Understand organizations as top-level containers for teams, projects, and billing in KtrlPlane
+---
+# Organizations
+
+Organizations are the highest-level grouping construct in KtrlPlane. They represent a company, business unit, or major team boundary.
+
+## Purpose
+- Group related projects
+- Provide a shared billing context
+- Define a top-level RBAC boundary (org_owner, org_admin, org_viewer)
+- Serve as a logical tenant anchor for multi-tenancy
+
+## Key Characteristics
+| Attribute | Description |
+|-----------|-------------|
+| Multi-tenancy | Each organization establishes isolation across data and access |
+| Billing | Can own billing settings or allow project-specific overrides |
+| Membership | Users may belong to multiple organizations |
+| Governance | Central place to enforce policies and audit access |
+
+## Lifecycle
+1. Creation: An initial owner establishes the organization
+2. Project Provisioning: Projects are added under the organization
+3. Growth: Roles and billing are refined as usage scales
+4. Decommissioning: Resources and projects archived prior to deletion
+
+## RBAC Overview
+Organization-level roles often influence which projects are visible and manageable.
+
+## Best Practices
+- Use descriptive names (e.g., "Acme Data Platform")
+- Centralize billing at the organization unless specific chargeback is required
+- Periodically audit role assignments
+
+## Next Steps
+- [Projects](/concepts/projects)
+- [Access Control](/concepts/access-control)

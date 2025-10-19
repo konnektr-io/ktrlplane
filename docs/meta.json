@@ -1,73 +1,12 @@
 {
     "pages": [
         "index",
-        {
-            "title": "Getting Started",
-            "pages": [
-                "getting-started/quick-start",
-                "getting-started/first-project",
-                "getting-started/organizations"
-            ]
-        },
-        {
-            "title": "Core Concepts",
-            "pages": [
-                "concepts/organizations",
-                "concepts/projects",
-                "concepts/resources",
-                "concepts/access-control"
-            ]
-        },
-        {
-            "title": "User Guides",
-            "pages": [
-                "guides/organizations",
-                "guides/projects",
-                "guides/resources",
-                "guides/billing",
-                "guides/access-control"
-            ]
-        },
-        {
-            "title": "API Reference",
-            "pages": [
-                "api/authentication",
-                "api/organizations",
-                "api/projects",
-                "api/resources",
-                "api/rbac",
-                "api/billing"
-            ]
-        },
-        {
-            "title": "Self-Hosting",
-            "pages": [
-                "self-hosting/installation",
-                "self-hosting/configuration",
-                "self-hosting/database",
-                "self-hosting/authentication",
-                "self-hosting/deployment",
-                "self-hosting/monitoring",
-                "self-hosting/troubleshooting"
-            ]
-        },
-        {
-            "title": "Development",
-            "pages": [
-                "development/setup",
-                "development/architecture",
-                "development/contributing",
-                "development/testing",
-                "development/api"
-            ]
-        },
-        {
-            "title": "Support",
-            "pages": [
-                "support/faq",
-                "support/troubleshooting",
-                "support/community"
-            ]
-        }
+        "getting-started",
+        "concepts",
+        "guides",
+        "api",
+        "self-hosting",
+        "development",
+        "support"
     ]
 }

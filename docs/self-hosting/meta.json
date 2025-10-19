@@ -1,11 +1,6 @@
 {
+    "title": "Self-Hosting",
     "pages": [
-        "installation",
-        "configuration",
-        "database",
-        "authentication",
-        "deployment",
-        "monitoring",
-        "troubleshooting"
+        "installation"
     ]
 }

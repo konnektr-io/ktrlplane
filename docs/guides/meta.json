@@ -1,9 +1,6 @@
 {
+    "title": "User Guides",
     "pages": [
-        "organizations",
-        "projects",
-        "resources",
-        "billing",
-        "access-control"
+        "resources"
     ]
 }

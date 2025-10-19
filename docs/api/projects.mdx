@@ -1,0 +1,99 @@
+---
+title: Projects API
+description: Manage projects which group resources, RBAC scope, and billing context
+---
+# Projects API
+
+Projects are workspaces under an organization that contain resources and define an RBAC boundary.
+
+Base URL:
+```text
+https://ktrlplane.konnektr.io/api/v1
+```
+
+## Project Object
+```typescript
+interface Project {
+  project_id: string;
+  organization_id: string;
+  name: string;
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
+  billing_inherited?: boolean;
+}
+```
+
+## List Projects
+```http
+GET /api/v1/projects
+```
+Returns projects the user can access.
+
+## Create Project
+```http
+POST /api/v1/projects
+```
+### Request Body
+```json
+{
+  "id": "proj-abc123",
+  "organization_id": "org-abc123",
+  "name": "Customer Analytics"
+}
+```
+
+## Get Project
+```http
+GET /api/v1/projects/{projectId}
+```
+
+## Update Project
+```http
+PUT /api/v1/projects/{projectId}
+```
+### Request Body
+```json
+{
+  "name": "Customer Intelligence"
+}
+```
+
+## Delete Project
+```http
+DELETE /api/v1/projects/{projectId}
+```
+Requires elevated permission (e.g., project_owner).
+
+## RBAC: Role Assignments
+```http
+GET    /api/v1/projects/{projectId}/rbac
+POST   /api/v1/projects/{projectId}/rbac
+DELETE /api/v1/projects/{projectId}/rbac/{assignmentId}
+```
+
+## Billing
+```http
+GET  /api/v1/projects/{projectId}/billing
+PUT  /api/v1/projects/{projectId}/billing
+POST /api/v1/projects/{projectId}/billing/customer
+POST /api/v1/projects/{projectId}/billing/subscription
+POST /api/v1/projects/{projectId}/billing/portal
+POST /api/v1/projects/{projectId}/billing/cancel
+```
+Supports project-level billing configuration or inheritance from organization.
+
+## Nested Resources
+See [Resources API](/api/resources) for managing deployable units within a project.
+
+## Error Responses
+| Status | Description |
+|--------|-------------|
+| 400 Bad Request | Invalid input |
+| 401 Unauthorized | Missing/invalid token |
+| 403 Forbidden | Insufficient permission |
+| 404 Not Found | Project does not exist |
+
+## Next Steps
+- [Resources API](/api/resources)
+- [RBAC API](/api/rbac)
+- [Billing API](/api/billing)
