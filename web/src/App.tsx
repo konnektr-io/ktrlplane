@@ -22,6 +22,8 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import OrganizationOverviewPage from '@/features/organizations/pages/OrganizationOverviewPage';
 import OrganizationSettingsPage from '@/features/organizations/pages/OrganizationSettingsPage';
 import ResourceSettingsPage from '@/features/resources/pages/ResourceSettingsPage';
+import { ResourceLogsPage } from "@/features/resources/pages/ResourceLogsPage";
+import { ResourceMonitoringPage } from "@/features/resources/pages/ResourceMonitoringPage";
 import BillingPage from "@/features/billing/pages/BillingPage";
 
 function App() {
@@ -108,11 +110,8 @@ function App() {
                 path="access/grant"
                 element={<CreateRoleAssignmentPage />}
               />
-              <Route path="logs" element={<div>Resource Logs Page</div>} />
-              <Route
-                path="monitoring"
-                element={<div>Resource Monitoring Page</div>}
-              />
+              <Route path="logs" element={<ResourceLogsPage />} />
+              <Route path="monitoring" element={<ResourceMonitoringPage />} />
               <Route path="settings" element={<ResourceSettingsPage />} />
             </Route>
 

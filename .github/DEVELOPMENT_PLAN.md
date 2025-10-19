@@ -375,6 +375,36 @@ _Track anything preventing progress_
 
 
 
+
+## 🔥 Logging & Metrics Backend (Loki/Mimir Proxy)
+
+### Overview
+KtrlPlane will provide secure, multi-tenant proxy endpoints for logs and metrics, integrating with Loki (logs) and Mimir (metrics) backends. All requests are authenticated, authorized, and scoped to the correct tenant using X-Scope-OrgID headers.
+
+### Endpoints
+- **Logs:** `GET /api/v1/resources/{resourceId}/logs?query={logQL}&start={ts}&end={ts}&limit=1000`
+- **Metrics:** `GET /api/v1/resources/{resourceId}/metrics/query_range?query={promQL}&start={ts}&end={ts}&step=15s`
+
+### Architecture
+1. **Authentication:** All endpoints require Auth0 JWT (existing middleware).
+2. **Authorization:** Use `PermissionService.CanUserAccessResource(userID, resourceID)` to enforce RBAC for each request.
+3. **Tenant Scoping:** Use `ResourceService.GetResourceTenantID(resourceID)` to fetch the tenant ID and inject `X-Scope-OrgID` header for Loki/Mimir multi-tenancy.
+4. **Query Rewriting:**
+  - For logs: Rewrite LogQL query to inject resource-specific label filter (e.g., `pod_selector_label`).
+  - For metrics: Optionally rewrite PromQL query for resource scoping.
+5. **Reverse Proxy:** Use Go's `httputil.NewSingleHostReverseProxy` to forward requests to Loki/Mimir, with custom Director for header injection and query rewriting.
+6. **Error Handling:**
+  - 403/404 for denied or not found (do not leak resource existence)
+  - 500 for internal errors
+7. **Security:** Never forward requests without RBAC check and tenant header. Log denied/failed attempts for audit.
+8. **Testability:** All proxy logic is dependency-injected for easy mocking in tests.
+
+### Implementation Notes
+- Proxy logic will be in `internal/api/proxy.go`.
+- Endpoints will be added to `internal/api/routes.go`.
+- All code follows clean architecture and security best practices.
+
+---
 ## 🔄 Continuous Improvements
 
   - Resource creation page should auto-select last active project (from localStorage/Zustand)

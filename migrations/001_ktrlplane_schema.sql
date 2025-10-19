@@ -52,7 +52,7 @@ CREATE TABLE ktrlplane.resources (
     resource_id VARCHAR(255) PRIMARY KEY,
     project_id VARCHAR(255) NOT NULL REFERENCES ktrlplane.projects(project_id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    type VARCHAR(100) NOT NULL DEFAULT 'Konnektr.DigitalTwins',
+    type VARCHAR(100) NOT NULL DEFAULT 'Konnektr.Graph',
     status VARCHAR(50) DEFAULT 'Creating',
     helm_values JSONB DEFAULT '{}',
     error_message TEXT,

@@ -99,26 +99,30 @@ func SetupRouter(handler *Handler) *gin.Engine {
 				}
 
 				// --- Resource Routes (nested under project) ---
-				resources := projectDetail.Group("/resources")
-				{
-					resources.POST("", handler.CreateResource) // Create Resource (Editor role)
-					resources.GET("", handler.ListResources)   // List resources in the project (Viewer role)
+				   resources := projectDetail.Group("/resources")
+				   {
+					   resources.POST("", handler.CreateResource) // Create Resource (Editor role)
+					   resources.GET("", handler.ListResources)   // List resources in the project (Viewer role)
 
-					resourceDetail := resources.Group("/:resourceId")
-					{
-						resourceDetail.GET("", handler.GetResource)       // Get specific resource details (Viewer role)
-						resourceDetail.PUT("", handler.UpdateResource)    // Update Resource (Editor role)
-						resourceDetail.DELETE("", handler.DeleteResource) // Delete Resource (Editor role) // Or owner?
+					   resourceDetail := resources.Group("/:resourceId")
+					   {
+						   resourceDetail.GET("", handler.GetResource)       // Get specific resource details (Viewer role)
+						   resourceDetail.PUT("", handler.UpdateResource)    // Update Resource (Editor role)
+						   resourceDetail.DELETE("", handler.DeleteResource) // Delete Resource (Editor role) // Or owner?
 
-						// Resource RBAC routes
-						resourceRBAC := resourceDetail.Group("/rbac")
-						{
-							resourceRBAC.GET("", handler.ListResourceRoleAssignments)                   // List role assignments
-							resourceRBAC.POST("", handler.CreateResourceRoleAssignment)                 // Assign role
-							resourceRBAC.DELETE("/:assignmentId", handler.DeleteResourceRoleAssignment) // Remove role assignment
-						}
-					}
-				}
+						   // Resource RBAC routes
+						   resourceRBAC := resourceDetail.Group("/rbac")
+						   {
+							   resourceRBAC.GET("", handler.ListResourceRoleAssignments)                   // List role assignments
+							   resourceRBAC.POST("", handler.CreateResourceRoleAssignment)                 // Assign role
+							   resourceRBAC.DELETE("/:assignmentId", handler.DeleteResourceRoleAssignment) // Remove role assignment
+						   }
+
+						   // --- Logging & Metrics Proxy Endpoints ---
+						   resourceDetail.GET("/logs", handler.LogsProxyHandler)                    // Loki logs proxy
+						   resourceDetail.GET("/metrics/query_range", handler.MetricsProxyHandler) // Mimir metrics proxy
+					   }
+				   }
 			}
 		}
 	}

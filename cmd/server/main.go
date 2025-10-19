@@ -9,6 +9,7 @@ import (
 	"ktrlplane/internal/service"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -51,8 +52,34 @@ func main() {
 	rbacService := service.NewRBACService()
 	billingService := service.NewBillingService(db.GetDB(), &cfg)
 
+	// --- Proxy Service Initialization ---
+	var proxyService *api.ProxyService
+	if cfg.Observability.Loki.Enabled || cfg.Observability.Mimir.Enabled {
+		var lokiURL, mimirURL *url.URL
+		
+		if cfg.Observability.Loki.Enabled && cfg.Observability.Loki.URL != "" {
+			lokiURL, err = url.Parse(cfg.Observability.Loki.URL)
+			if err != nil {
+				log.Fatalf("Failed to parse Loki URL: %v", err)
+			}
+			log.Printf("Loki backend enabled at: %s", cfg.Observability.Loki.URL)
+		}
+		
+		if cfg.Observability.Mimir.Enabled && cfg.Observability.Mimir.URL != "" {
+			mimirURL, err = url.Parse(cfg.Observability.Mimir.URL)
+			if err != nil {
+				log.Fatalf("Failed to parse Mimir URL: %v", err)
+			}
+			log.Printf("Mimir backend enabled at: %s", cfg.Observability.Mimir.URL)
+		}
+		
+		proxyService = api.NewProxyService(rbacService, lokiURL, mimirURL)
+	} else {
+		log.Println("Observability backends disabled. Logs and metrics endpoints will return service unavailable.")
+	}
+
 	// --- API Handler Initialization ---
-	apiHandler := api.NewHandler(projectService, resourceService, organizationService, rbacService, billingService)
+	apiHandler := api.NewHandler(projectService, resourceService, organizationService, rbacService, billingService, proxyService)
 
 	// --- Router Setup ---
 	router := api.SetupRouter(apiHandler)

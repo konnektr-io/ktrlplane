@@ -7,7 +7,18 @@ database:
   password: "your_password"
   dbname: "ktrlplane_db"
   sslmode: "disable"
-auth0:
-  domain: "your-domain.auth0.com"
+auth:
+  issuer: "https://your-domain.auth0.com/"
   audience: "https://api.ktrlplane.example.com"
-  client_id: "your_auth0_client_id"
+stripe:
+  secret_key: "sk_test_your_stripe_secret_key"
+  publishable_key: "pk_test_your_stripe_publishable_key"
+  webhook_secret: "whsec_your_webhook_secret"
+  products: []
+observability:
+  loki:
+    enabled: false
+    url: "http://localhost:3100"  # Loki server URL
+  mimir:
+    enabled: false
+    url: "http://localhost:9009"  # Mimir server URL

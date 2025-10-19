@@ -135,3 +135,5 @@ func (s *ResourceService) DeleteResource(ctx context.Context, projectID string, 
 
 	return db.ExecQuery(ctx, db.DeleteResourceQuery, projectID, resourceID)
 }
+
+
