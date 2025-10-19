@@ -81,7 +81,8 @@ export async function fetchLogs(
       for (const stream of response.data.data.result) {
         for (const [timestamp, message] of stream.values) {
           logs.push({
-            timestamp: new Date(parseInt(timestamp.slice(0, -6))).toISOString(), // Convert nanoseconds to milliseconds
+            // Loki returns timestamps in nanoseconds; convert to milliseconds for JavaScript Date
+            timestamp: new Date(Math.floor(parseInt(timestamp) / 1_000_000)).toISOString(),
             level: stream.stream.level || "info",
             message: message,
             source: stream.stream.job || stream.stream.instance,
