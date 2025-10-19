@@ -1,3 +1,7 @@
+---
+title: "Observability API"
+description: "Secure, multi-tenant proxy endpoints for logs and metrics in KtrlPlane."
+---
 # Observability API
 
 KtrlPlane provides secure, multi-tenant proxy endpoints for accessing logs and metrics data from your resources.
@@ -31,7 +35,7 @@ Proxies log queries to Loki with automatic tenant scoping and resource filtering
 **Example:**
 ```bash
 curl -H "Authorization: Bearer $JWT_TOKEN" \
-  "https://api.ktrlplane.com/api/v1/projects/my-project/resources/my-resource/logs?query={level=\"error\"}&start=2025-01-27T10:00:00Z&end=2025-01-27T11:00:00Z&limit=100"
+  "https://ktrlplane.konnektr.io/api/v1/projects/my-project/resources/my-resource/logs?query={level=\"error\"}&start=2025-01-27T10:00:00Z&end=2025-01-27T11:00:00Z&limit=100"
 ```
 
 ### Metrics
@@ -51,7 +55,7 @@ Proxies metrics queries to Mimir with automatic tenant scoping and resource filt
 **Example:**
 ```bash
 curl -H "Authorization: Bearer $JWT_TOKEN" \
-  "https://api.ktrlplane.com/api/v1/projects/my-project/resources/my-resource/metrics/query_range?query=cpu_usage_percent&start=2025-01-27T10:00:00Z&end=2025-01-27T11:00:00Z&step=15s"
+  "https://ktrlplane.konnektr.io/api/v1/projects/my-project/resources/my-resource/metrics/query_range?query=cpu_usage_percent&start=2025-01-27T10:00:00Z&end=2025-01-27T11:00:00Z&step=15s"
 ```
 
 ## Security & Multi-Tenancy

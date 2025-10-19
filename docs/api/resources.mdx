@@ -10,7 +10,7 @@ The Resources API allows you to create, manage, and configure resources within y
 ## Base URL
 
 ```
-https://api.ktrlplane.com/api/v1
+https://ktrlplane.konnektr.io/api/v1
 ```
 
 ## Authentication
@@ -57,7 +57,7 @@ GET /projects/{projectId}/resources
 
 ```bash
 curl -X GET \
-  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources" \
+  "https://ktrlplane.konnektr.io/api/v1/projects/proj-abc123/resources" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
@@ -113,7 +113,7 @@ interface CreateResourceRequest {
 
 ```bash
 curl -X POST \
-  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources" \
+  "https://ktrlplane.konnektr.io/api/v1/projects/proj-abc123/resources" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -170,7 +170,7 @@ GET /projects/{projectId}/resources/{resourceId}
 
 ```bash
 curl -X GET \
-  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
+  "https://ktrlplane.konnektr.io/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
@@ -219,7 +219,7 @@ interface UpdateResourceRequest {
 
 ```bash
 curl -X PUT \
-  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
+  "https://ktrlplane.konnektr.io/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -279,7 +279,7 @@ This action is irreversible. All data associated with the resource will be perma
 
 ```bash
 curl -X DELETE \
-  "https://api.ktrlplane.com/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
+  "https://ktrlplane.konnektr.io/api/v1/projects/proj-abc123/resources/res-graph-xyz789" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
