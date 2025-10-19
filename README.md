@@ -49,11 +49,19 @@ These are required for billing features to function. See the [Billing Implementa
 
 ## Documentation
 
-- 📚 [Documentation](docs/) - Complete documentation
-- 🚀 [Getting Started](docs/getting-started.md) - Quick setup guide
-- 🛠️ [Development](docs/development.md) - Development workflow
-- 🚢 [Deployment](docs/deployment.md) - Production deployment
-- 📖 [API Reference](docs/api-reference.md) - REST API documentation
+The full hosted documentation (including Concepts, API Reference, Self-Hosting, and Guides) is available at:
+
+👉 https://docs.konnektr.io/docs/ktrlplane/
+
+Key sections:
+- 🚀 Getting Started: https://docs.konnektr.io/docs/ktrlplane/getting-started/quick-start
+- 🧱 Core Concepts: https://docs.konnektr.io/docs/ktrlplane/concepts/organizations
+- 📖 API Reference: https://docs.konnektr.io/docs/ktrlplane/api/authentication
+- 🛠️ Development: https://docs.konnektr.io/docs/ktrlplane/development/setup
+- 🏗️ Self-Hosting: https://docs.konnektr.io/docs/ktrlplane/self-hosting/installation
+- � Billing: https://docs.konnektr.io/docs/ktrlplane/api/billing
+
+Local markdown files in `docs/` are for authoring; prefer the hosted site for the most up-to-date version.
 
 ## Deployment
 
