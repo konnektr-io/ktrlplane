@@ -375,11 +375,14 @@ function MetricChart({
   );
 
   const chartData = useMemo(() => {
-    return metricData.map((point) => ({
-      timestamp: point.timestamp * 1000,
-      time: format(new Date(point.timestamp * 1000), "HH:mm:ss"),
-      [metric.label]: point.value,
-    }));
+    return metricData.map((point) => {
+      const tsMs = point.timestamp * 1000;
+      return {
+        timestamp: tsMs,
+        time: format(new Date(tsMs), "HH:mm:ss"),
+        [metric.label]: point.value,
+      };
+    });
   }, [metricData, metric.label]);
 
   return (
