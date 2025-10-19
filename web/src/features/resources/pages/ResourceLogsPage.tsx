@@ -74,7 +74,7 @@ export function ResourceLogsPage() {
     };
 
     // Build LogQL query
-    let query = '{resource_id="' + resourceId + '"}';
+    let query = `{resource_id="${resourceId}"}`;
 
     if (logLevel !== "all") {
       query += ` |= "${logLevel}"`;
