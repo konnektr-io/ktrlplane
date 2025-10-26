@@ -68,7 +68,7 @@ jobs:
           path: docs-repo
           token: ${{ secrets.REPO_PAT }}
           commit-message: "Update Konnektr KtrlPlane documentation"
-          title: "Update Konnektr Graph documentation"
+          title: "Update Konnektr KtrlPlane documentation"
           body: |
             This PR updates the Konnektr KtrlPlane documentation with the latest changes from the ktrlplane repository.
 
