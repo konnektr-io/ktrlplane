@@ -141,7 +141,7 @@ INSERT INTO ktrlplane.permissions (permission_id, resource_type, action, descrip
 ('00000000-0004-0000-0000-0000000000024', 'Konnektr.Graph', 'jobs/deletions/write', 'Create any Bulk Delete Job', NOW()),
 ('00000000-0004-0000-0000-0000000000025', 'Konnektr.Graph', 'jobs/deletions/delete', 'Delete any Bulk Delete Job', NOW()),
 ('00000000-0004-0000-0000-0000000000026', 'Konnektr.Graph', 'jobs/deletions/cancel/action', 'Cancel any Bulk Delete Job', NOW()),
-('00000000-0004-0000-0000-0000000000027', 'Konnektr.Graph', 'jobs/deletions/*', 'Perform any operation on any Bulk Delete Job', NOW()),
+('00000000-0004-0000-0000-0000000000027', 'Konnektr.Graph', 'jobs/deletions/*', 'Perform any operation on any Bulk Delete Job', NOW());
 
 -- Insert UNIVERSAL CONTROL PLANE roles (3 simple roles with inheritance)
 INSERT INTO ktrlplane.roles (role_id, name, display_name, description, is_system, created_at, updated_at) VALUES
