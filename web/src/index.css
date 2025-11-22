@@ -133,12 +133,13 @@
     @apply border-border outline-ring/50;
   }
   html {
-    font-family: "Plus Jakarta Sans", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 400;
-    font-style: normal;
-    font-variation-settings: "wdth" 100;
-    font-size: 14px;
+     font-family: "Plus Jakarta Sans", sans-serif;
+     font-optical-sizing: auto;
+     font-weight: 400;
+     font-style: normal;
+     font-variation-settings: "wdth" 100;
+     font-size: 14px;
+     line-height: 1.5;
   }
   body {
     @apply bg-background text-foreground;

@@ -107,7 +107,9 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="text-muted-foreground">Manage your ktrlplane projects</p>
+          <p className="text-muted-foreground">
+            Manage your ktrlplane projects
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -138,12 +140,15 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
                   id="id"
                   type="text"
                   value={formData.id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, id: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, id: e.target.value }))
+                  }
                   placeholder="project-id-4f2a"
                   required
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Used for Kubernetes resources and DNS. Auto-generated from name but can be edited.
+                  Used for Kubernetes resources and DNS. Leave empty to
+                  auto-generate.
                 </p>
                 {formData.id && validateDNSId(formData.id) && (
                   <p className="text-sm text-red-500 mt-1">
@@ -156,17 +161,26 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Enter project description (optional)"
                   rows={3}
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isCreating}>
-                  {isCreating ? 'Creating...' : 'Create Project'}
+                  {isCreating ? "Creating..." : "Create Project"}
                 </Button>
               </div>
             </form>
@@ -177,21 +191,32 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {projects.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-muted-foreground">No projects found. Create your first project!</p>
+            <p className="text-muted-foreground">
+              No projects found. Create your first project!
+            </p>
           </div>
         ) : (
           projects.map((project) => (
-            <div key={project.project_id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div
+              key={project.project_id}
+              className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+            >
               <h3 className="font-semibold">{project.name}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{project.description || 'No description'}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {project.description || "No description"}
+              </p>
               <div className="mt-3 flex items-center justify-between">
-                <span className={`text-xs px-2 py-1 rounded ${
-                  project.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
+                <span
+                  className={`text-xs px-2 py-1 rounded ${
+                    project.status === "Active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {project.status}
                 </span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => navigate(`/projects/${project.project_id}`)}
                 >
