@@ -41,7 +41,7 @@ type AuthConfig struct {
 type StripeConfig struct {
 	SecretKey      string          `mapstructure:"secret_key"`
 	PublishableKey string          `mapstructure:"publishable_key"`
-	WebhookSecret  string          `mapstructure:"webhook_secret"`
+	// WebhookSecret  string          `mapstructure:"webhook_secret"`
 	Products       []StripeProduct `mapstructure:"products"`
 }
 
@@ -94,7 +94,7 @@ func LoadConfig(path string) (config Config, err error) {
 	       "auth.audience",
 	       "stripe.secret_key",
 	       "stripe.publishable_key",
-	       "stripe.webhook_secret",
+	    //    "stripe.webhook_secret",
 	       "observability.loki.url",
 	       "observability.loki.enabled",
 	       "observability.mimir.url",
