@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useProjectStore } from '../store/projectStore';
+import { useNavigate, useParams } from "react-router-dom";
+import { useProjectStore } from "../store/projectStore";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
 import CreateProjectDialog from "../components/CreateProjectDialog";
 
 // Accept optional organizationId prop (for direct usage or from route params)
@@ -13,12 +11,7 @@ type ProjectListPageProps = {
 export default function ProjectListPage(props: ProjectListPageProps = {}) {
   const { orgId } = useParams<{ orgId?: string }>();
   const organizationId = props.organizationId || orgId;
-  const {
-    projects: allProjects,
-    isLoadingList,
-    fetchProjects,
-    createProject,
-  } = useProjectStore();
+  const { projects: allProjects, isLoadingList } = useProjectStore();
   const navigate = useNavigate();
 
   // Filter projects by organization if organizationId is present
