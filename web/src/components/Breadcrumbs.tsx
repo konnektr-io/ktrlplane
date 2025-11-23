@@ -155,24 +155,22 @@ export default function Breadcrumbs() {
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {breadcrumbs.map((item, index) => (
-          <>
-            {index > 0 && <BreadcrumbSeparator />}
-            <BreadcrumbItem key={index}>
-              {item.href && !item.isActive ? (
-                <BreadcrumbLink asChild>
-                  <Link to={item.href}>
-                    {index === 0 ? <Home className="h-4 w-4" /> : item.label}
-                  </Link>
-                </BreadcrumbLink>
-              ) : (
-                <BreadcrumbPage>
+        {breadcrumbs.map((item, index) => [
+          index > 0 && <BreadcrumbSeparator key={`separator-${index}`} />,
+          <BreadcrumbItem key={`item-${index}`}>
+            {item.href && !item.isActive ? (
+              <BreadcrumbLink asChild>
+                <Link to={item.href}>
                   {index === 0 ? <Home className="h-4 w-4" /> : item.label}
-                </BreadcrumbPage>
-              )}
-            </BreadcrumbItem>
-          </>
-        ))}
+                </Link>
+              </BreadcrumbLink>
+            ) : (
+              <BreadcrumbPage>
+                {index === 0 ? <Home className="h-4 w-4" /> : item.label}
+              </BreadcrumbPage>
+            )}
+          </BreadcrumbItem>,
+        ])}
       </BreadcrumbList>
     </Breadcrumb>
   );

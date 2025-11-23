@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Auth0Provider } from '@auth0/auth0-react';
-import AuthSetup from '@/features/auth/AuthSetup';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Auth0Provider } from "@auth0/auth0-react";
+import AuthSetup from "@/features/auth/AuthSetup";
 import MinimalAppLayout from "@/components/MinimalAppLayout";
 import ProjectLayout from "@/features/projects/layouts/ProjectLayout";
 import ResourceLayout from "@/features/resources/layouts/ResourceLayout";
@@ -25,6 +25,7 @@ import ResourceSettingsPage from "@/features/resources/pages/ResourceSettingsPag
 import { ResourceLogsPage } from "@/features/resources/pages/ResourceLogsPage";
 import { ResourceMonitoringPage } from "@/features/resources/pages/ResourceMonitoringPage";
 import BillingPage from "@/features/billing/pages/BillingPage";
+import ProjectAutoRedirect from "@/features/projects/components/ProjectAutoRedirect";
 
 function App() {
   const onRedirectCallback = (appState?: { returnTo?: string }) => {
@@ -52,7 +53,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/callback" element={<AuthCallbackPage />} />
 
-            {/* Project Selection */}
+            {/* Project Selection with auto-redirect */}
             <Route
               element={
                 <ProtectedRoute>
@@ -60,8 +61,22 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<Navigate to="/projects" replace />} />
-              <Route path="/projects" element={<ProjectListPage />} />
+              <Route
+                path="/"
+                element={
+                  <ProjectAutoRedirect>
+                    <ProjectListPage />
+                  </ProjectAutoRedirect>
+                }
+              />
+              <Route
+                path="/projects"
+                element={
+                  <ProjectAutoRedirect>
+                    <ProjectListPage />
+                  </ProjectAutoRedirect>
+                }
+              />
             </Route>
 
             {/* Project-based Routes (plural) */}
