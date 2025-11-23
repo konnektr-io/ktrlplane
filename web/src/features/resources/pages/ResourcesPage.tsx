@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useResourceStore } from "../store/resourceStore";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,10 @@ export default function ResourcesPage() {
   const navigate = useNavigate();
   const { resources, isLoading, fetchResources, error, deleteResource } =
     useResourceStore();
-  const resourceIds = resources.map((r) => r.resource_id);
+  const resourceIds = useMemo(
+    () => resources.map((r) => r.resource_id),
+    [resources]
+  );
   const { permissionsMap, loadingMap } =
     useMultipleResourcePermissions(resourceIds);
 

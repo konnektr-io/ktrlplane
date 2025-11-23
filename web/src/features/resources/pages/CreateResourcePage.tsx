@@ -1,3 +1,10 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Database, Workflow, ArrowLeft, Check } from "lucide-react";
@@ -193,39 +200,47 @@ export default function CreateResourcePage() {
     }
   };
 
+  // Determine if we're on the global create route
+  const isGlobalCreateRoute = window.location.pathname === "/resources/create";
+
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       {/* Header */}
       <div className="mb-6">
-        {/* Project Selection Dropdown */}
-        <div className="mb-4">
-          <Label htmlFor="project-select">Select Project *</Label>
-          {projects.length === 0 ? (
-            <div className="text-muted-foreground text-sm">
-              No projects found.{" "}
-              <a href="/projects/create" className="underline">
-                Create a project
-              </a>{" "}
-              to continue.
-            </div>
-          ) : (
-            <select
-              id="project-select"
-              value={selectedProjectId || ""}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="w-full border rounded px-3 py-2 mt-1"
-            >
-              <option value="" disabled>
-                Select a project...
-              </option>
-              {projects.map((project) => (
-                <option key={project.project_id} value={project.project_id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+        {/* Project Selection Dropdown - only show on global create route */}
+        {isGlobalCreateRoute && (
+          <div className="mb-4">
+            <Label htmlFor="project-select">Select Project *</Label>
+            {projects.length === 0 ? (
+              <div className="text-muted-foreground text-sm">
+                No projects found.{" "}
+                <a href="/projects/create" className="underline">
+                  Create a project
+                </a>{" "}
+                to continue.
+              </div>
+            ) : (
+              <Select
+                value={selectedProjectId || ""}
+                onValueChange={setSelectedProjectId}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="Select a project..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem
+                      key={project.project_id}
+                      value={project.project_id}
+                    >
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-2 mb-2">
           <Button variant="ghost" size="sm" onClick={handleBackClick}>
             <ArrowLeft className="h-4 w-4 mr-2" />
