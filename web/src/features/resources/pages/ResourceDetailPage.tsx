@@ -16,14 +16,20 @@ export default function ResourceDetailPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{currentResource?.name || 'Resource Overview'}</h1>
+          <h1 className="text-3xl font-bold">
+            {currentResource?.name || "Resource Overview"}
+          </h1>
           <p className="text-muted-foreground">
             Resource details and configuration
           </p>
         </div>
         {currentResource?.access_url && (
           <Button variant="outline" asChild>
-            <a href={currentResource.access_url} target="_blank" rel="noopener noreferrer">
+            <a
+              href={currentResource.access_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <ExternalLink className="h-4 w-4 mr-2" />
               Open Resource
             </a>
@@ -43,18 +49,22 @@ export default function ResourceDetailPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium">Status</p>
-              <Badge variant={
-                currentResource?.status === 'Running' ? 'default' : 
-                currentResource?.status === 'Creating' ? 'secondary' : 
-                'destructive'
-              }>
-                {currentResource?.status || 'Unknown'}
+              <Badge
+                variant={
+                  currentResource?.status === "Healthy"
+                    ? "default"
+                    : currentResource?.status === "Creating"
+                    ? "secondary"
+                    : "destructive"
+                }
+              >
+                {currentResource?.status || "Unknown"}
               </Badge>
             </div>
             <div>
               <p className="text-sm font-medium">Type</p>
               <p className="text-sm text-muted-foreground">
-                {currentResource?.type || 'Unknown'}
+                {currentResource?.type || "Unknown"}
               </p>
             </div>
             <div>
@@ -78,12 +88,14 @@ export default function ResourceDetailPage() {
             <div>
               <p className="text-sm font-medium">Current Status</p>
               <p className="text-sm text-muted-foreground">
-                {currentResource?.status || 'Unknown'}
+                {currentResource?.status || "Unknown"}
               </p>
             </div>
             {currentResource?.error_message && (
               <div>
-                <p className="text-sm font-medium text-red-600">Error Message</p>
+                <p className="text-sm font-medium text-red-600">
+                  Error Message
+                </p>
                 <p className="text-sm text-red-500">
                   {currentResource.error_message}
                 </p>
@@ -92,9 +104,9 @@ export default function ResourceDetailPage() {
             {currentResource?.access_url && (
               <div>
                 <p className="text-sm font-medium">Access URL</p>
-                <a 
-                  href={currentResource.access_url} 
-                  target="_blank" 
+                <a
+                  href={currentResource.access_url}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-blue-600 hover:underline"
                 >
@@ -135,7 +147,7 @@ export default function ResourceDetailPage() {
       </div>
 
       {/* Configuration Card */}
-  {currentResource?.settings_json && (
+      {currentResource?.settings_json && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
