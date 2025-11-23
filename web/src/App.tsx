@@ -1,27 +1,27 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Auth0Provider } from '@auth0/auth0-react';
 import AuthSetup from '@/features/auth/AuthSetup';
-import ProjectSelectorLayout from '@/features/projects/layouts/ProjectSelectorLayout';
-import ProjectLayout from '@/features/projects/layouts/ProjectLayout';
-import ResourceLayout from '@/features/resources/layouts/ResourceLayout';
-import OrganizationLayout from '@/features/organizations/layouts/OrganizationLayout';
-import ProtectedRoute from '@/features/auth/ProtectedRoute';
-import ProjectListPage from '@/features/projects/pages/ProjectListPage';
-import ResourcesPage from '@/features/resources/pages/ResourcesPage';
-import CreateResourcePage from '@/features/resources/pages/CreateResourcePage';
-import ResourceDetailPage from '@/features/resources/pages/ResourceDetailPage';
-import ResourceAccessPage from '@/features/resources/pages/ResourceAccessPage';
-import ProjectSettingsPage from '@/features/projects/pages/ProjectSettingsPage';
-import ProjectDetailPage from '@/features/projects/pages/ProjectDetailPage';
-import ProjectAccessPage from '@/features/projects/pages/ProjectAccessPage';
-import OrganizationAccessPage from '@/features/organizations/pages/OrganizationAccessPage';
-import CreateRoleAssignmentPage from '@/features/access/pages/CreateRoleAssignmentPage';
-import LoginPage from '@/features/auth/LoginPage';
-import AuthCallbackPage from '@/features/auth/callback';
-import NotFoundPage from '@/pages/NotFoundPage';
-import OrganizationOverviewPage from '@/features/organizations/pages/OrganizationOverviewPage';
-import OrganizationSettingsPage from '@/features/organizations/pages/OrganizationSettingsPage';
-import ResourceSettingsPage from '@/features/resources/pages/ResourceSettingsPage';
+import MinimalAppLayout from "@/components/MinimalAppLayout";
+import ProjectLayout from "@/features/projects/layouts/ProjectLayout";
+import ResourceLayout from "@/features/resources/layouts/ResourceLayout";
+import OrganizationLayout from "@/features/organizations/layouts/OrganizationLayout";
+import ProtectedRoute from "@/features/auth/ProtectedRoute";
+import ProjectListPage from "@/features/projects/pages/ProjectListPage";
+import ResourcesPage from "@/features/resources/pages/ResourcesPage";
+import CreateResourcePage from "@/features/resources/pages/CreateResourcePage";
+import ResourceDetailPage from "@/features/resources/pages/ResourceDetailPage";
+import ResourceAccessPage from "@/features/resources/pages/ResourceAccessPage";
+import ProjectSettingsPage from "@/features/projects/pages/ProjectSettingsPage";
+import ProjectDetailPage from "@/features/projects/pages/ProjectDetailPage";
+import ProjectAccessPage from "@/features/projects/pages/ProjectAccessPage";
+import OrganizationAccessPage from "@/features/organizations/pages/OrganizationAccessPage";
+import CreateRoleAssignmentPage from "@/features/access/pages/CreateRoleAssignmentPage";
+import LoginPage from "@/features/auth/LoginPage";
+import AuthCallbackPage from "@/features/auth/callback";
+import NotFoundPage from "@/pages/NotFoundPage";
+import OrganizationOverviewPage from "@/features/organizations/pages/OrganizationOverviewPage";
+import OrganizationSettingsPage from "@/features/organizations/pages/OrganizationSettingsPage";
+import ResourceSettingsPage from "@/features/resources/pages/ResourceSettingsPage";
 import { ResourceLogsPage } from "@/features/resources/pages/ResourceLogsPage";
 import { ResourceMonitoringPage } from "@/features/resources/pages/ResourceMonitoringPage";
 import BillingPage from "@/features/billing/pages/BillingPage";
@@ -56,7 +56,7 @@ function App() {
             <Route
               element={
                 <ProtectedRoute>
-                  <ProjectSelectorLayout />
+                  <MinimalAppLayout />
                 </ProtectedRoute>
               }
             >
@@ -87,13 +87,17 @@ function App() {
 
             {/* Global resource creation route for homepage integration */}
             <Route
-              path="/resources/create"
               element={
                 <ProtectedRoute>
-                  <CreateResourcePage />
+                  <MinimalAppLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route
+                path="/resources/create"
+                element={<CreateResourcePage />}
+              />
+            </Route>
 
             {/* Resource-based Routes (plural) */}
             <Route

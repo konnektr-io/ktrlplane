@@ -1,3 +1,4 @@
+import CreateProjectDialog from "@/features/projects/components/CreateProjectDialog";
 import {
   Select,
   SelectContent,
@@ -8,6 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Database, Workflow, ArrowLeft, Check } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -209,35 +211,37 @@ export default function CreateResourcePage() {
       <div className="mb-6">
         {/* Project Selection Dropdown - only show on global create route */}
         {isGlobalCreateRoute && (
-          <div className="mb-4">
+          <div className="mb-4 flex flex-col gap-2">
             <Label htmlFor="project-select">Select Project *</Label>
             {projects.length === 0 ? (
-              <div className="text-muted-foreground text-sm">
-                No projects found.{" "}
-                <a href="/projects/create" className="underline">
-                  Create a project
-                </a>{" "}
-                to continue.
+              <div className="text-muted-foreground text-sm flex flex-col gap-2 items-start">
+                <span>No projects found.</span>
+                <CreateProjectDialog trigger={<Button variant="outline" size="sm"><PlusCircle className="mr-2 h-4 w-4" />Create a project</Button>} />
               </div>
             ) : (
-              <Select
-                value={selectedProjectId || ""}
-                onValueChange={setSelectedProjectId}
-              >
-                <SelectTrigger className="w-full mt-1">
-                  <SelectValue placeholder="Select a project..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem
-                      key={project.project_id}
-                      value={project.project_id}
-                    >
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <Select
+                  value={selectedProjectId || ""}
+                  onValueChange={setSelectedProjectId}
+                >
+                  <SelectTrigger className="w-full mt-1">
+                    <SelectValue placeholder="Select a project..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem
+                        key={project.project_id}
+                        value={project.project_id}
+                      >
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="mt-2">
+                  <CreateProjectDialog trigger={<Button variant="outline" size="sm"><PlusCircle className="mr-2 h-4 w-4" />New Project</Button>} />
+                </div>
+              </>
             )}
           </div>
         )}
