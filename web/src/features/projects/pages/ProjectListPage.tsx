@@ -147,8 +147,7 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
                   required
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Used for Kubernetes resources and DNS. Leave empty to
-                  auto-generate.
+                  Leave empty to auto-generate.
                 </p>
                 {formData.id && validateDNSId(formData.id) && (
                   <p className="text-sm text-red-500 mt-1">

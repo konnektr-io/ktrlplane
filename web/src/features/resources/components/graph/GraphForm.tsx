@@ -445,7 +445,7 @@ export function GraphForm({
         </Card>
 
         <Button type="submit" disabled={disabled} className="w-full">
-          Save Configuration
+          Save Configuration and Deploy
         </Button>
       </form>
     </Form>

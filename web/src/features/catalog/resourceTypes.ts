@@ -44,7 +44,7 @@ export const resourceTypes: ResourceType[] = [
       {
         sku: "standard",
         name: "Standard",
-        price: "$29/mo",
+        price: "$99/mo",
         features: ["Up to 10,000 twins", "Email support"],
         limits: { Twins: "10,000", Storage: "10GB" },
       },

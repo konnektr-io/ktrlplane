@@ -470,8 +470,7 @@ export default function CreateResourcePage() {
                     className="w-full"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Used for Kubernetes resources and DNS. Auto-generated from
-                    name but can be edited.
+                    Leave empty to auto-generate.
                   </p>
                   {basicData.id && validateDNSId(basicData.id) && (
                     <p className="text-sm text-red-500">
