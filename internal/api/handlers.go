@@ -360,32 +360,11 @@ func (h *Handler) DeleteResource(c *gin.Context) {
 
 // ListRoles returns all available roles in the system.
 func (h *Handler) ListRoles(c *gin.Context) {
-	// For now, return hardcoded system roles
-	// In a real implementation, you'd fetch from database
-	roles := []models.Role{
-		{
-			RoleID:      "role-1",
-			Name:        "Owner",
-			DisplayName: "Owner",
-			Description: "Full access to all resources and settings",
-			IsSystem:    true,
-		},
-		{
-			RoleID:      "role-2",
-			Name:        "Editor",
-			DisplayName: "Editor",
-			Description: "Can create, edit, and delete resources",
-			IsSystem:    true,
-		},
-		{
-			RoleID:      "role-3",
-			Name:        "Viewer",
-			DisplayName: "Viewer",
-			Description: "Read-only access to resources",
-			IsSystem:    true,
-		},
+	roles, err := h.RBACService.ListRoles(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list roles"})
+		return
 	}
-
 	c.JSON(http.StatusOK, roles)
 }
 
@@ -425,8 +404,8 @@ func (h *Handler) CreateProjectRoleAssignment(c *gin.Context) {
 	projectID := c.Param("projectId")
 
 	var req struct {
-		UserID   string `json:"user_id" binding:"required"`
-		RoleName string `json:"role_name" binding:"required"`
+		UserID string `json:"user_id" binding:"required"`
+		RoleID string `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -450,7 +429,7 @@ func (h *Handler) CreateProjectRoleAssignment(c *gin.Context) {
 		return
 	}
 
-	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleName, "project", projectID, user.ID)
+	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleID, "project", projectID, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
 		return
@@ -460,7 +439,7 @@ func (h *Handler) CreateProjectRoleAssignment(c *gin.Context) {
 		"message":     "Role assignment created",
 		"project_id":  projectID,
 		"user_id":     req.UserID,
-		"role":        req.RoleName,
+		"role_id":     req.RoleID,
 		"assigned_by": user.ID,
 	})
 }
@@ -522,8 +501,8 @@ func (h *Handler) CreateResourceRoleAssignment(c *gin.Context) {
 	resourceID := c.Param("resourceId")
 
 	var req struct {
-		UserID   string `json:"user_id" binding:"required"`
-		RoleName string `json:"role_name" binding:"required"`
+		UserID string `json:"user_id" binding:"required"`
+		RoleID string `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -546,7 +525,7 @@ func (h *Handler) CreateResourceRoleAssignment(c *gin.Context) {
 		return
 	}
 
-	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleName, "resource", resourceID, user.ID)
+	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleID, "resource", resourceID, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
 		return
@@ -557,7 +536,7 @@ func (h *Handler) CreateResourceRoleAssignment(c *gin.Context) {
 		"project_id":  projectID,
 		"resource_id": resourceID,
 		"user_id":     req.UserID,
-		"role":        req.RoleName,
+		"role_id":     req.RoleID,
 		"assigned_by": user.ID,
 	})
 }
@@ -618,8 +597,8 @@ func (h *Handler) CreateOrganizationRoleAssignment(c *gin.Context) {
 	orgID := c.Param("orgId")
 
 	var req struct {
-		UserID   string `json:"user_id" binding:"required"`
-		RoleName string `json:"role_name" binding:"required"`
+		UserID string `json:"user_id" binding:"required"`
+		RoleID string `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -642,7 +621,7 @@ func (h *Handler) CreateOrganizationRoleAssignment(c *gin.Context) {
 		return
 	}
 
-	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleName, "organization", orgID, user.ID)
+	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleID, "organization", orgID, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
 		return
@@ -652,7 +631,7 @@ func (h *Handler) CreateOrganizationRoleAssignment(c *gin.Context) {
 		"message":         "Role assignment created",
 		"organization_id": orgID,
 		"user_id":         req.UserID,
-		"role":            req.RoleName,
+		"role_id":         req.RoleID,
 		"assigned_by":     user.ID,
 	})
 }

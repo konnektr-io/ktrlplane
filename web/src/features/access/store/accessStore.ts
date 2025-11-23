@@ -98,38 +98,8 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
       const response = await apiClient.get('/roles');
       set({ roles: response.data });
     } catch (error) {
-      console.error('Failed to fetch roles:', error);
-      // Fall back to mock data
-      const mockRoles: Role[] = [
-        {
-          role_id: 'role1',
-          name: 'Owner',
-          display_name: 'Owner',
-          description: 'Full access to all resources and settings',
-          is_system: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          role_id: 'role2',
-          name: 'Editor',
-          display_name: 'Editor',
-          description: 'Can create, edit, and delete resources',
-          is_system: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          role_id: 'role3',
-          name: 'Viewer',
-          display_name: 'Viewer',
-          description: 'Read-only access to resources',
-          is_system: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-      set({ roles: mockRoles });
+      console.error("Failed to fetch roles:", error);
+      // Do not set roles; show error/empty state in UI
     }
   },
 
@@ -171,7 +141,7 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
 
         await apiClient.post(url, {
           user_id: userId,
-          role_name: roleName,
+          role_id: roleName,
         });
       
       // Refresh data after successful invite
@@ -208,7 +178,7 @@ export const useAccessStore = create<AccessStore>((set, get) => ({
       }
 
       await apiClient.put(url, {
-        role_name: roleName,
+        role_id: roleName,
       });
       
       // Refresh data after successful update

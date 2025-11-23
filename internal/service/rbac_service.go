@@ -14,13 +14,42 @@ import (
 // Intentionally empty: all methods are stateless and operate on the database.
 type RBACService struct{}
 
+// ListRoles returns all roles in the system
+func (s *RBACService) ListRoles(ctx context.Context) ([]models.Role, error) {
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.GetAllRolesQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list roles: %w", err)
+	}
+	defer rows.Close()
+
+	roles := make([]models.Role, 0)
+	for rows.Next() {
+		var role models.Role
+		err := rows.Scan(
+			&role.RoleID,
+			&role.Name,
+			&role.DisplayName,
+			&role.Description,
+			&role.IsSystem,
+			&role.CreatedAt,
+			&role.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan role: %w", err)
+		}
+		roles = append(roles, role)
+	}
+	return roles, nil
+}
+
 // NewRBACService creates a new RBACService.
 func NewRBACService() *RBACService {
 	return &RBACService{}
 }
 
 // AssignRole assigns a role to a user for a specific scope
-func (s *RBACService) AssignRole(ctx context.Context, userID, roleName, scopeType, scopeID, assignedBy string) error {
+func (s *RBACService) AssignRole(ctx context.Context, userID, roleID, scopeType, scopeID, assignedBy string) error {
 	pool := db.GetDB()
 
 	tx, err := pool.Begin(ctx)
@@ -29,12 +58,11 @@ func (s *RBACService) AssignRole(ctx context.Context, userID, roleName, scopeTyp
 	}
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-			// Log rollback error but don't override the main error
 			fmt.Printf("[RBACService] transaction rollback error: %v\n", rollbackErr)
 		}
 	}()
 
-	err = s.AssignRoleInTx(ctx, tx, userID, roleName, scopeType, scopeID, assignedBy)
+	err = s.AssignRoleInTx(ctx, tx, userID, roleID, scopeType, scopeID, assignedBy)
 	if err != nil {
 		return err
 	}
@@ -43,16 +71,9 @@ func (s *RBACService) AssignRole(ctx context.Context, userID, roleName, scopeTyp
 }
 
 // AssignRoleInTx assigns a role within a transaction (exported for use by other services)
-func (s *RBACService) AssignRoleInTx(ctx context.Context, tx pgx.Tx, userID, roleName, scopeType, scopeID, assignedBy string) error {
-	// Get role ID
-	var roleID string
-	err := tx.QueryRow(ctx, db.GetRoleIDByNameQuery, roleName).Scan(&roleID)
-	if err != nil {
-		return fmt.Errorf("role not found: %w", err)
-	}
-
+func (s *RBACService) AssignRoleInTx(ctx context.Context, tx pgx.Tx, userID, roleID, scopeType, scopeID, assignedBy string) error {
 	// Insert role assignment (ON CONFLICT DO NOTHING to avoid duplicates)
-	_, err = tx.Exec(ctx, db.AssignRoleWithTransactionQuery,
+	_, err := tx.Exec(ctx, db.AssignRoleWithTransactionQuery,
 		uuid.New().String(), userID, roleID, scopeType, scopeID, assignedBy)
 	if err != nil {
 		return fmt.Errorf("failed to assign role: %w", err)

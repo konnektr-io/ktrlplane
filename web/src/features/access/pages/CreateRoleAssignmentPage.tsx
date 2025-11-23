@@ -18,7 +18,7 @@ const CreateRoleAssignmentPage: React.FC = () => {
   const navigate = useNavigate();
   const params = useParams();
   const [selectedUser, setSelectedUser] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const { roles, inviteUser, isInviting, setContext } = useAccessStore();
 
   // Determine context from route
@@ -59,13 +59,13 @@ const CreateRoleAssignmentPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedUser || !selectedRole) {
+    if (!selectedUser || !selectedRoleId) {
       toast.error("Please select both a user and a role");
       return;
     }
 
     try {
-      await inviteUser(selectedUser, selectedRole);
+      await inviteUser(selectedUser, selectedRoleId);
       toast.success("User access granted successfully");
 
       // Navigate back to access page
@@ -149,9 +149,9 @@ const CreateRoleAssignmentPage: React.FC = () => {
                 <Card
                   key={role.role_id}
                   className={`cursor-pointer transition-colors hover:bg-accent ${
-                    selectedRole === role.name ? "ring-2 ring-primary" : ""
+                    selectedRoleId === role.role_id ? "ring-2 ring-primary" : ""
                   }`}
-                  onClick={() => setSelectedRole(role.name)}
+                  onClick={() => setSelectedRoleId(role.role_id)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -160,9 +160,9 @@ const CreateRoleAssignmentPage: React.FC = () => {
                           <input
                             type="radio"
                             name="role"
-                            value={role.name}
-                            checked={selectedRole === role.name}
-                            onChange={() => setSelectedRole(role.name)}
+                            value={role.role_id}
+                            checked={selectedRoleId === role.role_id}
+                            onChange={() => setSelectedRoleId(role.role_id)}
                             className="h-4 w-4"
                           />
                           <h4 className="font-medium">{role.display_name}</h4>
@@ -189,7 +189,7 @@ const CreateRoleAssignmentPage: React.FC = () => {
         <div className="flex gap-3">
           <Button
             type="submit"
-            disabled={!selectedUser || !selectedRole || isInviting}
+            disabled={!selectedUser || !selectedRoleId || isInviting}
             className="flex-1"
           >
             {isInviting ? "Granting Access..." : "Grant Access"}
