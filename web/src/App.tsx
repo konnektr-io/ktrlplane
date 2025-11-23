@@ -53,7 +53,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/callback" element={<AuthCallbackPage />} />
 
-            {/* Project Selection with auto-redirect */}
+            {/* Project Selection: auto-redirect only on root */}
             <Route
               element={
                 <ProtectedRoute>
@@ -69,14 +69,7 @@ function App() {
                   </ProjectAutoRedirect>
                 }
               />
-              <Route
-                path="/projects"
-                element={
-                  <ProjectAutoRedirect>
-                    <ProjectListPage />
-                  </ProjectAutoRedirect>
-                }
-              />
+              <Route path="/projects" element={<ProjectListPage />} />
             </Route>
 
             {/* Project-based Routes (plural) */}
