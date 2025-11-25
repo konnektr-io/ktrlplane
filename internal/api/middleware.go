@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+	"log"
+	"runtime/debug"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -13,9 +15,9 @@ func ErrorLoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 		// Log all errors that occurred during the request
-		for _, err := range c.Errors {
-			fmt.Printf("[GIN][ERROR] %v\n", err.Err)
-		}
+ 		for _, err := range c.Errors {
+ 			log.Printf("[GIN][ERROR] %v", err.Err)
+ 		}
 	}
 }
 
@@ -25,7 +27,7 @@ func CustomRecoveryMiddleWare() gin.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				// Log the error
-				fmt.Printf("Panic occurred: %v\n", err)
+ 				log.Printf("Panic occurred: %v\nStacktrace:\n%s", err, debug.Stack())
 
 				// Return a unified error response
 				c.JSON(500, gin.H{

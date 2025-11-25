@@ -50,18 +50,21 @@ func (h *Handler) getUserFromContext(c *gin.Context) (*models.User, error) {
 func (h *Handler) CreateOrganization(c *gin.Context) {
 	var req models.CreateOrganizationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	org, err := h.OrganizationService.CreateOrganization(c.Request.Context(), req, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create organization", "details": err.Error()})
 		return
 	}
@@ -72,14 +75,16 @@ func (h *Handler) CreateOrganization(c *gin.Context) {
 func (h *Handler) ListOrganizations(c *gin.Context) {
 	user, err := h.getUserFromContext(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+ 		return
 	}
 
 	orgs, err := h.OrganizationService.ListOrganizations(c.Request.Context(), user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list organizations", "details": err.Error()})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list organizations", "details": err.Error()})
+ 		return
 	}
 	c.JSON(http.StatusOK, orgs)
 }
@@ -89,14 +94,16 @@ func (h *Handler) GetOrganization(c *gin.Context) {
 	orgID := c.Param("orgId")
 	user, err := h.getUserFromContext(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+ 		return
 	}
 
 	org, err := h.OrganizationService.GetOrganization(c.Request.Context(), orgID, user.ID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found", "details": err.Error()})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found", "details": err.Error()})
+ 		return
 	}
 	c.JSON(http.StatusOK, org)
 }
@@ -106,18 +113,21 @@ func (h *Handler) UpdateOrganization(c *gin.Context) {
 	orgID := c.Param("orgId")
 	var req models.UpdateOrganizationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	org, err := h.OrganizationService.UpdateOrganization(c.Request.Context(), orgID, req.Name, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update organization", "details": err.Error()})
 		return
 	}
@@ -129,12 +139,14 @@ func (h *Handler) DeleteOrganization(c *gin.Context) {
 	orgID := c.Param("orgId")
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	err = h.OrganizationService.DeleteOrganization(c.Request.Context(), orgID, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete organization", "details": err.Error()})
 		return
 	}
@@ -147,18 +159,21 @@ func (h *Handler) DeleteOrganization(c *gin.Context) {
 func (h *Handler) CreateProject(c *gin.Context) {
 	var req models.CreateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	project, err := h.ProjectService.CreateProject(c.Request.Context(), req, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create project", "details": err.Error()})
 		return
 	}
@@ -170,12 +185,14 @@ func (h *Handler) GetProject(c *gin.Context) {
 	projectID := c.Param("projectId")
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	project, err := h.ProjectService.GetProjectByID(c.Request.Context(), projectID, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found", "details": err.Error()})
 		return
 	}
@@ -186,14 +203,16 @@ func (h *Handler) GetProject(c *gin.Context) {
 func (h *Handler) ListProjects(c *gin.Context) {
 	user, err := h.getUserFromContext(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+ 		return
 	}
 
 	projects, err := h.ProjectService.ListProjects(c.Request.Context(), user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list projects", "details": err.Error()})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list projects", "details": err.Error()})
+ 		return
 	}
 	c.JSON(http.StatusOK, projects)
 }
@@ -203,18 +222,21 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 	projectID := c.Param("projectId")
 	var req models.UpdateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	project, err := h.ProjectService.UpdateProject(c.Request.Context(), projectID, req, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update project", "details": err.Error()})
 		return
 	}
@@ -226,12 +248,14 @@ func (h *Handler) DeleteProject(c *gin.Context) {
 	projectID := c.Param("projectId")
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	err = h.ProjectService.DeleteProject(c.Request.Context(), projectID, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete project", "details": err.Error()})
 		return
 	}
@@ -245,12 +269,14 @@ func (h *Handler) CreateResource(c *gin.Context) {
 	projectID := c.Param("projectId")
 	var req models.CreateResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
@@ -258,9 +284,11 @@ func (h *Handler) CreateResource(c *gin.Context) {
 	resource, err := h.ResourceService.CreateResource(c.Request.Context(), projectID, req, user.ID)
 	if err != nil {
 		if err.Error() == "insufficient permissions to create resource" {
+			c.Error(err)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to create resource"})
 			return
 		}
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create resource", "details": err.Error()})
 		return
 	}
@@ -274,6 +302,7 @@ func (h *Handler) GetResource(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
@@ -281,6 +310,7 @@ func (h *Handler) GetResource(c *gin.Context) {
 	resource, err := h.ResourceService.GetResourceByID(c.Request.Context(), projectID, resourceID, user.ID)
 	if err != nil {
 		// Always return 404 for security - don't reveal if resource exists but user lacks access
+		c.Error(err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Resource not found"})
 		return
 	}
@@ -293,14 +323,16 @@ func (h *Handler) ListResources(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+ 		return
 	}
 
 	resources, err := h.ResourceService.ListResources(c.Request.Context(), projectID, user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list resources", "details": err.Error()})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list resources", "details": err.Error()})
+ 		return
 	}
 	c.JSON(http.StatusOK, resources)
 }
@@ -311,12 +343,14 @@ func (h *Handler) UpdateResource(c *gin.Context) {
 	resourceID := c.Param("resourceId")
 	var req models.UpdateResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
@@ -324,9 +358,11 @@ func (h *Handler) UpdateResource(c *gin.Context) {
 	resource, err := h.ResourceService.UpdateResource(c.Request.Context(), projectID, resourceID, req, user.ID)
 	if err != nil {
 		if err.Error() == "insufficient permissions to update resource" {
+			c.Error(err)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to update resource"})
 			return
 		}
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update resource", "details": err.Error()})
 		return
 	}
@@ -340,6 +376,7 @@ func (h *Handler) DeleteResource(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
@@ -347,9 +384,11 @@ func (h *Handler) DeleteResource(c *gin.Context) {
 	err = h.ResourceService.DeleteResource(c.Request.Context(), projectID, resourceID, user.ID)
 	if err != nil {
 		if err.Error() == "insufficient permissions to delete resource" {
+			c.Error(err)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to delete resource"})
 			return
 		}
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete resource", "details": err.Error()})
 		return
 	}
@@ -362,6 +401,7 @@ func (h *Handler) DeleteResource(c *gin.Context) {
 func (h *Handler) ListRoles(c *gin.Context) {
 	roles, err := h.RBACService.ListRoles(c.Request.Context())
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list roles"})
 		return
 	}
@@ -378,6 +418,7 @@ func (h *Handler) SearchUsers(c *gin.Context) {
 
 	users, err := h.RBACService.SearchUsers(c.Request.Context(), query)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search users"})
 		return
 	}
@@ -392,6 +433,7 @@ func (h *Handler) ListProjectRoleAssignments(c *gin.Context) {
 
 	assignments, err := h.RBACService.GetRoleAssignmentsWithInheritance(c.Request.Context(), "project", projectID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch role assignments", "details": err.Error()})
 		return
 	}
@@ -408,12 +450,14 @@ func (h *Handler) CreateProjectRoleAssignment(c *gin.Context) {
 		RoleID string `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
@@ -421,6 +465,7 @@ func (h *Handler) CreateProjectRoleAssignment(c *gin.Context) {
 	// Validate user exists and is unique
 	users, err := h.RBACService.SearchUsers(c.Request.Context(), req.UserID)
 	if err != nil || len(users) == 0 {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found for given user_id"})
 		return
 	}
@@ -431,6 +476,7 @@ func (h *Handler) CreateProjectRoleAssignment(c *gin.Context) {
 
 	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleID, "project", projectID, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
 		return
 	}
@@ -451,22 +497,26 @@ func (h *Handler) DeleteProjectRoleAssignment(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
 
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_access", "project", projectID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
 		return
 	}
 	if !hasPermission {
+		c.Error(err)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to delete role assignment"})
 		return
 	}
 
 	err = h.RBACService.DeleteRoleAssignment(c, assignmentID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role assignment", "details": err.Error()})
 		return
 	}
@@ -488,6 +538,7 @@ func (h *Handler) ListResourceRoleAssignments(c *gin.Context) {
 
 	assignments, err := h.RBACService.GetRoleAssignmentsWithInheritance(c.Request.Context(), "resource", resourceID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch role assignments", "details": err.Error()})
 		return
 	}
@@ -505,18 +556,21 @@ func (h *Handler) CreateResourceRoleAssignment(c *gin.Context) {
 		RoleID string `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	users, err := h.RBACService.SearchUsers(c.Request.Context(), req.UserID)
 	if err != nil || len(users) == 0 {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found for given user_id"})
 		return
 	}
@@ -527,6 +581,7 @@ func (h *Handler) CreateResourceRoleAssignment(c *gin.Context) {
 
 	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleID, "resource", resourceID, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
 		return
 	}
@@ -549,12 +604,14 @@ func (h *Handler) DeleteResourceRoleAssignment(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
 
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_access", "resource", resourceID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
 		return
 	}
@@ -565,6 +622,7 @@ func (h *Handler) DeleteResourceRoleAssignment(c *gin.Context) {
 
 	err = h.RBACService.DeleteRoleAssignment(c, assignmentID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role assignment", "details": err.Error()})
 		return
 	}
@@ -585,6 +643,7 @@ func (h *Handler) ListOrganizationRoleAssignments(c *gin.Context) {
 
 	assignments, err := h.RBACService.GetRoleAssignmentsForScope(c.Request.Context(), "organization", orgID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch role assignments", "details": err.Error()})
 		return
 	}
@@ -601,19 +660,21 @@ func (h *Handler) CreateOrganizationRoleAssignment(c *gin.Context) {
 		RoleID string `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	users, err := h.RBACService.SearchUsers(c.Request.Context(), req.UserID)
 	if err != nil || len(users) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found for given user_id"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found for given user_id"})
 		return
 	}
 	if len(users) > 1 {
@@ -623,6 +684,7 @@ func (h *Handler) CreateOrganizationRoleAssignment(c *gin.Context) {
 
 	err = h.RBACService.AssignRole(c.Request.Context(), req.UserID, req.RoleID, "organization", orgID, user.ID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role", "details": err.Error()})
 		return
 	}
@@ -643,12 +705,14 @@ func (h *Handler) DeleteOrganizationRoleAssignment(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
 
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_access", "organization", orgID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permission"})
 		return
 	}
@@ -690,6 +754,7 @@ func (h *Handler) GetBillingInfo(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
@@ -697,17 +762,20 @@ func (h *Handler) GetBillingInfo(c *gin.Context) {
 	// Check manage_billing permission
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
 		return
 	}
 
 	if !hasPermission {
+		c.Error(err)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to view billing information"})
 		return
 	}
 
 	billingInfo, err := h.BillingService.GetBillingInfo(scopeType, scopeID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get billing information", "details": err.Error()})
 		return
 	}
@@ -733,12 +801,14 @@ func (h *Handler) UpdateBillingInfo(c *gin.Context) {
 
 	var req models.UpdateBillingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
@@ -746,6 +816,7 @@ func (h *Handler) UpdateBillingInfo(c *gin.Context) {
 	// Check manage_billing permission
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
 		return
 	}
@@ -757,6 +828,7 @@ func (h *Handler) UpdateBillingInfo(c *gin.Context) {
 
 	account, err := h.BillingService.UpdateBillingAccount(scopeType, scopeID, req)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update billing information", "details": err.Error()})
 		return
 	}
@@ -782,12 +854,14 @@ func (h *Handler) CreateStripeCustomer(c *gin.Context) {
 
 	var req models.CreateStripeCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
@@ -795,6 +869,7 @@ func (h *Handler) CreateStripeCustomer(c *gin.Context) {
 	// Check manage_billing permission
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
 		return
 	}
@@ -806,6 +881,7 @@ func (h *Handler) CreateStripeCustomer(c *gin.Context) {
 
 	account, err := h.BillingService.CreateStripeCustomer(scopeType, scopeID, req)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Stripe customer", "details": err.Error()})
 		return
 	}
@@ -831,7 +907,7 @@ func (h *Handler) CreateStripeSubscription(c *gin.Context) {
 
 	var req models.CreateStripeSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		fmt.Printf("JSON binding error: %v\n", err)
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -840,6 +916,7 @@ func (h *Handler) CreateStripeSubscription(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
@@ -847,6 +924,7 @@ func (h *Handler) CreateStripeSubscription(c *gin.Context) {
 	// Check manage_billing permission
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
 		return
 	}
@@ -859,7 +937,7 @@ func (h *Handler) CreateStripeSubscription(c *gin.Context) {
 	fmt.Printf("About to call billing service CreateStripeSubscription\n")
 	account, err := h.BillingService.CreateStripeSubscription(scopeType, scopeID, req)
 	if err != nil {
-		fmt.Printf("Billing service error: %v\n", err)
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create subscription", "details": err.Error()})
 		return
 	}
@@ -885,6 +963,7 @@ func (h *Handler) CreateStripeCustomerPortal(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
@@ -892,6 +971,7 @@ func (h *Handler) CreateStripeCustomerPortal(c *gin.Context) {
 	// Check manage_billing permission
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
 		return
 	}
@@ -908,12 +988,14 @@ func (h *Handler) CreateStripeCustomerPortal(c *gin.Context) {
 
 	var req PortalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	portalURL, err := h.BillingService.CreateStripeCustomerPortal(scopeType, scopeID, req.ReturnURL)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create customer portal", "details": err.Error()})
 		return
 	}
@@ -939,6 +1021,7 @@ func (h *Handler) CancelSubscription(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
@@ -946,6 +1029,7 @@ func (h *Handler) CancelSubscription(c *gin.Context) {
 	// Check manage_billing permission
 	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
 		return
 	}
@@ -957,6 +1041,7 @@ func (h *Handler) CancelSubscription(c *gin.Context) {
 
 	account, err := h.BillingService.CancelSubscription(scopeType, scopeID)
 	if err != nil {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel subscription", "details": err.Error()})
 		return
 	}
@@ -975,14 +1060,16 @@ func (h *Handler) ListPermissionsHandler(c *gin.Context) {
 
 	user, err := h.getUserFromContext(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+ 		return
 	}
 
 	permissions, err := h.RBACService.ListPermissions(c.Request.Context(), user.ID, scopeType, scopeID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list permissions", "details": err.Error()})
-		return
+ 		c.Error(err)
+ 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list permissions", "details": err.Error()})
+ 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"permissions": permissions})
