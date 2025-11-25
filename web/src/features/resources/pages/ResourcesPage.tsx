@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useResourceStore } from "../store/resourceStore";
 import { Button } from "@/components/ui/button";
@@ -70,10 +71,20 @@ export default function ResourcesPage() {
   };
   const [filter, setFilter] = useState("");
 
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     if (projectId) {
       fetchResources(projectId);
+      intervalRef.current = setInterval(() => {
+        fetchResources(projectId);
+      }, 10000); // 10 seconds
     }
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, [projectId, fetchResources]);
 
   if (isLoading) {
@@ -167,11 +178,11 @@ export default function ResourcesPage() {
                       <TableRow
                         key={resource.resource_id}
                         className="hover:bg-muted/50 cursor-pointer border-b last:border-b-0"
-                        onClick={() =>
-                          navigate(
-                            `/projects/${projectId}/resources/${resource.resource_id}`
-                          )
-                        }
+                        onClick={() => {
+                          if (!showConfirm) {
+                            navigate(`/projects/${projectId}/resources/${resource.resource_id}`);
+                          }
+                        }}
                       >
                         <TableCell className="p-2 pl-4 align-middle whitespace-nowrap h-full">
                           <div className="flex items-center gap-2 h-full">
