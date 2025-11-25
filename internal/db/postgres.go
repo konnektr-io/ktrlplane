@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"ktrlplane/internal/config"
+	"log"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,12 +13,25 @@ import (
 
 var (
 	// dbPool is the global database connection pool.
-	dbPool        *pgxpool.Pool
+	dbPool *pgxpool.Pool
 	// MockExecQuery is a mockable function for ExecQuery.
 	MockExecQuery func(ctx context.Context, query string, args ...interface{}) error
 	// MockQuery is a mockable function for Query.
-	MockQuery     func(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error)
+	MockQuery func(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error)
 )
+
+// logPoolStats logs connection pool stats every 30 seconds
+func logPoolStats() {
+	go func() {
+		for {
+			if dbPool != nil {
+				stats := dbPool.Stat()
+				log.Printf("[DBPool] Total: %d, Idle: %d, Max: %d", stats.TotalConns(), stats.IdleConns(), stats.MaxConns())
+			}
+			time.Sleep(30 * time.Second)
+		}
+	}()
+}
 
 // InitDB initializes the database connection pool.
 func InitDB(cfg config.DatabaseConfig) error {
@@ -34,6 +49,7 @@ func InitDB(cfg config.DatabaseConfig) error {
 	}
 
 	fmt.Println("Database connection pool initialized.")
+	logPoolStats()
 	return nil
 }
 
@@ -58,6 +74,9 @@ func ExecQuery(ctx context.Context, query string, args ...any) error {
 
 	conn, err := dbPool.Acquire(ctx)
 	if err != nil {
+		log.Printf("[DBPool][ERROR] failed to acquire connection: %v", err)
+		stats := dbPool.Stat()
+		log.Printf("[DBPool][STATS] Total: %d, Idle: %d, Max: %d", stats.TotalConns(), stats.IdleConns(), stats.MaxConns())
 		return fmt.Errorf("failed to acquire connection: %w", err)
 	}
 	defer conn.Release()
@@ -77,6 +96,9 @@ func Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, er
 
 	conn, err := dbPool.Acquire(ctx)
 	if err != nil {
+		log.Printf("[DBPool][ERROR] failed to acquire connection: %v", err)
+		stats := dbPool.Stat()
+		log.Printf("[DBPool][STATS] Total: %d, Idle: %d, Max: %d", stats.TotalConns(), stats.IdleConns(), stats.MaxConns())
 		return nil, fmt.Errorf("failed to acquire connection: %w", err)
 	}
 

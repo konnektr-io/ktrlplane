@@ -1,7 +1,10 @@
 package api
 
 import (
+	"context"
 	"ktrlplane/internal/auth" // Import auth package
+	"ktrlplane/internal/db"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,10 +18,28 @@ func SetupRouter(handler *Handler) *gin.Engine {
 	r.Use(CORSMiddleware())
 
 	// --- Public Routes (Example: Health Check) ---
-	r.GET("/health", func(c *gin.Context) {
-		// Placeholder: Check DB connection?
-		c.JSON(200, gin.H{"status": "UP"})
-	})
+	 r.GET("/health", func(c *gin.Context) {
+	 	pool := db.GetDB()
+	 	if pool == nil {
+	 		c.JSON(503, gin.H{"status": "DOWN", "error": "DB pool not initialized"})
+	 		return
+	 	}
+	 	ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+	 	defer cancel()
+	 	conn, err := pool.Acquire(ctx)
+	 	if err != nil {
+	 		c.JSON(503, gin.H{"status": "DOWN", "error": err.Error()})
+	 		return
+	 	}
+	 	defer conn.Release()
+	 	var one int
+	 	err = conn.QueryRow(ctx, "SELECT 1").Scan(&one)
+	 	if err != nil || one != 1 {
+	 		c.JSON(503, gin.H{"status": "DOWN", "error": err.Error()})
+	 		return
+	 	}
+	 	c.JSON(200, gin.H{"status": "UP"})
+	 })
 
 	// API v1 routes
 	apiV1 := r.Group("/api/v1")
