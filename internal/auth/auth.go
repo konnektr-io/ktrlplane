@@ -178,7 +178,8 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 
 	// Check if user exists and get their current email in one query
 	var existingUserID, existingEmail, existingName string
-	rows, err := db.Query(ctx, db.GetUserByIDQuery, userID)
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.GetUserByIDQuery, userID)
 	if err != nil {
 		return fmt.Errorf("failed to check user existence: %w", err)
 	}

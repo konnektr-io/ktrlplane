@@ -56,7 +56,8 @@ func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string,
 		return nil, fmt.Errorf("resource not found: %s", resourceID)
 	}
 
-	rows, err := db.Query(ctx, db.GetResourceByIDQuery, projectID, resourceID)
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.GetResourceByIDQuery, projectID, resourceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch resource: %w", err)
 	}
@@ -85,7 +86,8 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string, u
 		return []models.Resource{}, nil
 	}
 
-	rows, err := db.Query(ctx, db.ListResourcesQuery, projectID)
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.ListResourcesQuery, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list resources: %w", err)
 	}

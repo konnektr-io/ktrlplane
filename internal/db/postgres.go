@@ -43,6 +43,10 @@ func InitDB(cfg config.DatabaseConfig) error {
 		return fmt.Errorf("unable to parse connection string: %w", err)
 	}
 
+	// Configure connection pool limits
+	poolConfig.MaxConns = 20 // Increase from default 4 to handle concurrent requests
+	poolConfig.MinConns = 2  // Keep minimum connections warm
+
 	dbPool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
 		return fmt.Errorf("unable to create connection pool: %w", err)
@@ -67,31 +71,14 @@ func CloseDB() {
 }
 
 // ExecQuery executes a query that doesn't return rows (e.g., INSERT, UPDATE, DELETE).
+// Uses the pool directly for automatic connection management.
 func ExecQuery(ctx context.Context, query string, args ...any) error {
 	if MockExecQuery != nil {
 		return MockExecQuery(ctx, query, args...)
 	}
 
-	startAcquire := time.Now()
-	conn, err := dbPool.Acquire(ctx)
-	acquireDuration := time.Since(startAcquire)
-	if err != nil {
-		log.Printf("[DBPool][ERROR] failed to acquire connection: %v", err)
-		stats := dbPool.Stat()
-		log.Printf("[DBPool][STATS] Total: %d, Idle: %d, Max: %d", stats.TotalConns(), stats.IdleConns(), stats.MaxConns())
-		return fmt.Errorf("failed to acquire connection: %w", err)
-	}
-	if acquireDuration > time.Second {
-		log.Printf("[DBPool][WARN] Connection acquisition took %v (>1s)", acquireDuration)
-	}
-	defer conn.Release()
-
-	startQuery := time.Now()
-	_, err = conn.Exec(ctx, query, args...)
-	queryDuration := time.Since(startQuery)
-	if queryDuration > time.Second {
-		log.Printf("[DBPool][WARN] Query execution took %v (>1s): %s", queryDuration, query)
-	}
+	// Use pool directly - it handles connection acquisition and release automatically
+	_, err := dbPool.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("query execution failed: %w", err)
 	}
@@ -99,34 +86,16 @@ func ExecQuery(ctx context.Context, query string, args ...any) error {
 }
 
 // Query executes a query and returns rows for processing.
+// DEPRECATED: This function leaks connections because it acquires a connection but never releases it.
+// The connection stays busy until rows.Close() is called, causing pool exhaustion.
+// Use db.GetDB().Query() directly instead and ensure proper defer rows.Close().
+// This function is kept only for backwards compatibility with tests.
 func Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error) {
 	if MockQuery != nil {
 		return MockQuery(ctx, query, args...)
 	}
 
-	startAcquire := time.Now()
-	conn, err := dbPool.Acquire(ctx)
-	acquireDuration := time.Since(startAcquire)
-	if err != nil {
-		log.Printf("[DBPool][ERROR] failed to acquire connection: %v", err)
-		stats := dbPool.Stat()
-		log.Printf("[DBPool][STATS] Total: %d, Idle: %d, Max: %d", stats.TotalConns(), stats.IdleConns(), stats.MaxConns())
-		return nil, fmt.Errorf("failed to acquire connection: %w", err)
-	}
-	if acquireDuration > time.Second {
-		log.Printf("[DBPool][WARN] Connection acquisition took %v (>1s)", acquireDuration)
-	}
-
-	startQuery := time.Now()
-	rows, err := conn.Query(ctx, query, args...)
-	queryDuration := time.Since(startQuery)
-	if queryDuration > time.Second {
-		log.Printf("[DBPool][WARN] Query execution took %v (>1s): %s", queryDuration, query)
-	}
-	if err != nil {
-		conn.Release()
-		return nil, fmt.Errorf("query execution failed: %w", err)
-	}
-
-	return rows, nil
+	// Use pool directly instead of acquiring a connection
+	// This allows the pool to manage connection lifecycle properly
+	return dbPool.Query(ctx, query, args...)
 }
