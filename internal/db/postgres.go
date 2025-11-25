@@ -72,16 +72,26 @@ func ExecQuery(ctx context.Context, query string, args ...any) error {
 		return MockExecQuery(ctx, query, args...)
 	}
 
+	startAcquire := time.Now()
 	conn, err := dbPool.Acquire(ctx)
+	acquireDuration := time.Since(startAcquire)
 	if err != nil {
 		log.Printf("[DBPool][ERROR] failed to acquire connection: %v", err)
 		stats := dbPool.Stat()
 		log.Printf("[DBPool][STATS] Total: %d, Idle: %d, Max: %d", stats.TotalConns(), stats.IdleConns(), stats.MaxConns())
 		return fmt.Errorf("failed to acquire connection: %w", err)
 	}
+	if acquireDuration > time.Second {
+		log.Printf("[DBPool][WARN] Connection acquisition took %v (>1s)", acquireDuration)
+	}
 	defer conn.Release()
 
+	startQuery := time.Now()
 	_, err = conn.Exec(ctx, query, args...)
+	queryDuration := time.Since(startQuery)
+	if queryDuration > time.Second {
+		log.Printf("[DBPool][WARN] Query execution took %v (>1s): %s", queryDuration, query)
+	}
 	if err != nil {
 		return fmt.Errorf("query execution failed: %w", err)
 	}
@@ -94,15 +104,25 @@ func Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, er
 		return MockQuery(ctx, query, args...)
 	}
 
+	startAcquire := time.Now()
 	conn, err := dbPool.Acquire(ctx)
+	acquireDuration := time.Since(startAcquire)
 	if err != nil {
 		log.Printf("[DBPool][ERROR] failed to acquire connection: %v", err)
 		stats := dbPool.Stat()
 		log.Printf("[DBPool][STATS] Total: %d, Idle: %d, Max: %d", stats.TotalConns(), stats.IdleConns(), stats.MaxConns())
 		return nil, fmt.Errorf("failed to acquire connection: %w", err)
 	}
+	if acquireDuration > time.Second {
+		log.Printf("[DBPool][WARN] Connection acquisition took %v (>1s)", acquireDuration)
+	}
 
+	startQuery := time.Now()
 	rows, err := conn.Query(ctx, query, args...)
+	queryDuration := time.Since(startQuery)
+	if queryDuration > time.Second {
+		log.Printf("[DBPool][WARN] Query execution took %v (>1s): %s", queryDuration, query)
+	}
 	if err != nil {
 		conn.Release()
 		return nil, fmt.Errorf("query execution failed: %w", err)
