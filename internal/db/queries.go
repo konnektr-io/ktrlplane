@@ -29,9 +29,9 @@ const (
 	UpdateProjectQuery = `
 		UPDATE ktrlplane.projects SET name = $2, description = $3, updated_at = NOW() WHERE project_id = $1`
 
-	// DeleteProjectQuery marks a project as deleting.
+	// DeleteProjectQuery deletes a project record.
 	DeleteProjectQuery = `
-		UPDATE ktrlplane.projects SET status = 'Deleting', updated_at = NOW() WHERE project_id = $1`
+		DELETE FROM ktrlplane.projects WHERE project_id = $1`
 
 	// GetOrganizationsForUserQuery selects organizations for a user.
 	GetOrganizationsForUserQuery = `
@@ -81,9 +81,9 @@ const (
 	UpdateResourceQuery = `
 		UPDATE ktrlplane.resources SET name = $3, settings_json = $4, status = 'Updating', updated_at = NOW() WHERE project_id = $1 AND resource_id = $2`
 
-	// DeleteResourceQuery marks a resource as deleting.
+	// DeleteResourceQuery deletes a resource record.
 	DeleteResourceQuery = `
-		UPDATE ktrlplane.resources SET status = 'Deleting', updated_at = NOW() WHERE project_id = $1 AND resource_id = $2`
+		DELETE FROM ktrlplane.resources WHERE project_id = $1 AND resource_id = $2`
 
 	// CreateOrganizationWithTimestampsQuery inserts an organization and returns timestamps.
 	CreateOrganizationWithTimestampsQuery = `
@@ -102,8 +102,7 @@ const (
 	GetAllRolesQuery = `
 		SELECT role_id, name, display_name, description, is_system, created_at, updated_at
 		FROM ktrlplane.roles
-		ORDER BY display_name ASC;
-		`
+		ORDER BY display_name ASC;`
 		
 	// AssignRoleWithTransactionQuery inserts a role assignment within a transaction.
 	AssignRoleWithTransactionQuery = `
