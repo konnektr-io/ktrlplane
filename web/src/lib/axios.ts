@@ -1,22 +1,13 @@
-// Extend Window interface for TypeScript
-declare global {
-  interface Window {
-    auth0Logout?: () => void;
-  }
-}
-import axios from 'axios';
+import axios from "axios";
 
 const apiClient = axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE_URL || window.location.origin + "/api/v1",
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // Helper to get Auth0 logout method
 // function getAuth0Logout() {
-  // Try to get the Auth0 logout method from window
+// Try to get the Auth0 logout method from window
 //   return window.auth0Logout || (() => { window.location.href = '/login'; });
 // }
 
@@ -45,6 +36,7 @@ export const setupAuthInterceptor = (
       } catch (error) {
         console.warn("Failed to get access token:", error);
         // getAuth0Logout()();
+        return Promise.reject(error);
       }
       return config;
     },
@@ -53,7 +45,6 @@ export const setupAuthInterceptor = (
     }
   );
 };
-
 
 // Response interceptor for error handling
 /* apiClient.interceptors.response.use(
