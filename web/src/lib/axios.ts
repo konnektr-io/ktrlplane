@@ -25,17 +25,15 @@ export const setupAuthInterceptor = (
       try {
         const token = await getAccessTokenSilently();
         if (!token) {
-          // If token cannot be retrieved redirect to login
+          // If token cannot be retrieved, redirect to login and throw error to stop further requests
           await loginWithRedirect();
-        }
-        if (!token) {
-          // If token cannot be retrieved throw error
-          throw new Error("Could not retrieve token");
+          throw new Error("Could not retrieve token after login redirect");
         }
         config.headers.Authorization = `Bearer ${token}`;
       } catch (error) {
         console.warn("Failed to get access token:", error);
-        // getAuth0Logout()();
+        // Always redirect to login if token cannot be refreshed
+        await loginWithRedirect();
         return Promise.reject(error);
       }
       return config;
