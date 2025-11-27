@@ -1,16 +1,28 @@
 import { useParams } from 'react-router-dom';
 import { useResourceStore } from '../store/resourceStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Database, Activity, Settings, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  CalendarDays,
+  Database,
+  Activity,
+  Settings,
+  ExternalLink,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ResourceStatusBadge } from "../components/ResourceStatusBadge";
 
 export default function ResourceDetailPage() {
   const { resourceId } = useParams();
   const { resources } = useResourceStore();
-  
+
   // Find the current resource
-  const currentResource = resources.find(r => r.resource_id === resourceId);
+  const currentResource = resources.find((r) => r.resource_id === resourceId);
 
   return (
     <div className="space-y-6">
@@ -49,17 +61,7 @@ export default function ResourceDetailPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium">Status</p>
-              <Badge
-                variant={
-                  currentResource?.status === "Healthy"
-                    ? "default"
-                    : currentResource?.status === "Creating"
-                    ? "secondary"
-                    : "destructive"
-                }
-              >
-                {currentResource?.status || "Unknown"}
-              </Badge>
+              <ResourceStatusBadge status={currentResource?.status} />
             </div>
             <div>
               <p className="text-sm font-medium">Type</p>

@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { ResourceStatusBadge } from "../components/ResourceStatusBadge";
 import {
   PlusCircle,
   Database,
@@ -180,7 +180,9 @@ export default function ResourcesPage() {
                         className="hover:bg-muted/50 cursor-pointer border-b last:border-b-0"
                         onClick={() => {
                           if (!showConfirm) {
-                            navigate(`/projects/${projectId}/resources/${resource.resource_id}`);
+                            navigate(
+                              `/projects/${projectId}/resources/${resource.resource_id}`
+                            );
                           }
                         }}
                       >
@@ -192,15 +194,7 @@ export default function ResourcesPage() {
                         </TableCell>
                         <TableCell>{resource.type}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              resource.status === "Active"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {resource.status}
-                          </Badge>
+                          <ResourceStatusBadge status={resource.status} />
                         </TableCell>
                         <TableCell>
                           {resource.created_at.toLocaleDateString()}
