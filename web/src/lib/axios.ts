@@ -1,4 +1,6 @@
 import axios from "axios";
+// Prevent multiple redirects and request storms
+let isRedirecting = false;
 
 const apiClient = axios.create({
   baseURL:
@@ -19,21 +21,26 @@ export const setupAuthInterceptor = (
   // Clear any existing auth interceptors
   apiClient.interceptors.request.clear();
 
-  // Add new auth interceptor
   apiClient.interceptors.request.use(
     async (config) => {
+      if (isRedirecting) {
+        // Block further requests while redirecting
+        return Promise.reject(new Error("Redirecting to login"));
+      }
       try {
         const token = await getAccessTokenSilently();
         if (!token) {
-          // If token cannot be retrieved, redirect to login and throw error to stop further requests
+          isRedirecting = true;
           await loginWithRedirect();
           throw new Error("Could not retrieve token after login redirect");
         }
         config.headers.Authorization = `Bearer ${token}`;
       } catch (error) {
         console.warn("Failed to get access token:", error);
-        // Always redirect to login if token cannot be refreshed
-        await loginWithRedirect();
+        if (!isRedirecting) {
+          isRedirecting = true;
+          await loginWithRedirect();
+        }
         return Promise.reject(error);
       }
       return config;
