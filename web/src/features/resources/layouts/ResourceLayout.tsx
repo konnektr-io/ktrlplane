@@ -1,21 +1,19 @@
-import { useParams } from 'react-router-dom';
-import { useEffect } from 'react';
-import { useResourceStore } from '../store/resourceStore';
-import AppLayout from '@/components/AppLayout';
-import ResourceSidebarNav from '../components/sidebars/ResourceSidebarNav';
+import { useParams } from "react-router-dom";
+import AppLayout from "@/components/AppLayout";
+import ResourceSidebarNav from "../components/sidebars/ResourceSidebarNav";
+import { useResource } from "../hooks/useResourceApi";
 
 export default function ResourceLayout() {
-  const { projectId, resourceId } = useParams<{ projectId: string; resourceId: string }>();
-  const { fetchResourceById } = useResourceStore();
+  const { projectId, resourceId } = useParams<{
+    projectId: string;
+    resourceId: string;
+  }>();
+  // Fetch resource data (for sidebar, context, etc.)
+  useResource(projectId!, resourceId!);
 
-  useEffect(() => {
-    if (projectId && resourceId) {
-      fetchResourceById(projectId, resourceId);
-    }
-  }, [projectId, resourceId, fetchResourceById]);
-
+  // Optionally, you could pass resource to sidebar or context if needed
   return (
-    <AppLayout 
+    <AppLayout
       sidebarContent={<ResourceSidebarNav />}
       showProjectSelector={true}
     />

@@ -1,9 +1,10 @@
+
 import { useNavigate, useParams } from "react-router-dom";
-import { useProjectStore } from "../store/projectStore";
 import { Button } from "@/components/ui/button";
 import CreateProjectDialog from "../components/CreateProjectDialog";
+import { useProjects } from "../hooks/useProjectApi";
 
-import React from "react";
+
 
 // Accept optional organizationId prop (for direct usage or from route params)
 type ProjectListPageProps = {
@@ -13,25 +14,19 @@ type ProjectListPageProps = {
 export default function ProjectListPage(props: ProjectListPageProps = {}) {
   const { orgId } = useParams<{ orgId?: string }>();
   const organizationId = props.organizationId || orgId;
-  const {
-    projects: allProjects,
-    isLoadingList,
-    fetchProjects,
-  } = useProjectStore();
   const navigate = useNavigate();
-
-  // Fetch projects on mount
-  React.useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+  const { data: allProjects = [], isLoading, isError, error } = useProjects();
 
   // Filter projects by organization if organizationId is present
   const projects = organizationId
     ? allProjects.filter((p) => p.org_id === organizationId)
     : allProjects;
 
-  if (isLoadingList) {
+  if (isLoading) {
     return <div>Loading projects...</div>;
+  }
+  if (isError) {
+    return <div className="text-red-500">Error loading projects: {error?.message || "Unknown error"}</div>;
   }
 
   return (

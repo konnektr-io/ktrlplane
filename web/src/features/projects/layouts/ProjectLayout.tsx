@@ -1,21 +1,16 @@
-import { useParams } from 'react-router-dom';
-import { useEffect } from 'react';
-import { useProjectStore } from '../store/projectStore';
-import AppLayout from '@/components/AppLayout';
-import ProjectSidebarNav from '../components/sidebars/ProjectSidebarNav';
+import { useParams } from "react-router-dom";
+import AppLayout from "@/components/AppLayout";
+import ProjectSidebarNav from "../components/sidebars/ProjectSidebarNav";
+import { useProject } from "../hooks/useProjectApi";
 
 export default function ProjectLayout() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { fetchProjectById } = useProjectStore();
+  // Fetch project data (for sidebar, context, etc.)
+  useProject(projectId!);
 
-  useEffect(() => {
-    if (projectId) {
-      fetchProjectById(projectId);
-    }
-  }, [projectId, fetchProjectById]);
-
+  // Optionally, you could pass project to sidebar or context if needed
   return (
-    <AppLayout 
+    <AppLayout
       sidebarContent={<ProjectSidebarNav />}
       showProjectSelector={true}
     />

@@ -27,7 +27,7 @@ import type { ResourceType } from "../schemas";
 import { defaultConfigurations } from "@/features/resources/schemas";
 import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
 import { generateDNSId, validateDNSId, slugify } from "@/lib/dnsUtils";
-import { useProjectStore } from "@/features/projects/store/projectStore";
+import { useProjects } from "@/features/projects/hooks/useProjectApi";
 import { resourceTypes as catalogResourceTypes } from "@/features/catalog/resourceTypes";
 
 const resourceTypes = [
@@ -63,8 +63,8 @@ const resourceTypes = [
 
 export default function CreateResourcePage() {
   const { projectId: urlProjectId } = useParams<{ projectId: string }>();
-  const { projects, lastProjectId, setLastProjectId, fetchProjects } =
-    useProjectStore();
+  const { data: projects = [] } = useProjects();
+  // For lastProjectId and setLastProjectId, consider using local state or a context if needed
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   // ...existing code...
@@ -75,29 +75,16 @@ export default function CreateResourcePage() {
 
   // Project selection logic
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    urlProjectId || lastProjectId || null
+    urlProjectId || (projects.length > 0 ? projects[0].project_id : null)
   );
 
   // Fetch projects on mount if not loaded
+  // Auto-select first project if none selected and projects are loaded
   useEffect(() => {
-    if (projects.length === 0) {
-      fetchProjects(); // If fetchProjects requires arguments, add them here
+    if (!selectedProjectId && projects.length > 0) {
+      setSelectedProjectId(projects[0].project_id);
     }
-  }, [fetchProjects, projects.length]);
-
-  // If no project selected, auto-select lastProjectId when projects are loaded
-  useEffect(() => {
-    if (!selectedProjectId && lastProjectId && projects.length > 0) {
-      setSelectedProjectId(lastProjectId);
-    }
-  }, [lastProjectId, projects.length, selectedProjectId]);
-
-  // If user selects a project, update lastProjectId in store
-  useEffect(() => {
-    if (selectedProjectId) {
-      setLastProjectId(selectedProjectId);
-    }
-  }, [selectedProjectId, setLastProjectId]);
+  }, [projects, selectedProjectId]);
 
   // No longer redirect to catalog - allow resource type selection on this page
 
