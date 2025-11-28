@@ -1,6 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/axios";
-import { User, Role, RoleAssignment, AccessControlContextType } from "../types";
+import {
+  User,
+  Role,
+  RoleAssignment,
+  AccessControlContextType,
+} from "../types/access.types";
 
 // Fetch roles
 export function useRoles() {
@@ -10,6 +15,19 @@ export function useRoles() {
       const response = await apiClient.get<Role[]>("/roles");
       return response.data;
     },
+  });
+}
+
+// Fetch permissions for a specific role (cached per roleId)
+export function useRolePermissions(roleId: string | null) {
+  return useQuery({
+    queryKey: ["rolePermissions", roleId],
+    queryFn: async () => {
+      if (!roleId) return [];
+      const response = await apiClient.get(`/roles/${roleId}/permissions`);
+      return response.data;
+    },
+    enabled: !!roleId,
   });
 }
 

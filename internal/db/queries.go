@@ -97,13 +97,16 @@ const (
 		VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) 
 		RETURNING created_at, updated_at`
 
-
 	// GetAllRolesQuery returns all roles in the system
 	GetAllRolesQuery = `
 		SELECT role_id, name, display_name, description, is_system, created_at, updated_at
 		FROM ktrlplane.roles
 		ORDER BY display_name ASC;`
-		
+	
+	// GetPermissionsForRoleQuery returns all permissions associated with a specific role
+	GetPermissionsForRoleQuery = `
+		SELECT p.permission_id, p.name, p.display_name, p.description, p.resource_type, p.action, p.created_at, p.updated_at`
+	
 	// AssignRoleWithTransactionQuery inserts a role assignment within a transaction.
 	AssignRoleWithTransactionQuery = `
 		INSERT INTO ktrlplane.role_assignments (assignment_id, user_id, role_id, scope_type, scope_id, assigned_by, created_at) 

@@ -49,6 +49,7 @@ func SetupRouter(handler *Handler) *gin.Engine {
 	{
 		// --- Global RBAC Routes ---
 		apiV1.GET("/roles", handler.ListRoles)                          // List all available roles
+        apiV1.GET("/roles/:roleId/permissions", handler.ListRolePermissions) // List permissions for a specific role
 		apiV1.GET("/users/search", handler.SearchUsers)                 // Search users
 		apiV1.GET("/permissions/check", handler.ListPermissionsHandler) // List all permissions for current user/scope
 

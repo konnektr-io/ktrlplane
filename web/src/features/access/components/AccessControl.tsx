@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccessStore } from '../store/accessStore';
 import { useRoleAssignments, useRemoveUser, useUserPermissions } from '../hooks/useAccessApi';
-import { AccessControlContextType, RoleAssignment } from '../types';
+import {
+  AccessControlContextType,
+  RoleAssignment,
+} from "../types/access.types";
 import RolePermissionsTooltip from './RolePermissionsTooltip';
 import {
   Card,

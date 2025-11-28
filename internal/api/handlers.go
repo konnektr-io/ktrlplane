@@ -408,6 +408,18 @@ func (h *Handler) ListRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, roles)
 }
 
+// ListRolePermissions returns all permissions for a specific role
+func (h *Handler) ListRolePermissions(c *gin.Context) {
+	roleID := c.Param("roleId")
+	permissions, err := h.RBACService.ListPermissionsForRole(c.Request.Context(), roleID)
+	if err != nil {
+		c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list permissions for role"})
+		return
+	}
+	c.JSON(http.StatusOK, permissions)
+}
+
 // SearchUsers searches for users by query string.
 func (h *Handler) SearchUsers(c *gin.Context) {
 	query := c.Query("q")

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AccessControlContextType } from "../types";
+import { AccessControlContextType } from "../types/access.types";
 
 interface AccessStore {
   // Current context

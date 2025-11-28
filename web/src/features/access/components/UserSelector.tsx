@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useAccessStore } from '../store/accessStore';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { useSearchUsers } from "../hooks/useAccessApi";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -8,15 +8,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { User } from '../types';
-import { Check, ChevronDown, UserPlus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/popover";
+import { Check, ChevronDown, UserPlus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface UserSelectorProps {
   value: string;
@@ -25,35 +24,20 @@ interface UserSelectorProps {
   disabled?: boolean;
 }
 
-export default function UserSelector({ value, onValueChange, placeholder = "Select user...", disabled }: UserSelectorProps) {
+export default function UserSelector({
+  value,
+  onValueChange,
+  placeholder = "Select user...",
+  disabled,
+}: UserSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { data: users = [], isLoading } = useSearchUsers(searchTerm);
 
-  const searchUsers = useAccessStore((state) => state.searchUsers);
-
-  useEffect(() => {
-    let cancelled = false;
-    const doSearch = async () => {
-      if (searchTerm.length >= 2) {
-        setIsLoading(true);
-        try {
-          const results = await searchUsers(searchTerm);
-          if (!cancelled) setUsers(results || []);
-        } finally {
-          if (!cancelled) setIsLoading(false);
-        }
-      } else {
-        setUsers([]);
-      }
-    };
-    doSearch();
-    return () => { cancelled = true; };
-  }, [searchTerm, searchUsers]);
+  // Remove legacy effect, use React Query result
 
   // Match selected user strictly by id
-  const selectedUser = users.find(user => user.id === value);
+  const selectedUser = users.find((user) => user.id === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -67,7 +51,9 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
         >
           {selectedUser ? (
             <div className="flex items-center gap-2">
-              <span>{selectedUser.name || selectedUser.email || selectedUser.id}</span>
+              <span>
+                {selectedUser.name || selectedUser.email || selectedUser.id}
+              </span>
             </div>
           ) : value ? (
             <div className="flex items-center gap-2">
@@ -82,8 +68,8 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput 
-            placeholder="Search users by email or name..." 
+          <CommandInput
+            placeholder="Search users by email or name..."
             value={searchTerm}
             onValueChange={setSearchTerm}
           />
@@ -106,14 +92,20 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            value === `${user.email}${uIdx}` ? "opacity-100" : "opacity-0"
+                            value === `${user.email}${uIdx}`
+                              ? "opacity-100"
+                              : "opacity-0"
                           )}
                         />
                         <div className="flex items-center gap-2">
                           <div>
                             <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-muted-foreground">{user.email}</div>
-                            <div className="text-xs text-muted-foreground">{user.id}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {user.email}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {user.id}
+                            </div>
                           </div>
                         </div>
                       </CommandItem>
@@ -132,13 +124,17 @@ export default function UserSelector({ value, onValueChange, placeholder = "Sele
                       <UserPlus className="mr-2 h-4 w-4" />
                       <div>
                         <div className="font-medium">Invite {searchTerm}</div>
-                        <div className="text-sm text-muted-foreground">Send invitation to new user</div>
+                        <div className="text-sm text-muted-foreground">
+                          Send invitation to new user
+                        </div>
                       </div>
                     </CommandItem>
                   </CommandGroup>
                 )}
                 {searchTerm.length < 2 && users.length === 0 && (
-                  <CommandEmpty>Type at least 2 characters to search...</CommandEmpty>
+                  <CommandEmpty>
+                    Type at least 2 characters to search...
+                  </CommandEmpty>
                 )}
               </>
             )}

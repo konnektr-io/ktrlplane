@@ -14,6 +14,11 @@ import (
 // Intentionally empty: all methods are stateless and operate on the database.
 type RBACService struct{}
 
+// NewRBACService creates a new RBACService.
+func NewRBACService() *RBACService {
+	return &RBACService{}
+}
+
 // ListRoles returns all roles in the system
 func (s *RBACService) ListRoles(ctx context.Context) ([]models.Role, error) {
 	pool := db.GetDB()
@@ -43,9 +48,31 @@ func (s *RBACService) ListRoles(ctx context.Context) ([]models.Role, error) {
 	return roles, nil
 }
 
-// NewRBACService creates a new RBACService.
-func NewRBACService() *RBACService {
-	return &RBACService{}
+// ListPermissionsForRole returns all permissions for a specific role
+func (s *RBACService) ListPermissionsForRole(ctx context.Context, roleID string) ([]models.Permission, error) {
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.GetPermissionsForRoleQuery, roleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list permissions for role: %w", err)
+	}
+	defer rows.Close()
+
+	var permissions []models.Permission
+	for rows.Next() {
+		var perm models.Permission
+		err := rows.Scan(
+			&perm.PermissionID,
+			&perm.ResourceType,
+			&perm.Action,
+			&perm.Description,
+			&perm.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan permission: %w", err)
+		}
+		permissions = append(permissions, perm)
+	}
+	return permissions, nil
 }
 
 // AssignRole assigns a role to a user for a specific scope

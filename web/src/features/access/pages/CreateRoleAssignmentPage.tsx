@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import UserSelector from "../components/UserSelector";
 import RolePermissionsTooltip from "../components/RolePermissionsTooltip";
 import { useAccessStore } from "../store/accessStore";
-import { AccessControlContextType } from "../types";
+import { AccessControlContextType } from "../types/access.types";
 import { useRoles, useInviteUser } from "../hooks/useAccessApi";
 
 const CreateRoleAssignmentPage: React.FC = () => {
