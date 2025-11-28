@@ -1,66 +1,25 @@
-import { useEffect, useState } from "react";
-import { fetchUserPermissions } from "../api/permissions";
+import { useUserPermissions as useUserPermissionsQuery } from "./useAccessApi";
 
 export function useMultipleResourcePermissions(resourceIds: string[]) {
-  const [permissionsMap, setPermissionsMap] = useState<
-    Record<string, string[]>
-  >({});
-  const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
-  const [errorMap, setErrorMap] = useState<Record<string, string | null>>({});
+  // For each resourceId, call the React Query hook
+  const permissionsMap: Record<string, string[]> = {};
+  const loadingMap: Record<string, boolean> = {};
+  const errorMap: Record<string, string | null> = {};
 
-  useEffect(() => {
-    if (!resourceIds || resourceIds.length === 0) {
-      setPermissionsMap({});
-      setLoadingMap({});
-      setErrorMap({});
-      return;
-    }
-
-    // Only set loading for new resourceIds
-    setLoadingMap((prev) => {
-      const next = { ...prev };
-      resourceIds.forEach((id) => {
-        next[id] = true;
-      });
-      return next;
-    });
-
-    let cancelled = false;
-    const fetchAll = async () => {
-      const perms: Record<string, string[]> = {};
-      const loading: Record<string, boolean> = {};
-      const errors: Record<string, string | null> = {};
-      for (const id of resourceIds) {
-        try {
-          const p = await fetchUserPermissions("resource", id);
-          perms[id] = p;
-          errors[id] = null;
-        } catch (err: unknown) {
-          perms[id] = [];
-          if (
-            err &&
-            typeof err === "object" &&
-            "message" in err &&
-            typeof (err as { message?: unknown }).message === "string"
-          ) {
-            errors[id] = (err as { message: string }).message;
-          } else {
-            errors[id] = "Failed to fetch permissions";
-          }
-        }
-        loading[id] = false;
-      }
-      if (!cancelled) {
-        setPermissionsMap(perms);
-        setLoadingMap(loading);
-        setErrorMap(errors);
-      }
-    };
-    fetchAll();
-    return () => {
-      cancelled = true;
-    };
-  }, [resourceIds]);
+  resourceIds.forEach((id) => {
+    const {
+      data: perms = [],
+      isLoading,
+      error,
+    } = useUserPermissionsQuery("resource", id);
+    permissionsMap[id] = perms;
+    loadingMap[id] = isLoading;
+    errorMap[id] = error
+      ? typeof error === "string"
+        ? error
+        : (error as Error).message
+      : null;
+  });
 
   return { permissionsMap, loadingMap, errorMap };
 }

@@ -1,9 +1,9 @@
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
-import { useUserPermissions } from '@/features/access/hooks/useUserPermissions';
-import { ResourceSettingsForm } from '../components/ResourceSettingsForm';
-import { resourceSchemas, ResourceType } from '../schemas';
+import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
+import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
+import { resourceSchemas, ResourceType } from "../schemas";
 import { ZodObject, ZodRawShape } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,13 +23,13 @@ export default function ResourceSettingsPage() {
   } = useResource(projectId!, resourceId!);
   const updateResourceMutation = useUpdateResource(projectId!, resourceId!);
   // Permissions for resource (prefer resource, fallback to project)
-  const { permissions: resourcePermissions } = useUserPermissions(
+  const { data: resourcePermissions = [] } = useUserPermissions(
     "resource",
-    resourceId
+    resourceId ?? ""
   );
-  const { permissions: projectPermissions } = useUserPermissions(
+  const { data: projectPermissions = [] } = useUserPermissions(
     "project",
-    projectId
+    projectId ?? ""
   );
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentResource?.name || "");

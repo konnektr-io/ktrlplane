@@ -1,6 +1,6 @@
-import { type ReactNode, useEffect } from "react";
-import { useProjectStore } from "../features/projects/store/projectStore";
-import { useOrganizationStore } from "../features/organizations/store/organizationStore";
+import { type ReactNode } from "react";
+import { useProjects } from "../features/projects/hooks/useProjectApi";
+import { useOrganizations } from "../features/organizations/hooks/useOrganizationApi";
 import {
   Sidebar,
   SidebarContent,
@@ -21,18 +21,11 @@ export default function AppLayout({
   sidebarContent,
   showProjectSelector = false,
 }: AppLayoutProps) {
-  const { fetchProjects } = useProjectStore();
-  const { fetchOrganizations } = useOrganizationStore();
-
-  useEffect(() => {
-    // Always fetch organizations on layout mount
-    fetchOrganizations();
-
-    // Fetch projects if we need the project selector
-    if (showProjectSelector) {
-      fetchProjects();
-    }
-  }, [fetchOrganizations, fetchProjects, showProjectSelector]);
+  // Fetch organizations and projects using React Query hooks
+  useOrganizations();
+  if (showProjectSelector) {
+    useProjects();
+  }
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">

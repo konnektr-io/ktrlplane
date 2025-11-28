@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccessStore } from '../store/accessStore';
-import { useUserPermissions } from '../hooks/useUserPermissions';
+import { useRoleAssignments, useRemoveUser, useUserPermissions } from '../hooks/useAccessApi';
 import { AccessControlContextType, RoleAssignment } from '../types';
 import RolePermissionsTooltip from './RolePermissionsTooltip';
 import {
@@ -53,19 +53,14 @@ interface AccessControlProps {
   context: AccessControlContextType;
 }
 
-
 export default function AccessControl({ context }: AccessControlProps) {
   const navigate = useNavigate();
-  const {
-    roleAssignments,
-    isLoading,
-    isUpdating,
-    setContext,
-    removeUser,
-  } = useAccessStore();
+  const { setContext } = useAccessStore();
+  const { data: roleAssignments = [], isLoading: assignmentsLoading } = useRoleAssignments(context);
+  const removeUserMutation = useRemoveUser(context);
 
   // Permissions for this scope
-  const { permissions } = useUserPermissions(context.scopeType, context.scopeId);
+  const { data: permissions = [] } = useUserPermissions(context.scopeType, context.scopeId);
 
   const [removeConfirmation, setRemoveConfirmation] = useState<RoleAssignment | null>(null);
 
@@ -83,13 +78,15 @@ export default function AccessControl({ context }: AccessControlProps) {
     : roleAssignments;
 
   const handleRemoveUser = async (assignment: RoleAssignment) => {
-    try {
-      await removeUser(assignment.assignment_id);
-      toast.success("User access removed successfully");
-      setRemoveConfirmation(null);
-    } catch {
-      toast.error("Failed to remove user access");
-    }
+    removeUserMutation.mutate(assignment.assignment_id, {
+      onSuccess: () => {
+        toast.success("User access removed successfully");
+        setRemoveConfirmation(null);
+      },
+      onError: () => {
+        toast.error("Failed to remove user access");
+      },
+    });
   };
 
   const getCreateAccessUrl = () => {
@@ -159,7 +156,7 @@ export default function AccessControl({ context }: AccessControlProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {assignmentsLoading ? (
             <div className="text-center py-8">Loading...</div>
           ) : filteredAssignments.length === 0 ? (
             <div className="text-center py-8">
@@ -255,7 +252,7 @@ export default function AccessControl({ context }: AccessControlProps) {
                               <DropdownMenuItem
                                 onClick={() => permissions?.includes('manage_access') && setRemoveConfirmation(assignment)}
                                 className="text-red-600 focus:text-red-600"
-                                disabled={!permissions?.includes('manage_access')}
+                                disabled={!permissions?.includes('manage_access') || removeUserMutation.isPending}
                               >
                                 <UserX className="h-4 w-4 mr-2" />
                                 Remove Access
@@ -293,10 +290,10 @@ export default function AccessControl({ context }: AccessControlProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => removeConfirmation && handleRemoveUser(removeConfirmation)}
-              disabled={isUpdating}
+              disabled={removeUserMutation.isPending}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isUpdating ? 'Removing...' : 'Remove Access'}
+              {removeUserMutation.isPending ? 'Removing...' : 'Remove Access'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

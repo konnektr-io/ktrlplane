@@ -30,7 +30,7 @@ import {
   Filter,
   Trash2,
 } from "lucide-react";
-import { useUserPermissions } from "@/features/access/hooks/useUserPermissions";
+import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { useMultipleResourcePermissions } from "@/features/access/hooks/useMultipleResourcePermissions";
 
 const resourceTypeIcons = {
@@ -50,19 +50,29 @@ export default function ResourcesPage() {
     error,
     refetch,
   } = useResources(projectId!);
-  const resourceIds = useMemo(() => resources.map((r) => r.resource_id), [resources]);
+  const resourceIds = useMemo(
+    () => resources.map((r) => r.resource_id),
+    [resources]
+  );
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const deleteResourceMutation = useDeleteResource(projectId!, deletingId ?? "");
-  const { permissionsMap, loadingMap } = useMultipleResourcePermissions(resourceIds);
+  const deleteResourceMutation = useDeleteResource(
+    projectId!,
+    deletingId ?? ""
+  );
+  const { permissionsMap, loadingMap } =
+    useMultipleResourcePermissions(resourceIds);
   // Permissions for project (for create)
-  const { permissions: projectPermissions } = useUserPermissions("project", projectId);
+  const { data: projectPermissions = [] } = useUserPermissions(
+    "project",
+    projectId ?? ""
+  );
   const [showConfirm, setShowConfirm] = useState(false);
   const resourceToDelete = resources.find((r) => r.resource_id === deletingId);
 
   // Resource-level permissions will be handled via state and effect below
   const handleDelete = async () => {
-      if (deletingId && projectId) {
-        await deleteResourceMutation.mutateAsync();
+    if (deletingId && projectId) {
+      await deleteResourceMutation.mutateAsync();
       setDeletingId(null);
       setShowConfirm(false);
       refetch();
@@ -84,14 +94,18 @@ export default function ResourcesPage() {
         clearInterval(intervalRef.current);
       }
     };
-    }, [projectId, refetch]);
+  }, [projectId, refetch]);
 
   if (isLoading) {
     return <div>Loading resources...</div>;
   }
 
   if (error) {
-     return <div className="text-red-500">Error: {error.message || String(error)}</div>;
+    return (
+      <div className="text-red-500">
+        Error: {error.message || String(error)}
+      </div>
+    );
   }
 
   // Filtering logic

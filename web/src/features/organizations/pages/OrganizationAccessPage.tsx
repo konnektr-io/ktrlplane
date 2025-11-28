@@ -1,12 +1,23 @@
-import { useParams } from 'react-router-dom';
-import { useOrganizationStore } from '../store/organizationStore';
-import AccessControl from '@/features/access/components/AccessControl';
+import { useParams } from "react-router-dom";
+import AccessControl from "@/features/access/components/AccessControl";
+import { useOrganization } from "../hooks/useOrganizationApi";
 
 export default function OrganizationAccessPage() {
   const { orgId } = useParams<{ orgId: string }>();
-  const { currentOrganization } = useOrganizationStore();
+  const {
+    data: currentOrganization,
+    isLoading,
+    isError,
+  } = useOrganization(orgId!);
 
-  if (!orgId || !currentOrganization) {
+  if (!orgId || isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading organization...</p>
+      </div>
+    );
+  }
+  if (!currentOrganization || isError) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Organization not found</p>
@@ -17,7 +28,7 @@ export default function OrganizationAccessPage() {
   return (
     <AccessControl
       context={{
-        scopeType: 'organization',
+        scopeType: "organization",
         scopeId: orgId,
         scopeName: currentOrganization.name,
       }}

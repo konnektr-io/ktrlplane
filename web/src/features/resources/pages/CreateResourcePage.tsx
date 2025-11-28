@@ -28,7 +28,7 @@ import { defaultConfigurations } from "@/features/resources/schemas";
 import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
 import { generateDNSId, validateDNSId, slugify } from "@/lib/dnsUtils";
 import { useProjects } from "@/features/projects/hooks/useProjectApi";
-import { resourceTypes as catalogResourceTypes } from "@/features/catalog/resourceTypes";
+import { resourceTypes as catalogResourceTypes } from "@/features/resources/catalog/resourceTypes";
 
 const resourceTypes = [
   {

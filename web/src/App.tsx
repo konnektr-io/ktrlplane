@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Auth0Provider } from "@auth0/auth0-react";
-import AuthSetup from "@/features/auth/AuthSetup";
 import MinimalAppLayout from "@/components/MinimalAppLayout";
 import ProjectLayout from "@/features/projects/layouts/ProjectLayout";
 import ResourceLayout from "@/features/resources/layouts/ResourceLayout";
