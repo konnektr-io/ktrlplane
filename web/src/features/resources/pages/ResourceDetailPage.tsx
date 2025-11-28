@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useResourceStore } from '../store/resourceStore';
+import { useResource } from "../hooks/useResourceApi";
 import {
   Card,
   CardContent,
@@ -18,11 +18,26 @@ import { Button } from "@/components/ui/button";
 import { ResourceStatusBadge } from "../components/ResourceStatusBadge";
 
 export default function ResourceDetailPage() {
-  const { resourceId } = useParams();
-  const { resources } = useResourceStore();
+  const { projectId, resourceId } = useParams<{
+    projectId: string;
+    resourceId: string;
+  }>();
+  const {
+    data: currentResource,
+    isLoading,
+    error,
+  } = useResource(projectId!, resourceId!);
 
-  // Find the current resource
-  const currentResource = resources.find((r) => r.resource_id === resourceId);
+  if (isLoading) {
+    return <div>Loading resource...</div>;
+  }
+  if (error) {
+    return (
+      <div className="text-red-500">
+        Error: {error.message || String(error)}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

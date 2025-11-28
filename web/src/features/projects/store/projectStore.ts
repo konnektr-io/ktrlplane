@@ -12,14 +12,31 @@ interface ProjectState {
   isLoadingList: boolean;
   isLoadingDetail: boolean;
   error: string | null;
-  fetchProjects: () => Promise<void>;
-  fetchProjectById: (projectId: string) => Promise<void>;
-  createProject: (data: CreateProjectData) => Promise<Project | null>;
+  fetchProjects: (
+    getAccessTokenSilently: () => Promise<string>,
+    loginWithRedirect: () => Promise<void>
+  ) => Promise<void>;
+  fetchProjectById: (
+    projectId: string,
+    getAccessTokenSilently: () => Promise<string>,
+    loginWithRedirect: () => Promise<void>
+  ) => Promise<void>;
+  createProject: (
+    data: CreateProjectData,
+    getAccessTokenSilently: () => Promise<string>,
+    loginWithRedirect: () => Promise<void>
+  ) => Promise<Project | null>;
   updateProject: (
     projectId: string,
-    data: Partial<{ name: string; description: string }>
+    data: Partial<{ name: string; description: string }>,
+    getAccessTokenSilently: () => Promise<string>,
+    loginWithRedirect: () => Promise<void>
   ) => Promise<Project | null>;
-  deleteProject: (projectId: string) => Promise<boolean>;
+  deleteProject: (
+    projectId: string,
+    getAccessTokenSilently: () => Promise<string>,
+    loginWithRedirect: () => Promise<void>
+  ) => Promise<boolean>;
   setCurrentProject: (project: Project | null) => void;
   setLastProjectId: (projectId: string | null) => void;
 }
@@ -34,10 +51,13 @@ export const useProjectStore = create<ProjectState>()(
       isLoadingDetail: false,
       error: null,
 
-      fetchProjects: async () => {
+      fetchProjects: async (getAccessTokenSilently, loginWithRedirect) => {
         set({ isLoadingList: true, error: null });
         try {
-          const response = await apiClient.get<Project[]>("/projects");
+          const token = await getAccessTokenSilently();
+          const response = await apiClient.get<Project[]>("/projects", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           const projectsWithDates = response.data.map((p: Project) => ({
             ...p,
             created_at: new Date(p.created_at),
@@ -45,6 +65,14 @@ export const useProjectStore = create<ProjectState>()(
           }));
           set({ projects: projectsWithDates, isLoadingList: false });
         } catch (err: unknown) {
+          const errorCode = (err as any)?.error;
+          if (
+            errorCode === "login_required" ||
+            errorCode === "consent_required"
+          ) {
+            await loginWithRedirect();
+            return;
+          }
           const errorMsg = axios.isAxiosError(err)
             ? err.response?.data?.error || err.message
             : err instanceof Error
@@ -55,11 +83,17 @@ export const useProjectStore = create<ProjectState>()(
         }
       },
 
-      fetchProjectById: async (projectId: string) => {
+      fetchProjectById: async (
+        projectId,
+        getAccessTokenSilently,
+        loginWithRedirect
+      ) => {
         set({ isLoadingDetail: true, error: null });
         try {
+          const token = await getAccessTokenSilently();
           const response = await apiClient.get<Project>(
-            `/projects/${projectId}`
+            `/projects/${projectId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           const projectWithDates = {
             ...response.data,
@@ -72,6 +106,14 @@ export const useProjectStore = create<ProjectState>()(
             isLoadingDetail: false,
           });
         } catch (err: unknown) {
+          const errorCode = (err as any)?.error;
+          if (
+            errorCode === "login_required" ||
+            errorCode === "consent_required"
+          ) {
+            await loginWithRedirect();
+            return;
+          }
           const errorMsg = axios.isAxiosError(err)
             ? err.response?.data?.error || err.message
             : err instanceof Error
@@ -82,10 +124,17 @@ export const useProjectStore = create<ProjectState>()(
         }
       },
 
-      createProject: async (data): Promise<Project | null> => {
+      createProject: async (
+        data,
+        getAccessTokenSilently,
+        loginWithRedirect
+      ): Promise<Project | null> => {
         set({ error: null });
         try {
-          const response = await apiClient.post<Project>("/projects", data);
+          const token = await getAccessTokenSilently();
+          const response = await apiClient.post<Project>("/projects", data, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           const newProject = {
             ...response.data,
             created_at: new Date(response.data.created_at),
@@ -95,6 +144,14 @@ export const useProjectStore = create<ProjectState>()(
           toast.success(`Project "${newProject.name}" created successfully.`);
           return newProject;
         } catch (err: unknown) {
+          const errorCode = (err as any)?.error;
+          if (
+            errorCode === "login_required" ||
+            errorCode === "consent_required"
+          ) {
+            await loginWithRedirect();
+            return null;
+          }
           const errorMsg = axios.isAxiosError(err)
             ? err.response?.data?.error || err.message
             : err instanceof Error
@@ -106,12 +163,19 @@ export const useProjectStore = create<ProjectState>()(
         }
       },
 
-      updateProject: async (projectId, data) => {
+      updateProject: async (
+        projectId,
+        data,
+        getAccessTokenSilently,
+        loginWithRedirect
+      ) => {
         set({ error: null });
         try {
+          const token = await getAccessTokenSilently();
           const response = await apiClient.put<Project>(
             `/projects/${projectId}`,
-            data
+            data,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           const updatedProject = {
             ...response.data,
@@ -130,6 +194,14 @@ export const useProjectStore = create<ProjectState>()(
           toast.success(`Project "${updatedProject.name}" updated.`);
           return updatedProject;
         } catch (err: unknown) {
+          const errorCode = (err as any)?.error;
+          if (
+            errorCode === "login_required" ||
+            errorCode === "consent_required"
+          ) {
+            await loginWithRedirect();
+            return null;
+          }
           const errorMsg = axios.isAxiosError(err)
             ? err.response?.data?.error || err.message
             : err instanceof Error
@@ -141,10 +213,17 @@ export const useProjectStore = create<ProjectState>()(
         }
       },
 
-      deleteProject: async (projectId: string): Promise<boolean> => {
+      deleteProject: async (
+        projectId,
+        getAccessTokenSilently,
+        loginWithRedirect
+      ): Promise<boolean> => {
         set({ error: null });
         try {
-          await apiClient.delete(`/projects/${projectId}`);
+          const token = await getAccessTokenSilently();
+          await apiClient.delete(`/projects/${projectId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           set((state) => ({
             projects: state.projects.filter((p) => p.project_id !== projectId),
             currentProject:
@@ -157,6 +236,14 @@ export const useProjectStore = create<ProjectState>()(
           toast.success(`Project deletion initiated.`);
           return true;
         } catch (err: unknown) {
+          const errorCode = (err as any)?.error;
+          if (
+            errorCode === "login_required" ||
+            errorCode === "consent_required"
+          ) {
+            await loginWithRedirect();
+            return false;
+          }
           const errorMsg = axios.isAxiosError(err)
             ? err.response?.data?.error || err.message
             : err instanceof Error

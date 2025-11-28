@@ -7,14 +7,21 @@ import { resourceSchemas, ResourceType } from '../schemas';
 import { ZodObject, ZodRawShape } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useResourceStore } from "../store/resourceStore";
+import { useResource, useUpdateResource } from "../hooks/useResourceApi";
+import type { UpdateResourceData } from "../types/resource.types";
 
 export default function ResourceSettingsPage() {
+  // ...existing code...
   const { projectId, resourceId } = useParams<{
     projectId: string;
     resourceId: string;
   }>();
-  const { currentResource, updateResource } = useResourceStore();
+  const {
+    data: currentResource,
+    isLoading,
+    error,
+  } = useResource(projectId!, resourceId!);
+  const updateResourceMutation = useUpdateResource(projectId!, resourceId!);
   // Permissions for resource (prefer resource, fallback to project)
   const { permissions: resourcePermissions } = useUserPermissions(
     "resource",
@@ -44,10 +51,11 @@ export default function ResourceSettingsPage() {
       return;
     }
     setSaving(true);
-    await updateResource(projectId!, resourceId!, {
+    const payload: UpdateResourceData = {
       name,
       settings_json: JSON.parse(settingsJson),
-    });
+    };
+    await updateResourceMutation.mutateAsync(payload);
     setSaving(false);
     setEditing(false);
   };
@@ -56,6 +64,17 @@ export default function ResourceSettingsPage() {
   const canEdit =
     resourcePermissions?.includes("write") ||
     projectPermissions?.includes("write");
+
+  if (isLoading) {
+    return <div>Loading resource...</div>;
+  }
+  if (error) {
+    return (
+      <div className="text-red-500">
+        Error: {error.message || String(error)}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -117,10 +136,11 @@ export default function ResourceSettingsPage() {
                     }
                     onSubmit={async (values) => {
                       setSaving(true);
-                      await updateResource(projectId!, resourceId!, {
+                      const payload: UpdateResourceData = {
                         name,
                         settings_json: values,
-                      });
+                      };
+                      await updateResourceMutation.mutateAsync(payload);
                       setSaving(false);
                       setEditing(false);
                     }}
