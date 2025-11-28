@@ -16,7 +16,6 @@ import ProjectDetailPage from "@/features/projects/pages/ProjectDetailPage";
 import ProjectAccessPage from "@/features/projects/pages/ProjectAccessPage";
 import OrganizationAccessPage from "@/features/organizations/pages/OrganizationAccessPage";
 import CreateRoleAssignmentPage from "@/features/access/pages/CreateRoleAssignmentPage";
-import LoginPage from "@/features/auth/LoginPage";
 import AuthCallbackPage from "@/features/auth/callback";
 import NotFoundPage from "@/pages/NotFoundPage";
 import OrganizationOverviewPage from "@/features/organizations/pages/OrganizationOverviewPage";
@@ -49,7 +48,6 @@ function App() {
       <Router>
         <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<LoginPage />} />
           <Route path="/callback" element={<AuthCallbackPage />} />
 
           {/* Project Selection: auto-redirect only on root */}

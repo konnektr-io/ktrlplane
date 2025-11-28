@@ -1,7 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { useEffect } from "react";
 import { useProjectStore } from "../store/projectStore";
-import { useOrganizationStore } from "../../organizations/store/organizationStore";
+import { useOrganization } from "../../organizations/hooks/useOrganizationApi";
 import {
   Card,
   CardContent,
@@ -15,21 +14,10 @@ import { CalendarDays, Building2, Activity } from "lucide-react";
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
   const { currentProject } = useProjectStore();
-  const { currentOrganization, fetchOrganizationById } = useOrganizationStore();
-
-  // Update currentOrganization when the project's org_id changes
-  useEffect(() => {
-    if (
-      currentProject?.org_id &&
-      currentProject.org_id !== currentOrganization?.org_id
-    ) {
-      fetchOrganizationById(currentProject.org_id);
-    }
-  }, [
-    currentProject?.org_id,
-    currentOrganization?.org_id,
-    fetchOrganizationById,
-  ]);
+  // Use React Query to fetch organization details
+  const { data: currentOrganization } = useOrganization(
+    currentProject?.org_id ?? ""
+  );
 
   return (
     <div className="space-y-6">
