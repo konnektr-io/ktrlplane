@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"ktrlplane/internal/config"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
 	"ktrlplane/internal/utils"
@@ -11,12 +13,14 @@ import (
 // ResourceService handles resource-related operations.
 type ResourceService struct {
 	rbacService *RBACService
+	config      *config.Config
 }
 
 // NewResourceService creates a new ResourceService.
-func NewResourceService() *ResourceService {
+func NewResourceService(cfg *config.Config) *ResourceService {
 	return &ResourceService{
 		rbacService: NewRBACService(),
+		config:      cfg,
 	}
 }
 
@@ -34,6 +38,39 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 	}
 	if !hasPermission {
 		return nil, fmt.Errorf("insufficient permissions to create resource")
+	}
+	
+	// Determine if resource is paid (not free)
+	isPaidResource := true
+	sku := "free"
+	// Try to extract SKU from settings_json if present, otherwise default to free
+	if req.SettingsJSON != nil && len(req.SettingsJSON) > 0 {
+		var settings map[string]interface{}
+		if err := json.Unmarshal(req.SettingsJSON, &settings); err == nil {
+			if val, ok := settings["sku"].(string); ok {
+				sku = val
+			}
+		}
+	}
+	if sku == "free" {
+		isPaidResource = false
+	}
+
+	if isPaidResource {
+		// Check billing account and subscription for project
+		billingSvc := NewBillingService(db.GetDB(), s.config)
+		billingAccount, err := billingSvc.GetBillingAccount("project", projectID)
+		if err != nil || billingAccount == nil || billingAccount.StripeCustomerID == nil || billingAccount.StripeSubscriptionID == nil || billingAccount.SubscriptionStatus != "active" {
+			return nil, fmt.Errorf("billing account with active subscription required for paid resources")
+		}
+
+		// Validate Stripe price ID for resource type and SKU
+		resourceType := req.Type
+		priceID, err := billingSvc.getPriceIDForResourceType(resourceType, sku)
+		if err != nil || priceID == "" {
+			return nil, fmt.Errorf("no Stripe price ID configured for resource type '%s' and SKU '%s': %v", resourceType, sku, err)
+		}
+		// Optionally, you could store priceID in resource metadata or use it for further Stripe logic here
 	}
 
 	err = db.ExecQuery(ctx, db.CreateResourceQuery, req.ID, projectID, req.Name, req.Type, req.SettingsJSON)

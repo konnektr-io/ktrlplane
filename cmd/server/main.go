@@ -47,7 +47,7 @@ func main() {
 
 	// --- Service Initialization ---
 	projectService := service.NewProjectService()
-	resourceService := service.NewResourceService()
+	resourceService := service.NewResourceService(&cfg)
 	organizationService := service.NewOrganizationService()
 	rbacService := service.NewRBACService()
 	billingService := service.NewBillingService(db.GetDB(), &cfg)

@@ -254,6 +254,9 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 	params := &stripe.SubscriptionParams{
 		Customer: stripe.String(*account.StripeCustomerID),
 		Items:    items,
+		BillingMode: &stripe.SubscriptionBillingModeParams{
+			Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
+		},
 	}
 
 	stripeSubscription, err := subscription.New(params)
