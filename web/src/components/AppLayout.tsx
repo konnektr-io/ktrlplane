@@ -19,13 +19,12 @@ interface AppLayoutProps {
 
 export default function AppLayout({
   sidebarContent,
-  showProjectSelector = false,
+  showProjectSelector = false, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: AppLayoutProps) {
   // Fetch organizations and projects using React Query hooks
   useOrganizations();
-  if (showProjectSelector) {
-    useProjects();
-  }
+  const projectsQuery = useProjects(); // eslint-disable-line @typescript-eslint/no-unused-vars
+  // Only use projectsQuery data if showProjectSelector is true
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">

@@ -1,7 +1,6 @@
 import { useEffect, useState, ReactNode } from "react";
 import { Theme, ThemeProviderContext, useTheme } from "./theme-provider.utils";
 
-export { useTheme };
 
 interface ThemeProviderProps {
   children: ReactNode;

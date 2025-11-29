@@ -28,8 +28,8 @@ export function useMultipleResourcePermissions(resourceIds: string[]) {
   const errorMap: Record<string, string | null> = {};
 
   resourceIds.forEach((id: string, idx: number) => {
-    const result = results[idx] as UseQueryResult<any, unknown>;
-    permissionsMap[id] = (result.data as string[]) || [];
+    const result = results[idx] as UseQueryResult<string[], unknown>;
+    permissionsMap[id] = result.data || [];
     loadingMap[id] = result.isLoading;
     let errorMsg: string | null = null;
     if (result.error) {
@@ -42,7 +42,7 @@ export function useMultipleResourcePermissions(resourceIds: string[]) {
         result.error !== null &&
         "message" in result.error
       ) {
-        errorMsg = String((result.error as any).message);
+        errorMsg = String((result.error as { message?: unknown }).message);
       } else {
         errorMsg = JSON.stringify(result.error);
       }
