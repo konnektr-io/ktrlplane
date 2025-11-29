@@ -84,18 +84,3 @@ func ExecQuery(ctx context.Context, query string, args ...any) error {
 	}
 	return nil
 }
-
-// Query executes a query and returns rows for processing.
-// DEPRECATED: This function leaks connections because it acquires a connection but never releases it.
-// The connection stays busy until rows.Close() is called, causing pool exhaustion.
-// Use db.GetDB().Query() directly instead and ensure proper defer rows.Close().
-// This function is kept only for backwards compatibility with tests.
-func Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error) {
-	if MockQuery != nil {
-		return MockQuery(ctx, query, args...)
-	}
-
-	// Use pool directly instead of acquiring a connection
-	// This allows the pool to manage connection lifecycle properly
-	return dbPool.Query(ctx, query, args...)
-}

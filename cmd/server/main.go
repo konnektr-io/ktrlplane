@@ -50,7 +50,7 @@ func main() {
 	resourceService := service.NewResourceService(&cfg)
 	organizationService := service.NewOrganizationService()
 	rbacService := service.NewRBACService()
-	billingService := service.NewBillingService(db.GetDB(), &cfg)
+	billingService := service.NewBillingService(&cfg)
 
 	// --- Proxy Service Initialization ---
 	var proxyService *api.ProxyService
