@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useUserPermissions } from '@/features/access/hooks/useUserPermissions';
+import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -14,40 +14,40 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { 
+} from "@/components/ui/tooltip";
+import {
   Settings,
   Shield,
   Building2,
   CreditCard,
-  FolderOpen
-} from 'lucide-react';
+  FolderOpen,
+} from "lucide-react";
 
 const organizationMenuItems = [
   {
-    title: 'Overview',
+    title: "Overview",
     icon: Building2,
-    path: '',
+    path: "",
   },
   {
-    title: 'Projects',
+    title: "Projects",
     icon: FolderOpen,
-    path: 'projects'
+    path: "projects",
   },
   {
-    title: 'Access & Permissions', 
+    title: "Access & Permissions",
     icon: Shield,
-    path: 'access',
+    path: "access",
   },
   {
-    title: 'Billing',
+    title: "Billing",
     icon: CreditCard,
-    path: 'billing',
+    path: "billing",
   },
   {
-    title: 'Settings',
+    title: "Settings",
     icon: Settings,
-    path: 'settings',
+    path: "settings",
   },
 ];
 
@@ -58,9 +58,12 @@ export default function OrganizationSidebarNav() {
   const { state } = useSidebar();
 
   // Fetch permissions for current organization
-  const { permissions } = useUserPermissions('organization', orgId);
+  const { data: permissions = [] } = useUserPermissions(
+    "organization",
+    orgId ?? ""
+  );
 
-  const isCollapsed = state === 'collapsed';
+  const isCollapsed = state === "collapsed";
 
   return (
     <TooltipProvider>
@@ -70,12 +73,18 @@ export default function OrganizationSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu>
             {organizationMenuItems.map((item) => {
-              const fullPath = `/organizations/${orgId}${item.path ? `/${item.path}` : ''}`;
-              const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/organizations/${orgId}` || location.pathname === `/organizations/${orgId}/`));
+              const fullPath = `/organizations/${orgId}${
+                item.path ? `/${item.path}` : ""
+              }`;
+              const isActive =
+                location.pathname === fullPath ||
+                (item.path === "" &&
+                  (location.pathname === `/organizations/${orgId}` ||
+                    location.pathname === `/organizations/${orgId}/`));
 
               // Only allow Billing if user has manage_billing permission
-              const isBilling = item.title === 'Billing';
-              const canManageBilling = permissions?.includes('manage_billing');
+              const isBilling = item.title === "Billing";
+              const canManageBilling = permissions?.includes("manage_billing");
               const isDisabled = isBilling && !canManageBilling;
 
               const menuButton = (
@@ -86,7 +95,15 @@ export default function OrganizationSidebarNav() {
                     if (!isDisabled) navigate(fullPath);
                   }}
                   disabled={isDisabled}
-                  style={isDisabled ? { opacity: 0.5, pointerEvents: 'none', cursor: 'not-allowed' } : {}}
+                  style={
+                    isDisabled
+                      ? {
+                          opacity: 0.5,
+                          pointerEvents: "none",
+                          cursor: "not-allowed",
+                        }
+                      : {}
+                  }
                 >
                   <div className="flex items-center gap-2 cursor-pointer">
                     <item.icon className="h-4 w-4" />
@@ -99,13 +116,13 @@ export default function OrganizationSidebarNav() {
                 <SidebarMenuItem key={item.title}>
                   {isCollapsed ? (
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        {menuButton}
-                      </TooltipTrigger>
+                      <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
                       <TooltipContent side="right">
                         <p>{item.title}</p>
                         {isDisabled && (
-                          <span className="text-xs text-muted-foreground block mt-1">You do not have permission to manage billing</span>
+                          <span className="text-xs text-muted-foreground block mt-1">
+                            You do not have permission to manage billing
+                          </span>
                         )}
                       </TooltipContent>
                     </Tooltip>

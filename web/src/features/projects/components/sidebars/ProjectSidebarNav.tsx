@@ -1,6 +1,6 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useProjectStore } from '../../store/projectStore';
-import { useUserPermissions } from '@/features/access/hooks/useUserPermissions';
+import { useProjects } from '../../hooks/useProjectApi';
+import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -16,46 +16,46 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { 
-  Database, 
+} from "@/components/ui/tooltip";
+import {
+  Database,
   Settings,
   Shield,
   FolderOpen,
-  CreditCard
-} from 'lucide-react';
+  CreditCard,
+} from "lucide-react";
 
 const projectMenuItems = [
   {
-    title: 'Overview',
+    title: "Overview",
     icon: FolderOpen,
-    path: '',
+    path: "",
   },
   {
-    title: 'Resources',
+    title: "Resources",
     icon: Database,
-    path: 'resources',
+    path: "resources",
   },
   {
-    title: 'Access & Permissions', 
+    title: "Access & Permissions",
     icon: Shield,
-    path: 'access',
+    path: "access",
   },
   {
-    title: 'Billing',
+    title: "Billing",
     icon: CreditCard,
-    path: 'billing',
+    path: "billing",
   },
   {
-    title: 'Settings',
+    title: "Settings",
     icon: Settings,
-    path: 'settings',
+    path: "settings",
   },
 ];
 
@@ -63,20 +63,22 @@ export default function ProjectSidebarNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
-  const { currentProject, projects, setCurrentProject } = useProjectStore();
+  const { data: projects = [] } = useProjects();
+  const currentProject = projects.find((p) => p.project_id === projectId) || null;
   const { state } = useSidebar();
 
   // Fetch permissions for current project
-  const { permissions } = useUserPermissions('project', projectId);
+  const { data: permissions = [] } = useUserPermissions(
+    "project",
+    projectId ?? ""
+  );
 
   const handleProjectChange = (newProjectId: string) => {
-    const selected = projects.find((p) => p.project_id === newProjectId) || null;
-    setCurrentProject(selected);
-    const currentPath = location.pathname.split('/').slice(3).join('/') || '';
+    const currentPath = location.pathname.split("/").slice(3).join("/") || "";
     navigate(`/projects/${newProjectId}/${currentPath}`);
   };
 
-  const isCollapsed = state === 'collapsed';
+  const isCollapsed = state === "collapsed";
 
   return (
     <TooltipProvider>
@@ -92,7 +94,7 @@ export default function ProjectSidebarNav() {
                 </SidebarMenuButton>
               </TooltipTrigger>
               <TooltipContent side="right">
-                <p>{currentProject?.name || 'Select Project'}</p>
+                <p>{currentProject?.name || "Select Project"}</p>
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -101,7 +103,7 @@ export default function ProjectSidebarNav() {
                 <SelectValue>
                   <div className="flex flex-col items-start">
                     <span className="truncate font-medium text-sm">
-                      {currentProject?.name || 'Select Project'}
+                      {currentProject?.name || "Select Project"}
                     </span>
                     {currentProject?.description && (
                       <span className="text-xs text-muted-foreground">
@@ -113,7 +115,10 @@ export default function ProjectSidebarNav() {
               </SelectTrigger>
               <SelectContent>
                 {projects.map((project) => (
-                  <SelectItem key={project.project_id} value={project.project_id}>
+                  <SelectItem
+                    key={project.project_id}
+                    value={project.project_id}
+                  >
                     <div className="flex flex-col">
                       <span>{project.name}</span>
                       {project.description && (
@@ -136,12 +141,18 @@ export default function ProjectSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu>
             {projectMenuItems.map((item) => {
-              const fullPath = `/projects/${projectId}${item.path ? `/${item.path}` : ''}`;
-              const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/projects/${projectId}` || location.pathname === `/projects/${projectId}/`));
+              const fullPath = `/projects/${projectId}${
+                item.path ? `/${item.path}` : ""
+              }`;
+              const isActive =
+                location.pathname === fullPath ||
+                (item.path === "" &&
+                  (location.pathname === `/projects/${projectId}` ||
+                    location.pathname === `/projects/${projectId}/`));
 
               // Only allow Billing if user has manage_billing permission
-              const isBilling = item.title === 'Billing';
-              const canManageBilling = permissions?.includes('manage_billing');
+              const isBilling = item.title === "Billing";
+              const canManageBilling = permissions?.includes("manage_billing");
               const isDisabled = isBilling && !canManageBilling;
 
               const menuButton = (
@@ -152,7 +163,15 @@ export default function ProjectSidebarNav() {
                     if (!isDisabled) navigate(fullPath);
                   }}
                   disabled={isDisabled}
-                  style={isDisabled ? { opacity: 0.5, pointerEvents: 'none', cursor: 'not-allowed' } : {}}
+                  style={
+                    isDisabled
+                      ? {
+                          opacity: 0.5,
+                          pointerEvents: "none",
+                          cursor: "not-allowed",
+                        }
+                      : {}
+                  }
                 >
                   <div className="flex items-center gap-2 cursor-pointer">
                     <item.icon className="h-4 w-4" />
@@ -165,13 +184,13 @@ export default function ProjectSidebarNav() {
                 <SidebarMenuItem key={item.title}>
                   {isCollapsed ? (
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        {menuButton}
-                      </TooltipTrigger>
+                      <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
                       <TooltipContent side="right">
                         <p>{item.title}</p>
                         {isDisabled && (
-                          <span className="text-xs text-muted-foreground block mt-1">You do not have permission to manage billing</span>
+                          <span className="text-xs text-muted-foreground block mt-1">
+                            You do not have permission to manage billing
+                          </span>
                         )}
                       </TooltipContent>
                     </Tooltip>

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { generateDNSId, validateDNSId, slugify } from "@/lib/dnsUtils";
-import { useProjectStore } from "../store/projectStore";
+import { useCreateProject, useProjects } from "../hooks/useProjectApi";
 
 export default function CreateProjectDialog({
   trigger,
@@ -22,7 +22,8 @@ export default function CreateProjectDialog({
   trigger?: React.ReactNode;
   onCreated?: (newProjectId: string) => void;
 }) {
-  const { createProject, fetchProjects } = useProjectStore();
+  const { mutateAsync: createProject } = useCreateProject();
+  const { refetch: fetchProjects } = useProjects();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     id: "",
@@ -69,7 +70,7 @@ export default function CreateProjectDialog({
         toast.success("Project created successfully!");
         setIsDialogOpen(false);
         setFormData({ id: "", name: "", description: "" });
-        fetchProjects();
+        await fetchProjects();
         if (onCreated) onCreated(newProject.project_id);
       }
     } catch {

@@ -1,21 +1,24 @@
-import { useParams } from 'react-router-dom';
-import { useEffect } from 'react';
-import { useProjectStore } from '../store/projectStore';
-import AppLayout from '@/components/AppLayout';
-import ProjectSidebarNav from '../components/sidebars/ProjectSidebarNav';
+import React from "react";
+import { useParams } from "react-router-dom";
+import AppLayout from "@/components/AppLayout";
+import ProjectSidebarNav from "../components/sidebars/ProjectSidebarNav";
+import { useProject } from "../hooks/useProjectApi";
+import { useProjectStore } from "../store/projectStore";
 
 export default function ProjectLayout() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { fetchProjectById } = useProjectStore();
+  const { data: project } = useProject(projectId!);
+  const setCurrentProject = useProjectStore((s) => s.setCurrentProject);
 
-  useEffect(() => {
-    if (projectId) {
-      fetchProjectById(projectId);
+  // Set currentProject in store when loaded
+  React.useEffect(() => {
+    if (project) {
+      setCurrentProject(project);
     }
-  }, [projectId, fetchProjectById]);
+  }, [project, setCurrentProject]);
 
   return (
-    <AppLayout 
+    <AppLayout
       sidebarContent={<ProjectSidebarNav />}
       showProjectSelector={true}
     />

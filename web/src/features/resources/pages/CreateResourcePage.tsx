@@ -21,12 +21,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useResourceStore } from "../store/resourceStore";
+import { useCreateResource } from "../hooks/useResourceApi";
+import type { CreateResourceData } from "../types/resource.types";
+import type { ResourceType } from "../schemas";
 import { defaultConfigurations } from "@/features/resources/schemas";
 import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
 import { generateDNSId, validateDNSId, slugify } from "@/lib/dnsUtils";
-import { useProjectStore } from "@/features/projects/store/projectStore";
-import { resourceTypes as catalogResourceTypes } from "@/features/catalog/resourceTypes";
+import { useProjects } from "@/features/projects/hooks/useProjectApi";
+import { resourceTypes as catalogResourceTypes } from "@/features/resources/catalog/resourceTypes";
 
 const resourceTypes = [
   {
@@ -61,40 +63,28 @@ const resourceTypes = [
 
 export default function CreateResourcePage() {
   const { projectId: urlProjectId } = useParams<{ projectId: string }>();
-  const { projects, lastProjectId, setLastProjectId, fetchProjects } =
-    useProjectStore();
+  const { data: projects = [] } = useProjects();
+  // For lastProjectId and setLastProjectId, consider using local state or a context if needed
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { createResource } = useResourceStore();
+  // ...existing code...
+  // Place this after selectedProjectId is defined
 
   // Get the resource type from URL - it may be provided from external links
   const preselectedResourceType = searchParams.get("resourceType");
 
   // Project selection logic
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    urlProjectId || lastProjectId || null
+    urlProjectId || (projects.length > 0 ? projects[0].project_id : null)
   );
 
   // Fetch projects on mount if not loaded
+  // Auto-select first project if none selected and projects are loaded
   useEffect(() => {
-    if (projects.length === 0) {
-      fetchProjects();
+    if (!selectedProjectId && projects.length > 0) {
+      setSelectedProjectId(projects[0].project_id);
     }
-  }, [fetchProjects, projects.length]);
-
-  // If no project selected, auto-select lastProjectId when projects are loaded
-  useEffect(() => {
-    if (!selectedProjectId && lastProjectId && projects.length > 0) {
-      setSelectedProjectId(lastProjectId);
-    }
-  }, [lastProjectId, projects.length, selectedProjectId]);
-
-  // If user selects a project, update lastProjectId in store
-  useEffect(() => {
-    if (selectedProjectId) {
-      setLastProjectId(selectedProjectId);
-    }
-  }, [selectedProjectId, setLastProjectId]);
+  }, [projects, selectedProjectId]);
 
   // No longer redirect to catalog - allow resource type selection on this page
 
@@ -103,11 +93,16 @@ export default function CreateResourcePage() {
     preselectedResourceType ? "tier" : "resourceType"
   );
   const [isCreating, setIsCreating] = useState(false);
-  const [basicData, setBasicData] = useState({
+  const [basicData, setBasicData] = useState<{
+    id: string;
+    name: string;
+    type: ResourceType | "";
+    sku: string;
+  }>({
     id: "",
     name: "",
-    type: preselectedResourceType || "",
-    sku: "free", // Default to free tier
+    type: (preselectedResourceType as ResourceType) || "",
+    sku: "free",
   });
 
   // Pre-select resource type and first available SKU from URL parameters
@@ -116,7 +111,10 @@ export default function CreateResourcePage() {
       preselectedResourceType &&
       resourceTypes.find((rt) => rt.value === preselectedResourceType)
     ) {
-      setBasicData((prev) => ({ ...prev, type: preselectedResourceType }));
+      setBasicData((prev) => ({
+        ...prev,
+        type: preselectedResourceType as ResourceType,
+      }));
 
       // Auto-select first available SKU for this resource type
       const catalogType = catalogResourceTypes.find(
@@ -141,6 +139,8 @@ export default function CreateResourcePage() {
     }));
   };
 
+  const createResourceMutation = useCreateResource(selectedProjectId || "");
+
   const handleConfigurationSubmit = async (configuration: unknown) => {
     if (!selectedProjectId) {
       toast.error("Please select a project before creating a resource.");
@@ -153,13 +153,14 @@ export default function CreateResourcePage() {
       if (configuration && typeof configuration === "object") {
         settings = configuration as Record<string, unknown>;
       }
-      const newResource = await createResource(selectedProjectId, {
+      const payload: CreateResourceData = {
         id: basicData.id.trim(),
         name: basicData.name.trim(),
-        type: basicData.type as "Konnektr.Graph" | "Konnektr.Flow",
-        sku: basicData.sku, // Include SKU in the resource creation
+        type: basicData.type as ResourceType,
+        sku: basicData.sku,
         settings_json: settings,
-      });
+      };
+      const newResource = await createResourceMutation.mutateAsync(payload);
 
       if (newResource) {
         toast.success("Resource created successfully!");
@@ -216,7 +217,14 @@ export default function CreateResourcePage() {
             {projects.length === 0 ? (
               <div className="text-muted-foreground text-sm flex flex-col gap-2 items-start">
                 <span>No projects found.</span>
-                <CreateProjectDialog trigger={<Button variant="outline" size="sm"><PlusCircle className="mr-2 h-4 w-4" />Create a project</Button>} />
+                <CreateProjectDialog
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Create a project
+                    </Button>
+                  }
+                />
               </div>
             ) : (
               <>
@@ -239,7 +247,14 @@ export default function CreateResourcePage() {
                   </SelectContent>
                 </Select>
                 <div className="mt-2">
-                  <CreateProjectDialog trigger={<Button variant="outline" size="sm"><PlusCircle className="mr-2 h-4 w-4" />New Project</Button>} />
+                  <CreateProjectDialog
+                    trigger={
+                      <Button variant="outline" size="sm">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        New Project
+                      </Button>
+                    }
+                  />
                 </div>
               </>
             )}
@@ -386,7 +401,7 @@ export default function CreateResourcePage() {
                       onClick={() => {
                         setBasicData((prev) => ({
                           ...prev,
-                          type: resourceType.value,
+                          type: resourceType.value as ResourceType,
                         }));
 
                         // Auto-select first available SKU for this resource type

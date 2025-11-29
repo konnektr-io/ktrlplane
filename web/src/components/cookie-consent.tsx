@@ -46,7 +46,7 @@ export function CookieConsent({
     } catch (error) {
       console.error("Error checking cookie consent:", error);
     }
-  }, []);
+  }, [mode]);
 
   return variant === "default" ? (
     <div

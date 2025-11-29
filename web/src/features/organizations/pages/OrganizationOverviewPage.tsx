@@ -1,23 +1,49 @@
-import { useParams } from 'react-router-dom';
-import { useOrganizationStore } from '../store/organizationStore';
-import { useProjectStore } from '../../projects/store/projectStore';
-import { Project } from '../../projects/types/project.types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, FolderOpen } from 'lucide-react';
+import { useParams } from "react-router-dom";
+import { useOrganization } from "../hooks/useOrganizationApi";
+import { useProjects } from "../../projects/hooks/useProjectApi";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Building2, FolderOpen } from "lucide-react";
 
 export default function OrganizationOverviewPage() {
-  const { orgId } = useParams();
-  const { currentOrganization } = useOrganizationStore();
-  const { projects } = useProjectStore();
+  const { orgId } = useParams<{ orgId: string }>();
+  const {
+    data: currentOrganization,
+    isLoading,
+    isError,
+  } = useOrganization(orgId!);
+  const { data: projects = [], isLoading: projectsLoading } = useProjects();
 
   // Filter projects for this organization if needed
-  const orgProjects = projects.filter((project: Project) => project.org_id === orgId);
+  const orgProjects = projects.filter((project) => project.org_id === orgId);
+
+  if (isLoading || projectsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading organization...</p>
+      </div>
+    );
+  }
+  if (!currentOrganization || isError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Organization not found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{currentOrganization?.name || 'Organization Overview'}</h1>
+        <h1 className="text-3xl font-bold">
+          {currentOrganization?.name || "Organization Overview"}
+        </h1>
         <p className="text-muted-foreground">
           Organization details and management
         </p>
@@ -36,7 +62,7 @@ export default function OrganizationOverviewPage() {
             <div>
               <p className="text-sm font-medium">Name</p>
               <p className="text-sm text-muted-foreground">
-                {currentOrganization?.name || 'Unknown'}
+                {currentOrganization?.name || "Unknown"}
               </p>
             </div>
             <div>
@@ -64,7 +90,7 @@ export default function OrganizationOverviewPage() {
             <div>
               <p className="text-sm font-medium">Active Projects</p>
               <p className="text-lg font-semibold text-green-600">
-                {orgProjects.filter((p: Project) => p.status === 'Active').length}
+                {orgProjects.filter((p) => p.status === "Active").length}
               </p>
             </div>
           </CardContent>
@@ -83,7 +109,9 @@ export default function OrganizationOverviewPage() {
               <div>
                 <p className="text-sm font-medium">Created</p>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(currentOrganization.created_at).toLocaleDateString()}
+                  {new Date(
+                    currentOrganization.created_at
+                  ).toLocaleDateString()}
                 </p>
               </div>
             )}
@@ -91,7 +119,9 @@ export default function OrganizationOverviewPage() {
               <div>
                 <p className="text-sm font-medium">Last Updated</p>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(currentOrganization.updated_at).toLocaleDateString()}
+                  {new Date(
+                    currentOrganization.updated_at
+                  ).toLocaleDateString()}
                 </p>
               </div>
             )}
@@ -104,24 +134,31 @@ export default function OrganizationOverviewPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recent Projects</CardTitle>
-            <CardDescription>
-              Projects in this organization
-            </CardDescription>
+            <CardDescription>Projects in this organization</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {orgProjects.slice(0, 5).map((project: Project) => (
-                <div key={project.project_id} className="flex items-center justify-between p-3 border rounded-lg">
+              {orgProjects.slice(0, 5).map((project) => (
+                <div
+                  key={project.project_id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <FolderOpen className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">{project.name}</p>
                       {project.description && (
-                        <p className="text-sm text-muted-foreground">{project.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {project.description}
+                        </p>
                       )}
                     </div>
                   </div>
-                  <Badge variant={project.status === 'Active' ? 'default' : 'secondary'}>
+                  <Badge
+                    variant={
+                      project.status === "Active" ? "default" : "secondary"
+                    }
+                  >
                     {project.status}
                   </Badge>
                 </div>
@@ -135,9 +172,7 @@ export default function OrganizationOverviewPage() {
       <Card>
         <CardHeader>
           <CardTitle>Organization Metrics</CardTitle>
-          <CardDescription>
-            High-level organization statistics
-          </CardDescription>
+          <CardDescription>High-level organization statistics</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">

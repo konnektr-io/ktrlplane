@@ -1,6 +1,5 @@
-import { type ReactNode, useEffect } from "react";
-import { useProjectStore } from "../features/projects/store/projectStore";
-import { useOrganizationStore } from "../features/organizations/store/organizationStore";
+import { type ReactNode } from "react";
+import { ThemeProvider } from "next-themes";
 import {
   Sidebar,
   SidebarContent,
@@ -10,32 +9,19 @@ import {
 import AppHeader from "@/components/AppHeader";
 import { Outlet } from "react-router-dom";
 import konnektrLogo from "../assets/konnektr.svg";
-import { ThemeProvider } from "@/components/theme-provider";
 
 interface AppLayoutProps {
   sidebarContent: ReactNode;
   showProjectSelector?: boolean;
 }
 
-export default function AppLayout({
-  sidebarContent,
-  showProjectSelector = false,
-}: AppLayoutProps) {
-  const { fetchProjects } = useProjectStore();
-  const { fetchOrganizations } = useOrganizationStore();
-
-  useEffect(() => {
-    // Always fetch organizations on layout mount
-    fetchOrganizations();
-
-    // Fetch projects if we need the project selector
-    if (showProjectSelector) {
-      fetchProjects();
-    }
-  }, [fetchOrganizations, fetchProjects, showProjectSelector]);
-
+export default function AppLayout({ sidebarContent }: AppLayoutProps) {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      storageKey="vite-ui-theme"
+    >
       <SidebarProvider>
         <div className="flex h-screen w-full">
           <Sidebar>

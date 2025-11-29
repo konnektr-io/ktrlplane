@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Auth0Provider } from "@auth0/auth0-react";
-import AuthSetup from "@/features/auth/AuthSetup";
 import MinimalAppLayout from "@/components/MinimalAppLayout";
 import ProjectLayout from "@/features/projects/layouts/ProjectLayout";
 import ResourceLayout from "@/features/resources/layouts/ResourceLayout";
@@ -16,7 +15,6 @@ import ProjectDetailPage from "@/features/projects/pages/ProjectDetailPage";
 import ProjectAccessPage from "@/features/projects/pages/ProjectAccessPage";
 import OrganizationAccessPage from "@/features/organizations/pages/OrganizationAccessPage";
 import CreateRoleAssignmentPage from "@/features/access/pages/CreateRoleAssignmentPage";
-import LoginPage from "@/features/auth/LoginPage";
 import AuthCallbackPage from "@/features/auth/callback";
 import NotFoundPage from "@/pages/NotFoundPage";
 import OrganizationOverviewPage from "@/features/organizations/pages/OrganizationOverviewPage";
@@ -46,112 +44,97 @@ function App() {
       cacheLocation="localstorage"
       onRedirectCallback={onRedirectCallback}
     >
-      <AuthSetup>
-        <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/callback" element={<AuthCallbackPage />} />
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/callback" element={<AuthCallbackPage />} />
 
-            {/* Project Selection: auto-redirect only on root */}
+          {/* Project Selection: auto-redirect only on root */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <MinimalAppLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route
+              path="/"
               element={
-                <ProtectedRoute>
-                  <MinimalAppLayout />
-                </ProtectedRoute>
+                <ProjectAutoRedirect>
+                  <ProjectListPage />
+                </ProjectAutoRedirect>
               }
-            >
-              <Route
-                path="/"
-                element={
-                  <ProjectAutoRedirect>
-                    <ProjectListPage />
-                  </ProjectAutoRedirect>
-                }
-              />
-              <Route path="/projects" element={<ProjectListPage />} />
-            </Route>
+            />
+            <Route path="/projects" element={<ProjectListPage />} />
+          </Route>
 
-            {/* Project-based Routes (plural) */}
-            <Route
-              path="/projects/:projectId"
-              element={
-                <ProtectedRoute>
-                  <ProjectLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<ProjectDetailPage />} />
-              <Route path="resources" element={<ResourcesPage />} />
-              <Route path="resources/create" element={<CreateResourcePage />} />
-              <Route path="access" element={<ProjectAccessPage />} />
-              <Route
-                path="access/grant"
-                element={<CreateRoleAssignmentPage />}
-              />
-              <Route path="billing" element={<BillingPage />} />
-              <Route path="settings" element={<ProjectSettingsPage />} />
-            </Route>
+          {/* Project-based Routes (plural) */}
+          <Route
+            path="/projects/:projectId"
+            element={
+              <ProtectedRoute>
+                <ProjectLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ProjectDetailPage />} />
+            <Route path="resources" element={<ResourcesPage />} />
+            <Route path="resources/create" element={<CreateResourcePage />} />
+            <Route path="access" element={<ProjectAccessPage />} />
+            <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
+            <Route path="billing" element={<BillingPage />} />
+            <Route path="settings" element={<ProjectSettingsPage />} />
+          </Route>
 
-            {/* Global resource creation route for homepage integration */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <MinimalAppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route
-                path="/resources/create"
-                element={<CreateResourcePage />}
-              />
-            </Route>
+          {/* Global resource creation route for homepage integration */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <MinimalAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/resources/create" element={<CreateResourcePage />} />
+          </Route>
 
-            {/* Resource-based Routes (plural) */}
-            <Route
-              path="/projects/:projectId/resources/:resourceId"
-              element={
-                <ProtectedRoute>
-                  <ResourceLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<ResourceDetailPage />} />
-              <Route path="access" element={<ResourceAccessPage />} />
-              <Route
-                path="access/grant"
-                element={<CreateRoleAssignmentPage />}
-              />
-              <Route path="logs" element={<ResourceLogsPage />} />
-              <Route path="monitoring" element={<ResourceMonitoringPage />} />
-              <Route path="settings" element={<ResourceSettingsPage />} />
-            </Route>
+          {/* Resource-based Routes (plural) */}
+          <Route
+            path="/projects/:projectId/resources/:resourceId"
+            element={
+              <ProtectedRoute>
+                <ResourceLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ResourceDetailPage />} />
+            <Route path="access" element={<ResourceAccessPage />} />
+            <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
+            <Route path="logs" element={<ResourceLogsPage />} />
+            <Route path="monitoring" element={<ResourceMonitoringPage />} />
+            <Route path="settings" element={<ResourceSettingsPage />} />
+          </Route>
 
-            {/* Organization-based Routes (plural) */}
-            <Route
-              path="/organizations/:orgId"
-              element={
-                <ProtectedRoute>
-                  <OrganizationLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<OrganizationOverviewPage />} />
-              <Route path="projects" element={<ProjectListPage />} />
-              <Route path="access" element={<OrganizationAccessPage />} />
-              <Route
-                path="access/grant"
-                element={<CreateRoleAssignmentPage />}
-              />
-              <Route path="billing" element={<BillingPage />} />
-              <Route path="settings" element={<OrganizationSettingsPage />} />
-            </Route>
+          {/* Organization-based Routes (plural) */}
+          <Route
+            path="/organizations/:orgId"
+            element={
+              <ProtectedRoute>
+                <OrganizationLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<OrganizationOverviewPage />} />
+            <Route path="projects" element={<ProjectListPage />} />
+            <Route path="access" element={<OrganizationAccessPage />} />
+            <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
+            <Route path="billing" element={<BillingPage />} />
+            <Route path="settings" element={<OrganizationSettingsPage />} />
+          </Route>
 
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Router>
-        {/* <Toaster richColors position="top-right" /> */}
-      </AuthSetup>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Router>
+      {/* <Toaster richColors position="top-right" /> */}
     </Auth0Provider>
   );
 }

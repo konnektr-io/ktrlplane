@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useResourceStore } from "../store/resourceStore";
+// import { useResourceStore } from "../store/resourceStore";
+import { useResources, useDeleteResource } from "../hooks/useResourceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,7 +30,7 @@ import {
   Filter,
   Trash2,
 } from "lucide-react";
-import { useUserPermissions } from "@/features/access/hooks/useUserPermissions";
+import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { useMultipleResourcePermissions } from "@/features/access/hooks/useMultipleResourcePermissions";
 
 const resourceTypeIcons = {
@@ -43,30 +44,38 @@ const resourceTypeIcons = {
 export default function ResourcesPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { resources, isLoading, fetchResources, error, deleteResource } =
-    useResourceStore();
+  const {
+    data: resources = [],
+    isLoading,
+    error,
+    refetch,
+  } = useResources(projectId!);
   const resourceIds = useMemo(
     () => resources.map((r) => r.resource_id),
     [resources]
   );
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const deleteResourceMutation = useDeleteResource(
+    projectId!,
+    deletingId ?? ""
+  );
   const { permissionsMap, loadingMap } =
     useMultipleResourcePermissions(resourceIds);
-
   // Permissions for project (for create)
-  const { permissions: projectPermissions } = useUserPermissions(
+  const { data: projectPermissions = [] } = useUserPermissions(
     "project",
-    projectId
+    projectId ?? ""
   );
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const resourceToDelete = resources.find((r) => r.resource_id === deletingId);
 
   // Resource-level permissions will be handled via state and effect below
   const handleDelete = async () => {
-    if (projectId && deletingId) {
-      await deleteResource(projectId, deletingId);
+    if (deletingId && projectId) {
+      await deleteResourceMutation.mutateAsync();
       setDeletingId(null);
       setShowConfirm(false);
+      refetch();
     }
   };
   const [filter, setFilter] = useState("");
@@ -75,9 +84,9 @@ export default function ResourcesPage() {
 
   useEffect(() => {
     if (projectId) {
-      fetchResources(projectId);
+      refetch();
       intervalRef.current = setInterval(() => {
-        fetchResources(projectId);
+        refetch();
       }, 10000); // 10 seconds
     }
     return () => {
@@ -85,14 +94,18 @@ export default function ResourcesPage() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [projectId, fetchResources]);
+  }, [projectId, refetch]);
 
   if (isLoading) {
     return <div>Loading resources...</div>;
   }
 
   if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
+    return (
+      <div className="text-red-500">
+        Error: {error.message || String(error)}
+      </div>
+    );
   }
 
   // Filtering logic

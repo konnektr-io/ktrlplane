@@ -1,66 +1,58 @@
-import { useEffect, useState } from "react";
-import { fetchUserPermissions } from "../api/permissions";
+import { useQueries } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
+import { useAuth0 } from "@auth0/auth0-react";
+import apiClient from "@/lib/axios";
+import { handleApiError } from "@/lib/errorHandler";
 
 export function useMultipleResourcePermissions(resourceIds: string[]) {
-  const [permissionsMap, setPermissionsMap] = useState<
-    Record<string, string[]>
-  >({});
-  const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
-  const [errorMap, setErrorMap] = useState<Record<string, string | null>>({});
-
-  useEffect(() => {
-    if (!resourceIds || resourceIds.length === 0) {
-      setPermissionsMap({});
-      setLoadingMap({});
-      setErrorMap({});
-      return;
-    }
-
-    // Only set loading for new resourceIds
-    setLoadingMap((prev) => {
-      const next = { ...prev };
-      resourceIds.forEach((id) => {
-        next[id] = true;
-      });
-      return next;
-    });
-
-    let cancelled = false;
-    const fetchAll = async () => {
-      const perms: Record<string, string[]> = {};
-      const loading: Record<string, boolean> = {};
-      const errors: Record<string, string | null> = {};
-      for (const id of resourceIds) {
+  const { getAccessTokenSilently } = useAuth0();
+  // For each resourceId, call the React Query hook
+  // Use useQueries to fetch permissions for all resourceIds in parallel
+  const results = useQueries({
+    queries: resourceIds.map((id) => ({
+      queryKey: ["userPermissions", "resource", id],
+      queryFn: async () => {
         try {
-          const p = await fetchUserPermissions("resource", id);
-          perms[id] = p;
-          errors[id] = null;
+          const token = await getAccessTokenSilently();
+          const response = await apiClient.get("/permissions/check", {
+            params: { scopeType: "resource", scopeId: id },
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          return response.data.permissions || [];
         } catch (err: unknown) {
-          perms[id] = [];
-          if (
-            err &&
-            typeof err === "object" &&
-            "message" in err &&
-            typeof (err as { message?: unknown }).message === "string"
-          ) {
-            errors[id] = (err as { message: string }).message;
-          } else {
-            errors[id] = "Failed to fetch permissions";
-          }
+          await handleApiError(err);
         }
-        loading[id] = false;
+      },
+      enabled: !!id,
+    })),
+  });
+
+  const permissionsMap: Record<string, string[]> = {};
+  const loadingMap: Record<string, boolean> = {};
+  const errorMap: Record<string, string | null> = {};
+
+  resourceIds.forEach((id: string, idx: number) => {
+    const result = results[idx] as UseQueryResult<string[], unknown>;
+    permissionsMap[id] = result.data || [];
+    loadingMap[id] = result.isLoading;
+    let errorMsg: string | null = null;
+    if (result.error) {
+      if (typeof result.error === "string") {
+        errorMsg = result.error;
+      } else if (result.error instanceof Error) {
+        errorMsg = result.error.message;
+      } else if (
+        typeof result.error === "object" &&
+        result.error !== null &&
+        "message" in result.error
+      ) {
+        errorMsg = String((result.error as { message?: unknown }).message);
+      } else {
+        errorMsg = JSON.stringify(result.error);
       }
-      if (!cancelled) {
-        setPermissionsMap(perms);
-        setLoadingMap(loading);
-        setErrorMap(errors);
-      }
-    };
-    fetchAll();
-    return () => {
-      cancelled = true;
-    };
-  }, [resourceIds]);
+    }
+    errorMap[id] = errorMsg;
+  });
 
   return { permissionsMap, loadingMap, errorMap };
 }

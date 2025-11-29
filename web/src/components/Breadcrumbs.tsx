@@ -8,9 +8,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
-import { useOrganizationStore } from "../features/organizations/store/organizationStore";
-import { useProjectStore } from "../features/projects/store/projectStore";
-import { useResourceStore } from "../features/resources/store/resourceStore";
+import { useOrganizations } from "../features/organizations/hooks/useOrganizationApi";
+import { useProjects } from "../features/projects/hooks/useProjectApi";
+import { useResources } from "../features/resources/hooks/useResourceApi";
 
 interface BreadcrumbItem {
   label: string;
@@ -21,9 +21,9 @@ interface BreadcrumbItem {
 export default function Breadcrumbs() {
   const location = useLocation();
   const params = useParams();
-  const { organizations } = useOrganizationStore();
-  const { projects } = useProjectStore();
-  const { resources } = useResourceStore();
+  const { data: organizations = [] } = useOrganizations();
+  const { data: projects = [] } = useProjects();
+  const { data: resources = [] } = useResources(params.projectId ?? "");
 
   const getBreadcrumbs = (): BreadcrumbItem[] => {
     const breadcrumbs: BreadcrumbItem[] = [{ label: "Home", href: "/" }];
