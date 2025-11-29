@@ -33,21 +33,20 @@ export default function RolePermissionsTooltip({
             <Info className="h-3 w-3 text-muted-foreground" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="w-80 p-4">
+        <TooltipContent
+          side="top"
+          className="w-80 p-4 bg-background border border-border text-foreground shadow-lg"
+        >
           <div className="space-y-3">
             <div>
               <h4 className="font-semibold">{role.display_name}</h4>
-              <p className="text-sm text-muted-foreground">
-                {role.description}
-              </p>
+              <p className="text-sm text-foreground">{role.description}</p>
             </div>
             <div className="space-y-2">
               <h5 className="text-sm font-medium">Permissions:</h5>
               <div className="space-y-1">
                 {isLoading ? (
-                  <div className="text-xs text-muted-foreground">
-                    Loading...
-                  </div>
+                  <div className="text-xs text-foreground">Loading...</div>
                 ) : permissions.length > 0 ? (
                   permissions.map(
                     (permission: {
@@ -57,18 +56,20 @@ export default function RolePermissionsTooltip({
                     }) => (
                       <div
                         key={permission.permission_id}
-                        className="flex items-center gap-2 text-xs"
+                        className="flex items-center gap-4 text-xs py-1 border-b last:border-b-0"
                       >
-                        <Check className="h-3 w-3 text-green-600" />
-                        <span className="flex-1">{permission.action}</span>
-                        <span className="text-muted-foreground">
+                        <Check className="h-3 w-3 text-green-600 shrink-0" />
+                        <span className="font-mono text-foreground min-w-[100px]">
+                          {permission.action}
+                        </span>
+                        <span className="text-foreground flex-1">
                           {permission.description}
                         </span>
                       </div>
                     )
                   )
                 ) : (
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-foreground">
                     No permissions found for this role.
                   </div>
                 )}
