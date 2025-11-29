@@ -29,44 +29,12 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 		return nil, fmt.Errorf("invalid project ID: %w", err)
 	}
 
-	// For self-service, we need to either:
-	// 1. Create a new organization if user doesn't have one
-	// 2. Create project in user's existing organization with write access
-
-	// First, check if user has any organizations
-	orgs, err := s.orgService.ListOrganizations(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user organizations: %w", err)
-	}
-
-	var orgID string
-	if len(orgs) == 0 {
-		// Self-service: Create new organization for the user using the project name
-		orgReq := models.CreateOrganizationRequest{
-			ID:   req.ID + "-org", // Use project ID as base for org ID
-			Name: req.Name,
-		}
-		org, err := s.orgService.CreateOrganization(ctx, orgReq, userID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create organization: %w", err)
-		}
-		orgID = org.OrgID
+	// Allow org_id to be optional. If provided, use it; if not, allow project without org.
+	var orgID *string
+	if req.OrgID != nil && *req.OrgID != "" {
+		orgID = req.OrgID
 	} else {
-		// Find an organization where user has write access
-		for _, org := range orgs {
-			hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "write", "organization", org.OrgID)
-			if err != nil {
-				continue
-			}
-			if hasPermission {
-				orgID = org.OrgID
-				break
-			}
-		}
-
-		if orgID == "" {
-			return nil, fmt.Errorf("no write access to any organization")
-		}
+		orgID = nil
 	}
 
 	// Create project
@@ -86,7 +54,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 	// Insert project
 	project := &models.Project{
 		ProjectID:   req.ID,
-		OrgID:       &orgID,
+		OrgID:       orgID,
 		Name:        req.Name,
 		Description: req.Description,
 		Status:      "Active",

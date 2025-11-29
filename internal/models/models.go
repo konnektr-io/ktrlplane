@@ -72,11 +72,10 @@ type UpdateOrganizationRequest struct {
 
 // CreateProjectRequest is the payload for creating a project.
 type CreateProjectRequest struct {
-	ID          string `json:"id" binding:"required"`
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	// OrgID       string `json:"org_id" binding:"required"`
-	// BillingID   string `json:"billing_id" binding:"required"`
+	ID          string  `json:"id" binding:"required"`
+	Name        string  `json:"name" binding:"required"`
+	Description string  `json:"description"`
+	OrgID       *string `json:"org_id,omitempty"`
 }
 
 // UpdateProjectRequest is the payload for updating a project.

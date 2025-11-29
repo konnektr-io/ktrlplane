@@ -32,214 +32,111 @@ import {
   Calendar,
   Package,
 } from "lucide-react";
-import apiClient from "@/lib/axios";
-import { isAxiosError } from "axios";
-
-interface BillingAccount {
-  billing_account_id: string;
-  scope_type: "organization" | "project";
-  scope_id: string;
-  stripe_customer_id?: string;
-  stripe_subscription_id?: string;
-  subscription_status: string;
-  subscription_plan: string;
-  billing_email?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface StripeInvoice {
-  id: string;
-  amount_due: number;
-  currency: string;
-  period_start: number;
-  period_end: number;
-  status: string;
-  hosted_invoice_url?: string;
-}
-
-interface StripePaymentMethod {
-  id: string;
-  type: string;
-  card?: {
-    brand: string;
-    last4: string;
-    exp_month: number;
-    exp_year: number;
-  };
-}
-
-interface BillingInfo {
-  billing_account: BillingAccount;
-  stripe_customer_portal?: string;
-  upcoming_invoice?: StripeInvoice;
-  payment_methods?: StripePaymentMethod[];
-  subscription_items?: StripeSubscriptionItem[];
-  subscription_details?: StripeSubscriptionDetails;
-}
-
-interface StripeSubscriptionItem {
-  id: string;
-  quantity: number;
-  price?: {
-    id: string;
-    unit_amount: number;
-    currency: string;
-    recurring?: {
-      interval: string;
-      interval_count: number;
-    };
-    product?: {
-      id: string;
-      name: string;
-      description: string;
-    };
-  };
-}
-
-interface StripeSubscriptionDetails {
-  id: string;
-  status: string;
-  current_period_start: number;
-  current_period_end: number;
-  cancel_at_period_end: boolean;
-}
+import {
+  useBilling,
+  useUpdateBillingEmail,
+  useSetupStripeCustomer,
+  useOpenCustomerPortal,
+  useCreateSubscription,
+  useCancelSubscription,
+} from "../hooks/useBillingApi";
 
 export default function BillingPage() {
   const { orgId, projectId } = useParams();
   const location = useLocation();
-  const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [billingEmail, setBillingEmail] = useState("");
+  const scopeType = orgId ? "organization" : "project";
+  const scopeId = orgId || projectId || "";
   const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-
-  // Determine if this is an organization or project billing page
-  const scopeType = orgId ? "organization" : "project";
-  const scopeId = orgId || projectId || "";
-  const baseURL = orgId ? `/organizations/${orgId}` : `/projects/${projectId}`;
-
-  const fetchBillingInfo = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      console.log("Fetching billing info from:", `${baseURL}/billing`);
-      const response = await apiClient.get(`${baseURL}/billing`);
-      setBillingInfo(response.data);
-      setBillingEmail(response.data.billing_account.billing_email || "");
-    } catch (err: unknown) {
-      console.error("Billing fetch error:", err);
-      if (
-        err &&
-        typeof err === "object" &&
-        "response" in err &&
-        typeof (err as { response?: { data?: { error?: unknown } } }).response
-          ?.data?.error === "string"
-      ) {
-        setError(
-          (err as { response: { data: { error: string } } }).response.data.error
-        );
-      } else {
-        setError("Failed to load billing information");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [baseURL]);
+  const [billingEmail, setBillingEmail] = useState("");
+  const {
+    data: billingInfo,
+    isLoading: loading,
+    isError,
+    refetch,
+  } = useBilling(scopeType, scopeId);
+  const updateBillingEmailMutation = useUpdateBillingEmail(scopeType, scopeId);
+  const setupStripeCustomerMutation = useSetupStripeCustomer(
+    scopeType,
+    scopeId
+  );
+  const openCustomerPortalMutation = useOpenCustomerPortal(scopeType, scopeId);
+  const createSubscriptionMutation = useCreateSubscription(scopeType, scopeId);
+  const cancelSubscriptionMutation = useCancelSubscription(scopeType, scopeId);
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchBillingInfo();
-  }, [scopeId, scopeType, fetchBillingInfo]);
+    if (billingInfo && billingInfo.billing_account) {
+      setBillingEmail(billingInfo.billing_account.billing_email || "");
+    }
+  }, [billingInfo]);
 
+  // Handlers using mutations
   const updateBillingEmail = async () => {
+    setUpdating(true);
     try {
-      setUpdating(true);
-      await apiClient.put(`${baseURL}/billing`, {
-        billing_email: billingEmail,
-      });
-      await fetchBillingInfo();
-    } catch (err: unknown) {
-      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
-        setError(err.response.data.error);
-      } else {
-        setError("Failed to update billing email");
-      }
+      await updateBillingEmailMutation.mutateAsync(billingEmail);
+      await refetch();
+    } catch (err) {
+      setError("Failed to update billing email");
     } finally {
       setUpdating(false);
     }
   };
 
   const setupStripeCustomer = async () => {
+    setUpdating(true);
     try {
-      setUpdating(true);
-      await apiClient.post(`${baseURL}/billing/customer`, {
+      await setupStripeCustomerMutation.mutateAsync({
         email: customerEmail,
         name: customerName,
         description: `${scopeType} ${scopeId}`,
       });
-      await fetchBillingInfo();
+      await refetch();
       setShowSetupDialog(false);
       setCustomerName("");
       setCustomerEmail("");
-    } catch (err: unknown) {
-      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
-        setError(err.response.data.error);
-      } else {
-        setError("Failed to setup billing customer");
-      }
+    } catch (err) {
+      setError("Failed to setup billing customer");
     } finally {
       setUpdating(false);
     }
   };
 
   const openCustomerPortal = async () => {
+    setUpdating(true);
     try {
-      setUpdating(true);
       const returnUrl = `${window.location.origin}${location.pathname}`;
-      const response = await apiClient.post(`${baseURL}/billing/portal`, {
-        return_url: returnUrl,
-      });
-      window.location.href = response.data.portal_url;
-    } catch (err: unknown) {
-      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
-        setError(err.response.data.error);
-      } else {
-        setError("Failed to open customer portal");
-      }
+      const portalUrl = await openCustomerPortalMutation.mutateAsync(returnUrl);
+      window.location.href = portalUrl;
+    } catch (err) {
+      setError("Failed to open customer portal");
+    } finally {
       setUpdating(false);
     }
   };
 
   const createSubscription = async () => {
+    setUpdating(true);
     try {
-      setUpdating(true);
-      await apiClient.post(`${baseURL}/billing/subscription`, {});
-      await fetchBillingInfo();
-    } catch (err: unknown) {
-      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
-        setError(err.response.data.error);
-      } else {
-        setError("Failed to create subscription");
-      }
+      await createSubscriptionMutation.mutateAsync();
+      await refetch();
+    } catch (err) {
+      setError("Failed to create subscription");
     } finally {
       setUpdating(false);
     }
   };
 
   const cancelSubscription = async () => {
+    setUpdating(true);
     try {
-      setUpdating(true);
-      await apiClient.post(`${baseURL}/billing/cancel`);
-      await fetchBillingInfo();
-    } catch (err: unknown) {
-      if (isAxiosError(err) && typeof err.response?.data?.error === "string") {
-        setError(err.response.data.error);
-      } else {
-        setError("Failed to cancel subscription");
-      }
+      await cancelSubscriptionMutation.mutateAsync();
+      await refetch();
+    } catch (err) {
+      setError("Failed to cancel subscription");
     } finally {
       setUpdating(false);
     }

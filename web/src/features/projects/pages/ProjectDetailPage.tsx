@@ -1,6 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useProjectStore } from "../store/projectStore";
-import { useOrganization } from "../../organizations/hooks/useOrganizationApi";
+import { useProject } from "../hooks/useProjectApi";
 import {
   Card,
   CardContent,
@@ -13,11 +12,7 @@ import { CalendarDays, Building2, Activity } from "lucide-react";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
-  const { currentProject } = useProjectStore();
-  // Use React Query to fetch organization details
-  const { data: currentOrganization } = useOrganization(
-    currentProject?.org_id ?? ""
-  );
+  const { data: currentProject } = useProject(projectId ?? "");
 
   return (
     <div className="space-y-6">
@@ -68,33 +63,32 @@ export default function ProjectDetailPage() {
         </Card>
 
         {/* Organization Info Card */}
-        {currentOrganization && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Organization
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-medium">Name</p>
-                <p className="text-sm text-muted-foreground">
-                  {currentOrganization.name}
-                </p>
-              </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Organization
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {currentProject?.org_id ? (
               <div>
                 <p className="text-sm font-medium">Organization ID</p>
                 <Link
-                  to={`/organizations/${currentOrganization.org_id}/settings`}
+                  to={`/organizations/${currentProject.org_id}/settings`}
                   className="text-sm text-muted-foreground font-mono hover:text-foreground"
                 >
-                  {currentOrganization.org_id}
+                  {currentProject.org_id}
                 </Link>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div>
+                <p className="text-sm font-medium">Organization</p>
+                <p className="text-sm text-muted-foreground">No Organization</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Timestamps Card */}
         <Card>

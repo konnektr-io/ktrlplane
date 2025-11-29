@@ -1,5 +1,5 @@
 import { useLocation, useParams, Link } from 'react-router-dom';
-import { Home } from "lucide-react";
+// Removed Home icon
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -26,7 +26,7 @@ export default function Breadcrumbs() {
   const { data: resources = [] } = useResources(params.projectId ?? "");
 
   const getBreadcrumbs = (): BreadcrumbItem[] => {
-    const breadcrumbs: BreadcrumbItem[] = [{ label: "Home", href: "/" }];
+    const breadcrumbs: BreadcrumbItem[] = [];
 
     const pathSegments = location.pathname.split("/").filter(Boolean);
 
@@ -36,6 +36,8 @@ export default function Breadcrumbs() {
 
     // Handle different route patterns
     if (pathSegments[0] === "organizations" && params.orgId) {
+      // Add Organizations link if you have a listing page, otherwise just label
+      breadcrumbs.push({ label: "Organizations", href: "/organizations" });
       const org = organizations.find((o) => o.org_id === params.orgId);
       breadcrumbs.push({
         label: org?.name || "Organization",
@@ -43,31 +45,19 @@ export default function Breadcrumbs() {
       });
 
       if (pathSegments[2] === "access") {
-        breadcrumbs.push({
-          label: "Access & Permissions",
-          isActive: true,
-        });
+        breadcrumbs.push({ label: "Access & Permissions", isActive: true });
       } else if (pathSegments[2] === "projects") {
-        breadcrumbs.push({
-          label: "Projects",
-          isActive: true,
-        });
+        breadcrumbs.push({ label: "Projects", isActive: true });
       } else if (pathSegments[2] === "billing") {
-        breadcrumbs.push({
-          label: "Billing",
-          isActive: true,
-        });
+        breadcrumbs.push({ label: "Billing", isActive: true });
       } else if (pathSegments[2] === "settings") {
-        breadcrumbs.push({
-          label: "Settings",
-          isActive: true,
-        });
+        breadcrumbs.push({ label: "Settings", isActive: true });
       }
     }
 
     if (pathSegments[0] === "projects" && params.projectId) {
+      breadcrumbs.push({ label: "Projects", href: "/projects" });
       const project = projects.find((p) => p.project_id === params.projectId);
-
       breadcrumbs.push({
         label: project?.name || "Project",
         href: `/projects/${params.projectId}`,
@@ -84,55 +74,28 @@ export default function Breadcrumbs() {
           });
 
           if (pathSegments[4] === "access") {
-            breadcrumbs.push({
-              label: "Access & Permissions",
-              isActive: true,
-            });
+            breadcrumbs.push({ label: "Access & Permissions", isActive: true });
           } else if (pathSegments[4] === "logs") {
-            breadcrumbs.push({
-              label: "Logs",
-              isActive: true,
-            });
+            breadcrumbs.push({ label: "Logs", isActive: true });
           } else if (pathSegments[4] === "monitoring") {
-            breadcrumbs.push({
-              label: "Monitoring",
-              isActive: true,
-            });
+            breadcrumbs.push({ label: "Monitoring", isActive: true });
           } else if (pathSegments[4] === "settings") {
-            breadcrumbs.push({
-              label: "Settings",
-              isActive: true,
-            });
+            breadcrumbs.push({ label: "Settings", isActive: true });
           }
         } else {
-          breadcrumbs.push({
-            label: "Resources",
-            isActive: true,
-          });
+          breadcrumbs.push({ label: "Resources", isActive: true });
         }
       } else if (pathSegments[2] === "access") {
-        breadcrumbs.push({
-          label: "Access & Permissions",
-          isActive: true,
-        });
+        breadcrumbs.push({ label: "Access & Permissions", isActive: true });
       } else if (pathSegments[2] === "billing") {
-        breadcrumbs.push({
-          label: "Billing",
-          isActive: true,
-        });
+        breadcrumbs.push({ label: "Billing", isActive: true });
       } else if (pathSegments[2] === "settings") {
-        breadcrumbs.push({
-          label: "Settings",
-          isActive: true,
-        });
+        breadcrumbs.push({ label: "Settings", isActive: true });
       }
     }
 
     if (pathSegments[0] === "projects" && !params.projectId) {
-      breadcrumbs.push({
-        label: "All Projects",
-        isActive: true,
-      });
+      breadcrumbs.push({ label: "Projects", isActive: true });
     }
 
     // Handle create access routes
@@ -148,7 +111,7 @@ export default function Breadcrumbs() {
 
   const breadcrumbs = getBreadcrumbs();
 
-  if (breadcrumbs.length <= 1) {
+  if (breadcrumbs.length === 0) {
     return null;
   }
 
@@ -160,14 +123,10 @@ export default function Breadcrumbs() {
           <BreadcrumbItem key={`item-${index}`}>
             {item.href && !item.isActive ? (
               <BreadcrumbLink asChild>
-                <Link to={item.href}>
-                  {index === 0 ? <Home className="h-4 w-4" /> : item.label}
-                </Link>
+                <Link to={item.href}>{item.label}</Link>
               </BreadcrumbLink>
             ) : (
-              <BreadcrumbPage>
-                {index === 0 ? <Home className="h-4 w-4" /> : item.label}
-              </BreadcrumbPage>
+              <BreadcrumbPage>{item.label}</BreadcrumbPage>
             )}
           </BreadcrumbItem>,
         ])}
