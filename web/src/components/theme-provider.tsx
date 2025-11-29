@@ -1,5 +1,5 @@
 import { useEffect, useState, ReactNode } from "react";
-import { Theme, ThemeProviderContext, useTheme } from "./theme-provider.utils";
+import { Theme, ThemeProviderContext } from "./theme-provider.utils";
 
 
 interface ThemeProviderProps {
