@@ -19,6 +19,7 @@ import AuthCallbackPage from "@/features/auth/callback";
 import NotFoundPage from "@/pages/NotFoundPage";
 import OrganizationOverviewPage from "@/features/organizations/pages/OrganizationOverviewPage";
 import OrganizationSettingsPage from "@/features/organizations/pages/OrganizationSettingsPage";
+import OrganizationListPage from "@/features/organizations/pages/OrganizationListPage";
 import ResourceSettingsPage from "@/features/resources/pages/ResourceSettingsPage";
 import { ResourceLogsPage } from "@/features/resources/pages/ResourceLogsPage";
 import { ResourceMonitoringPage } from "@/features/resources/pages/ResourceMonitoringPage";
@@ -66,6 +67,7 @@ function App() {
               }
             />
             <Route path="/projects" element={<ProjectListPage />} />
+            <Route path="/organizations" element={<OrganizationListPage />} />
           </Route>
 
           {/* Project-based Routes (plural) */}

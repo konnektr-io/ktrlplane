@@ -1,32 +1,32 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useOrganizationStore } from '../features/organizations/store/organizationStore';
-import Breadcrumbs from './Breadcrumbs';
+import { useProject } from "../features/projects/hooks/useProjectApi";
+import Breadcrumbs from "./Breadcrumbs";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { 
-  Settings, 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  Settings,
   User,
   LogOut,
   ChevronDown,
   Menu,
   Building2,
-  FolderOpen
-} from 'lucide-react';
+  FolderOpen,
+} from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
 export default function AppHeader() {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
   const { user, logout } = useAuth0();
-  const { currentOrganization } = useOrganizationStore();
+  const { data: currentProject } = useProject(projectId ?? "");
 
   const handleLogout = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
@@ -37,8 +37,8 @@ export default function AppHeader() {
   };
 
   const handleNavigateToOrgSettings = () => {
-    if (currentOrganization) {
-      navigate(`/organizations/${currentOrganization.org_id}/settings`);
+    if (currentProject?.org_id) {
+      navigate(`/organizations/${currentProject.org_id}/settings`);
     }
   };
 
@@ -115,7 +115,7 @@ export default function AppHeader() {
                   Project Settings
                 </DropdownMenuItem>
               )}
-              {currentOrganization && (
+              {currentProject?.org_id && (
                 <DropdownMenuItem onClick={handleNavigateToOrgSettings}>
                   <Building2 className="mr-2 h-4 w-4" />
                   Organization Settings

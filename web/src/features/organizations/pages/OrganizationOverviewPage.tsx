@@ -139,9 +139,11 @@ export default function OrganizationOverviewPage() {
           <CardContent>
             <div className="space-y-3">
               {orgProjects.slice(0, 5).map((project) => (
-                <div
+                <a
                   key={project.project_id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  href={`/projects/${project.project_id}`}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+                  title={`View project: ${project.name}`}
                 >
                   <div className="flex items-center gap-3">
                     <FolderOpen className="h-4 w-4 text-muted-foreground" />
@@ -161,7 +163,7 @@ export default function OrganizationOverviewPage() {
                   >
                     {project.status}
                   </Badge>
-                </div>
+                </a>
               ))}
             </div>
           </CardContent>
