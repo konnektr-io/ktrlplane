@@ -1,6 +1,5 @@
 import { type ReactNode } from "react";
-import { useProjects } from "../features/projects/hooks/useProjectApi";
-import { useOrganizations } from "../features/organizations/hooks/useOrganizationApi";
+import { ThemeProvider } from "next-themes";
 import {
   Sidebar,
   SidebarContent,
@@ -10,24 +9,19 @@ import {
 import AppHeader from "@/components/AppHeader";
 import { Outlet } from "react-router-dom";
 import konnektrLogo from "../assets/konnektr.svg";
-import { ThemeProvider } from "@/components/theme-provider";
 
 interface AppLayoutProps {
   sidebarContent: ReactNode;
   showProjectSelector?: boolean;
 }
 
-export default function AppLayout({
-  sidebarContent,
-  showProjectSelector = false, // eslint-disable-line @typescript-eslint/no-unused-vars
-}: AppLayoutProps) {
-  // Fetch organizations and projects using React Query hooks
-  useOrganizations();
-  const projectsQuery = useProjects(); // eslint-disable-line @typescript-eslint/no-unused-vars
-  // Only use projectsQuery data if showProjectSelector is true
-
+export default function AppLayout({ sidebarContent }: AppLayoutProps) {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      storageKey="vite-ui-theme"
+    >
       <SidebarProvider>
         <div className="flex h-screen w-full">
           <Sidebar>
