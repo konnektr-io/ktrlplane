@@ -53,7 +53,6 @@ export default function BillingPage() {
   const {
     data: billingInfo,
     isLoading: loading,
-    isError,
     refetch,
   } = useBilling(scopeType, scopeId);
   const updateBillingEmailMutation = useUpdateBillingEmail(scopeType, scopeId);
