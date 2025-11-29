@@ -17,6 +17,8 @@ POST /api/v1/organizations/{orgId}/billing/customer
 POST /api/v1/organizations/{orgId}/billing/subscription
 POST /api/v1/organizations/{orgId}/billing/portal
 POST /api/v1/organizations/{orgId}/billing/cancel
+GET  /api/v1/organizations/{orgId}/billing/status
+POST /api/v1/organizations/{orgId}/billing/setup-intent
 ```
 
 ## Project Billing Endpoints
@@ -27,7 +29,43 @@ POST /api/v1/projects/{projectId}/billing/customer
 POST /api/v1/projects/{projectId}/billing/subscription
 POST /api/v1/projects/{projectId}/billing/portal
 POST /api/v1/projects/{projectId}/billing/cancel
+GET  /api/v1/projects/{projectId}/billing/status
+POST /api/v1/projects/{projectId}/billing/setup-intent
 ```
+## Billing Status Endpoint
+
+Returns billing status, payment method status, and Stripe subscription info for onboarding/payment enforcement.
+
+**GET /api/v1/organizations/{orgId}/billing/status**
+**GET /api/v1/projects/{projectId}/billing/status**
+
+**Response:**
+```json
+{
+  "subscription_status": "active",
+  "has_payment_method": true,
+  "payment_methods": [ ...StripePaymentMethod... ],
+  "subscription_details": { ...StripeSubscriptionDetails... },
+  "billing_email": "user@example.com"
+}
+```
+
+## Stripe SetupIntent Endpoint
+
+Creates a Stripe SetupIntent for payment onboarding (Stripe Elements integration).
+
+**POST /api/v1/organizations/{orgId}/billing/setup-intent**
+**POST /api/v1/projects/{projectId}/billing/setup-intent**
+
+**Response:**
+```json
+{
+  "client_secret": "seti_..."
+}
+```
+
+**Usage:**
+- Use client_secret with Stripe Elements to onboard payment method for the customer.
 
 ## Billing Object (Conceptual)
 ```typescript

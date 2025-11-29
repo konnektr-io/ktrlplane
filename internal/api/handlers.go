@@ -53,6 +53,101 @@ func (h *Handler) getUserFromContext(c *gin.Context) (*models.User, error) {
 }
 
 // --- Organization Handlers ---
+// GetBillingStatus returns billing status for organization or project (for onboarding/payment enforcement)
+func (h *Handler) GetBillingStatus(c *gin.Context) {
+	// Determine scope type and ID from URL
+	var scopeType, scopeID string
+	if orgID := c.Param("orgId"); orgID != "" {
+		scopeType = "organization"
+		scopeID = orgID
+	} else if projectID := c.Param("projectId"); projectID != "" {
+		scopeType = "project"
+		scopeID = projectID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		_ = c.Error(err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check view_billing permission (or manage_billing)
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "view_billing", scopeType, scopeID)
+	if err != nil {
+		_ = c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
+		return
+	}
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to view billing"})
+		return
+	}
+
+	billingInfo, err := h.BillingService.GetBillingInfo(scopeType, scopeID)
+	if err != nil {
+		_ = c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get billing info", "details": err.Error()})
+		return
+	}
+
+	// Return only status-relevant fields for onboarding
+	resp := gin.H{
+		"subscription_status": billingInfo.BillingAccount.SubscriptionStatus,
+		"has_payment_method": len(billingInfo.PaymentMethods) > 0,
+		"payment_methods": billingInfo.PaymentMethods,
+		"subscription_details": billingInfo.SubscriptionDetails,
+		"billing_email": billingInfo.BillingAccount.BillingEmail,
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// CreateStripeSetupIntent creates a Stripe SetupIntent for payment onboarding
+func (h *Handler) CreateStripeSetupIntent(c *gin.Context) {
+	// Determine scope type and ID from URL
+	var scopeType, scopeID string
+	if orgID := c.Param("orgId"); orgID != "" {
+		scopeType = "organization"
+		scopeID = orgID
+	} else if projectID := c.Param("projectId"); projectID != "" {
+		scopeType = "project"
+		scopeID = projectID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		_ = c.Error(err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check manage_billing permission
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
+	if err != nil {
+		_ = c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
+		return
+	}
+	if !hasPermission {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to manage billing"})
+		return
+	}
+
+	clientSecret, err := h.BillingService.CreateStripeSetupIntent(scopeType, scopeID)
+	if err != nil {
+		_ = c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create SetupIntent", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"client_secret": clientSecret})
+}
 
 // CreateOrganization handles the creation of a new organization.
 func (h *Handler) CreateOrganization(c *gin.Context) {

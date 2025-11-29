@@ -14,6 +14,7 @@ import (
 	"github.com/stripe/stripe-go/v82/customer"
 	"github.com/stripe/stripe-go/v82/paymentmethod"
 	"github.com/stripe/stripe-go/v82/price"
+	"github.com/stripe/stripe-go/v82/setupintent"
 	"github.com/stripe/stripe-go/v82/subscription"
 )
 
@@ -521,6 +522,26 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 	}
 
 	return billingInfo, nil
+}
+
+// CreateStripeSetupIntent creates a Stripe SetupIntent for payment onboarding
+func (s *BillingService) CreateStripeSetupIntent(scopeType, scopeID string) (string, error) {
+	account, err := s.GetBillingAccount(scopeType, scopeID)
+	if err != nil {
+		return "", err
+	}
+	if account.StripeCustomerID == nil {
+		return "", fmt.Errorf("Stripe customer not found for scope")
+	}
+	params := &stripe.SetupIntentParams{
+		Customer: stripe.String(*account.StripeCustomerID),
+		Usage:    stripe.String("off_session"),
+	}
+	intent, err := setupintent.New(params)
+	if err != nil {
+		return "", fmt.Errorf("failed to create Stripe SetupIntent: %w", err)
+	}
+	return intent.ClientSecret, nil
 }
 
 // getProductIDForResourceType maps resource types and SKUs to Stripe product IDs
