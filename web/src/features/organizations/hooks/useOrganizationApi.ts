@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth0 } from "@auth0/auth0-react";
 import apiClient from "@/lib/axios";
 import type { Organization } from "../types/organization.types";
+import { handleApiError } from "@/lib/errorHandler";
 
 // Fetch all organizations
 export function useOrganizations() {
@@ -19,14 +20,8 @@ export function useOrganizations() {
           created_at: new Date(org.created_at),
           updated_at: new Date(org.updated_at),
         }));
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
   });
@@ -53,14 +48,8 @@ export function useOrganization(orgId: string) {
           created_at: new Date(org.created_at),
           updated_at: new Date(org.updated_at),
         };
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     enabled: !!orgId,
@@ -86,14 +75,8 @@ export function useUpdateOrganization(orgId: string) {
           created_at: new Date(response.data.created_at),
           updated_at: new Date(response.data.updated_at),
         };
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     onSuccess: () => {

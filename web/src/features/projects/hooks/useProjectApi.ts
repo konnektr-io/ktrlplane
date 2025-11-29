@@ -6,6 +6,7 @@ import type {
   CreateProjectData,
   UpdateProjectData,
 } from "../types/project.types";
+import { handleApiError } from "@/lib/errorHandler";
 
 // Fetch all projects for the current user/org
 export function useProjects() {
@@ -19,14 +20,8 @@ export function useProjects() {
           headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
   });
@@ -48,14 +43,8 @@ export function useProject(projectId: string) {
           }
         );
         return response.data;
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     enabled: !!projectId,
@@ -74,14 +63,8 @@ export function useCreateProject() {
           headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     onSuccess: () => {
@@ -107,14 +90,8 @@ export function useUpdateProject(projectId: string) {
           }
         );
         return response.data;
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     onSuccess: () => {
@@ -136,14 +113,8 @@ export function useDeleteProject(projectId: string) {
         await apiClient.delete(`/projects/${projectId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     onSuccess: () => {

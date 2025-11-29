@@ -6,14 +6,19 @@ import {
   RoleAssignment,
   AccessControlContextType,
 } from "../types/access.types";
+import { handleApiError } from "@/lib/errorHandler";
 
 // Fetch roles
 export function useRoles() {
   return useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
-      const response = await apiClient.get<Role[]>("/roles");
-      return response.data;
+      try {
+        const response = await apiClient.get<Role[]>("/roles");
+        return response.data;
+      } catch (err: unknown) {
+        await handleApiError(err);
+      }
     },
   });
 }
@@ -24,8 +29,12 @@ export function useRolePermissions(roleId: string | null) {
     queryKey: ["rolePermissions", roleId],
     queryFn: async () => {
       if (!roleId) return [];
-      const response = await apiClient.get(`/roles/${roleId}/permissions`);
-      return response.data;
+      try {
+        const response = await apiClient.get(`/roles/${roleId}/permissions`);
+        return response.data;
+      } catch (err: unknown) {
+        await handleApiError(err);
+      }
     },
     enabled: !!roleId,
   });
@@ -46,7 +55,6 @@ export function useRoleAssignments(context: AccessControlContextType | null) {
           url = `/projects/${context.scopeId}/rbac`;
           break;
         case "resource": {
-          // For resources, extract projectId from route
           const currentPath = window.location.pathname;
           const projectMatch = currentPath.match(/\/projects\/([^/]+)/);
           const projectId = projectMatch ? projectMatch[1] : "";
@@ -54,8 +62,12 @@ export function useRoleAssignments(context: AccessControlContextType | null) {
           break;
         }
       }
-      const response = await apiClient.get<RoleAssignment[]>(url);
-      return response.data;
+      try {
+        const response = await apiClient.get<RoleAssignment[]>(url);
+        return response.data;
+      } catch (err: unknown) {
+        await handleApiError(err);
+      }
     },
     enabled: !!context,
   });
@@ -67,10 +79,14 @@ export function useSearchUsers(query: string) {
     queryKey: ["searchUsers", query],
     queryFn: async () => {
       if (!query || query.length < 2) return [];
-      const response = await apiClient.get<User[]>(
-        `/users/search?q=${encodeURIComponent(query)}`
-      );
-      return response.data;
+      try {
+        const response = await apiClient.get<User[]>(
+          `/users/search?q=${encodeURIComponent(query)}`
+        );
+        return response.data;
+      } catch (err: unknown) {
+        await handleApiError(err);
+      }
     },
     enabled: !!query && query.length >= 2,
   });
@@ -104,10 +120,14 @@ export function useInviteUser(context: AccessControlContextType | null) {
           break;
         }
       }
-      await apiClient.post(url, {
-        user_id: userId,
-        role_id: roleName,
-      });
+      try {
+        await apiClient.post(url, {
+          user_id: userId,
+          role_id: roleName,
+        });
+      } catch (err: unknown) {
+        await handleApiError(err);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roleAssignments", context] });
@@ -143,7 +163,11 @@ export function useUpdateUserRole(context: AccessControlContextType | null) {
           break;
         }
       }
-      await apiClient.put(url, { role_id: roleName });
+      try {
+        await apiClient.put(url, { role_id: roleName });
+      } catch (err: unknown) {
+        await handleApiError(err);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roleAssignments", context] });
@@ -173,7 +197,11 @@ export function useRemoveUser(context: AccessControlContextType | null) {
           break;
         }
       }
-      await apiClient.delete(url);
+      try {
+        await apiClient.delete(url);
+      } catch (err: unknown) {
+        await handleApiError(err);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roleAssignments", context] });
@@ -189,10 +217,14 @@ export function useUserPermissions(
   return useQuery({
     queryKey: ["userPermissions", scopeType, scopeId],
     queryFn: async () => {
-      const response = await apiClient.get("/permissions/check", {
-        params: { scopeType, scopeId },
-      });
-      return response.data.permissions || [];
+      try {
+        const response = await apiClient.get("/permissions/check", {
+          params: { scopeType, scopeId },
+        });
+        return response.data.permissions || [];
+      } catch (err: unknown) {
+        await handleApiError(err);
+      }
     },
     enabled: !!scopeType && !!scopeId,
   });

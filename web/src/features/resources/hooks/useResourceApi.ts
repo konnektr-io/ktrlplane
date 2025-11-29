@@ -6,6 +6,7 @@ import {
   CreateResourceData,
   UpdateResourceData,
 } from "../types/resource.types";
+import { handleApiError } from "@/lib/errorHandler";
 
 // Fetch all resources for a project
 export function useResources(projectId: string) {
@@ -31,14 +32,8 @@ export function useResources(projectId: string) {
               ? JSON.parse(r.settings_json || "{}")
               : r.settings_json ?? {},
         }));
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     enabled: !!projectId,
@@ -70,14 +65,8 @@ export function useResource(projectId: string, resourceId: string) {
               ? JSON.parse(r.settings_json || "{}")
               : r.settings_json ?? {},
         };
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     enabled: !!projectId && !!resourceId,
@@ -99,14 +88,8 @@ export function useCreateResource(projectId: string) {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         return response.data;
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     onSuccess: () => {
@@ -131,14 +114,8 @@ export function useUpdateResource(projectId: string, resourceId: string) {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         return response.data;
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     onSuccess: () => {
@@ -166,14 +143,8 @@ export function useDeleteResource(projectId: string, resourceId: string) {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-      } catch (err: any) {
-        if (
-          err?.error === "login_required" ||
-          err?.error === "consent_required"
-        ) {
-          await loginWithRedirect();
-        }
-        throw err;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
       }
     },
     onSuccess: () => {
