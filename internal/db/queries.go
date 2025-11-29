@@ -105,7 +105,10 @@ const (
 	
 	// GetPermissionsForRoleQuery returns all permissions associated with a specific role
 	GetPermissionsForRoleQuery = `
-		SELECT p.permission_id, p.name, p.display_name, p.description, p.resource_type, p.action, p.created_at, p.updated_at`
+		SELECT p.permission_id, p.resource_type, p.action, p.description, p.created_at
+		FROM ktrlplane.role_permissions rp
+		JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
+		WHERE rp.role_id = $1;`
 	
 	// AssignRoleWithTransactionQuery inserts a role assignment within a transaction.
 	AssignRoleWithTransactionQuery = `

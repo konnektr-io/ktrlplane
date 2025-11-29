@@ -1,11 +1,21 @@
 import { useParams } from 'react-router-dom';
-import { useProjectStore } from '../store/projectStore';
-import AccessControl from '@/features/access/components/AccessControl';
+import { useProject } from "../hooks/useProjectApi";
+import AccessControl from "@/features/access/components/AccessControl";
 
 export default function ProjectAccessPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { currentProject } = useProjectStore();
+  const { data: currentProject, isLoading, error } = useProject(projectId!);
 
+  if (isLoading) {
+    return <div>Loading resource...</div>;
+  }
+  if (error) {
+    return (
+      <div className="text-red-500">
+        Error: {error.message || String(error)}
+      </div>
+    );
+  }
   if (!projectId || !currentProject) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -17,7 +27,7 @@ export default function ProjectAccessPage() {
   return (
     <AccessControl
       context={{
-        scopeType: 'project',
+        scopeType: "project",
         scopeId: projectId,
         scopeName: currentProject.name,
       }}

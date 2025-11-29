@@ -1,11 +1,28 @@
-import { useParams } from 'react-router-dom';
-import { useResourceStore } from '../store/resourceStore';
-import AccessControl from '@/features/access/components/AccessControl';
+import { useParams } from "react-router-dom";
+import { useResource } from "../hooks/useResourceApi";
+import AccessControl from "@/features/access/components/AccessControl";
 
 export default function ResourceAccessPage() {
-  const { resourceId } = useParams<{ resourceId: string }>();
-  const { currentResource } = useResourceStore();
+  const { projectId, resourceId } = useParams<{
+    projectId: string;
+    resourceId: string;
+  }>();
+  const {
+    data: currentResource,
+    isLoading,
+    error,
+  } = useResource(projectId!, resourceId!);
 
+  if (isLoading) {
+    return <div>Loading resource...</div>;
+  }
+  if (error) {
+    return (
+      <div className="text-red-500">
+        Error: {error.message || String(error)}
+      </div>
+    );
+  }
   if (!resourceId || !currentResource) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -17,7 +34,7 @@ export default function ResourceAccessPage() {
   return (
     <AccessControl
       context={{
-        scopeType: 'resource',
+        scopeType: "resource",
         scopeId: resourceId,
         scopeName: currentResource.name,
       }}
