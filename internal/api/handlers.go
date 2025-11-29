@@ -35,11 +35,19 @@ func NewHandler(ps *service.ProjectService, rs *service.ResourceService, os *ser
 func (h *Handler) getUserFromContext(c *gin.Context) (*models.User, error) {
 	userValue, exists := c.Get("user")
 	if !exists {
-		return nil, fmt.Errorf("user not found in context")
+		err := fmt.Errorf("user not found in context")
+		if err2 := c.Error(err); err2 != nil {
+			return nil, fmt.Errorf("error handling context error: %w", err2)
+		}
+		return nil, err
 	}
 	user, ok := userValue.(models.User)
 	if !ok {
-		return nil, fmt.Errorf("invalid user type in context")
+		err := fmt.Errorf("invalid user type in context")
+		if err2 := c.Error(err); err2 != nil {
+			return nil, fmt.Errorf("error handling context error: %w", err2)
+		}
+		return nil, err
 	}
 	return &user, nil
 }
