@@ -220,7 +220,7 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 	}
 
 	if account.StripeCustomerID == nil {
-		return nil, errors.New("Stripe customer not found")
+		return nil, errors.New("stripe customer not found")
 	}
 
 	// Get resource counts for subscription items
@@ -305,7 +305,7 @@ func (s *BillingService) CreateStripeCustomerPortal(scopeType, scopeID, returnUR
 	}
 
 	if account.StripeCustomerID == nil {
-		return "", errors.New("Stripe customer not found")
+		return "", errors.New("stripe customer not found")
 	}
 
 	// Create customer portal session
