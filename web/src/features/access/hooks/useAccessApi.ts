@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/axios";
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   User,
   Role,
@@ -10,11 +11,15 @@ import { handleApiError } from "@/lib/errorHandler";
 
 // Fetch roles
 export function useRoles() {
+  const { getAccessTokenSilently } = useAuth0();
   return useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
       try {
-        const response = await apiClient.get<Role[]>("/roles");
+        const token = await getAccessTokenSilently();
+        const response = await apiClient.get<Role[]>("/roles", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         return response.data;
       } catch (err: unknown) {
         await handleApiError(err);
@@ -25,12 +30,16 @@ export function useRoles() {
 
 // Fetch permissions for a specific role (cached per roleId)
 export function useRolePermissions(roleId: string | null) {
+  const { getAccessTokenSilently } = useAuth0();
   return useQuery({
     queryKey: ["rolePermissions", roleId],
     queryFn: async () => {
       if (!roleId) return [];
       try {
-        const response = await apiClient.get(`/roles/${roleId}/permissions`);
+        const token = await getAccessTokenSilently();
+        const response = await apiClient.get(`/roles/${roleId}/permissions`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         return response.data;
       } catch (err: unknown) {
         await handleApiError(err);
@@ -42,6 +51,7 @@ export function useRolePermissions(roleId: string | null) {
 
 // Fetch role assignments for a context
 export function useRoleAssignments(context: AccessControlContextType | null) {
+  const { getAccessTokenSilently } = useAuth0();
   return useQuery({
     queryKey: ["roleAssignments", context],
     queryFn: async () => {
@@ -63,7 +73,10 @@ export function useRoleAssignments(context: AccessControlContextType | null) {
         }
       }
       try {
-        const response = await apiClient.get<RoleAssignment[]>(url);
+        const token = await getAccessTokenSilently();
+        const response = await apiClient.get<RoleAssignment[]>(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         return response.data;
       } catch (err: unknown) {
         await handleApiError(err);
@@ -75,13 +88,16 @@ export function useRoleAssignments(context: AccessControlContextType | null) {
 
 // Fetch users (search)
 export function useSearchUsers(query: string) {
+  const { getAccessTokenSilently } = useAuth0();
   return useQuery({
     queryKey: ["searchUsers", query],
     queryFn: async () => {
       if (!query || query.length < 2) return [];
       try {
+        const token = await getAccessTokenSilently();
         const response = await apiClient.get<User[]>(
-          `/users/search?q=${encodeURIComponent(query)}`
+          `/users/search?q=${encodeURIComponent(query)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         return response.data;
       } catch (err: unknown) {
@@ -95,6 +111,7 @@ export function useSearchUsers(query: string) {
 // Invite user
 export function useInviteUser(context: AccessControlContextType | null) {
   const queryClient = useQueryClient();
+  const { getAccessTokenSilently } = useAuth0();
   return useMutation({
     mutationFn: async ({
       userId,
@@ -121,10 +138,17 @@ export function useInviteUser(context: AccessControlContextType | null) {
         }
       }
       try {
-        await apiClient.post(url, {
-          user_id: userId,
-          role_id: roleName,
-        });
+        const token = await getAccessTokenSilently();
+        await apiClient.post(
+          url,
+          {
+            user_id: userId,
+            role_id: roleName,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } catch (err: unknown) {
         await handleApiError(err);
       }
@@ -138,6 +162,7 @@ export function useInviteUser(context: AccessControlContextType | null) {
 // Update user role
 export function useUpdateUserRole(context: AccessControlContextType | null) {
   const queryClient = useQueryClient();
+  const { getAccessTokenSilently } = useAuth0();
   return useMutation({
     mutationFn: async ({
       assignmentId,
@@ -164,7 +189,14 @@ export function useUpdateUserRole(context: AccessControlContextType | null) {
         }
       }
       try {
-        await apiClient.put(url, { role_id: roleName });
+        const token = await getAccessTokenSilently();
+        await apiClient.put(
+          url,
+          { role_id: roleName },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } catch (err: unknown) {
         await handleApiError(err);
       }
@@ -178,6 +210,7 @@ export function useUpdateUserRole(context: AccessControlContextType | null) {
 // Remove user
 export function useRemoveUser(context: AccessControlContextType | null) {
   const queryClient = useQueryClient();
+  const { getAccessTokenSilently } = useAuth0();
   return useMutation({
     mutationFn: async (assignmentId: string) => {
       if (!context) throw new Error("Missing context");
@@ -198,7 +231,10 @@ export function useRemoveUser(context: AccessControlContextType | null) {
         }
       }
       try {
-        await apiClient.delete(url);
+        const token = await getAccessTokenSilently();
+        await apiClient.delete(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } catch (err: unknown) {
         await handleApiError(err);
       }
@@ -214,12 +250,15 @@ export function useUserPermissions(
   scopeType: "organization" | "project" | "resource",
   scopeId: string
 ) {
+  const { getAccessTokenSilently } = useAuth0();
   return useQuery({
     queryKey: ["userPermissions", scopeType, scopeId],
     queryFn: async () => {
       try {
+        const token = await getAccessTokenSilently();
         const response = await apiClient.get("/permissions/check", {
           params: { scopeType, scopeId },
+          headers: { Authorization: `Bearer ${token}` },
         });
         return response.data.permissions || [];
       } catch (err: unknown) {

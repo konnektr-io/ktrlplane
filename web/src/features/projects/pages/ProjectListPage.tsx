@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import CreateProjectDialog from "../components/CreateProjectDialog";
 import { useProjects } from "../hooks/useProjectApi";
 
-
-
 // Accept optional organizationId prop (for direct usage or from route params)
 type ProjectListPageProps = {
   organizationId?: string;

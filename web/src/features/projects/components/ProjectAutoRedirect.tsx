@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useProjects } from "../hooks/useProjectApi";
+import { useProjectStore } from "../store/projectStore";
 
 interface ProjectAutoRedirectProps {
   children: React.ReactNode;
@@ -12,8 +13,12 @@ export default function ProjectAutoRedirect({
   const navigate = useNavigate();
   const location = useLocation();
   const { data: projects = [], isLoading } = useProjects();
-  // lastProjectId logic: fallback to first project if needed
-  const lastProjectId = projects.length > 0 ? projects[0].project_id : null;
+  const storeLastProjectId = useProjectStore((s) => s.lastProjectId);
+  // Find the last project in the loaded projects
+  const lastProject = projects.find((p) => p.project_id === storeLastProjectId);
+  const lastProjectId =
+    lastProject?.project_id ||
+    (projects.length > 0 ? projects[0].project_id : null);
   const hasRedirected = useRef(false);
 
   // No need to manually fetch, React Query handles it
