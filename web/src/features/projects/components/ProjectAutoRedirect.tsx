@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useProjectStore } from "../store/projectStore";
+import { useProjects } from "../hooks/useProjectApi";
 
 interface ProjectAutoRedirectProps {
   children: React.ReactNode;
@@ -11,22 +11,16 @@ export default function ProjectAutoRedirect({
 }: ProjectAutoRedirectProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { projects, isLoadingList, fetchProjects, lastProjectId } =
-    useProjectStore();
+  const { data: projects = [], isLoading } = useProjects();
+  // lastProjectId logic: fallback to first project if needed
+  const lastProjectId = projects.length > 0 ? projects[0].project_id : null;
   const hasRedirected = useRef(false);
 
-  useEffect(() => {
-    // Only fetch if projects are not loaded
-    if (projects.length === 0 && !isLoadingList) {
-      fetchProjects();
-    }
-  }, [projects.length, isLoadingList, fetchProjects]);
+  // No need to manually fetch, React Query handles it
 
   useEffect(() => {
-    // Prevent redirect loops
     if (hasRedirected.current) return;
-    if (isLoadingList) return;
-    // Only redirect from root or /projects
+    if (isLoading) return;
     const isRoot = location.pathname === "/";
     const isProjects = location.pathname === "/projects";
     if (!isRoot && !isProjects) return;
@@ -36,18 +30,15 @@ export default function ProjectAutoRedirect({
       return;
     }
     if (projects.length > 1 && lastProjectId) {
-      const lastProject = projects.find((p) => p.project_id === lastProjectId);
-      if (lastProject) {
-        hasRedirected.current = true;
-        navigate(`/projects/${lastProjectId}`, { replace: true });
-        return;
-      }
+      hasRedirected.current = true;
+      navigate(`/projects/${lastProjectId}`, { replace: true });
+      return;
     }
     // If no projects or no valid last project, stay on /projects
-  }, [projects, isLoadingList, lastProjectId, location.pathname, navigate]);
+  }, [projects, isLoading, lastProjectId, location.pathname, navigate]);
 
   // Show loading if fetching
-  if (isLoadingList) {
+  if (isLoading) {
     return <div>Loading projects...</div>;
   }
 
