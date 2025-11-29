@@ -5,44 +5,37 @@ import (
 	"errors"
 	"fmt"
 	"ktrlplane/internal/config"
+	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
 	"strings"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/billingportal/session"
 	"github.com/stripe/stripe-go/v82/customer"
 	"github.com/stripe/stripe-go/v82/paymentmethod"
 	"github.com/stripe/stripe-go/v82/price"
+	"github.com/stripe/stripe-go/v82/setupintent"
 	"github.com/stripe/stripe-go/v82/subscription"
 )
 
 // BillingService handles billing operations and Stripe integration.
 type BillingService struct {
-	db     *pgxpool.Pool
 	config *config.Config
 }
 
 // NewBillingService creates a new BillingService.
-func NewBillingService(db *pgxpool.Pool, cfg *config.Config) *BillingService {
-	return &BillingService{
-		db:     db,
-		config: cfg,
-	}
+func NewBillingService(cfg *config.Config) *BillingService {
+	 return &BillingService{
+	 config: cfg,
+	 }
 }
 
 // GetBillingAccount retrieves billing information for a scope (organization or project)
 func (s *BillingService) GetBillingAccount(scopeType, scopeID string) (*models.BillingAccount, error) {
-	query := `
-		SELECT billing_account_id, scope_type, scope_id, stripe_customer_id, 
-		       stripe_subscription_id, subscription_status, subscription_plan, 
-		       billing_email, created_at, updated_at
-		FROM ktrlplane.billing_accounts 
-		WHERE scope_type = $1 AND scope_id = $2
-	`
+	 query := db.GetBillingAccountQuery
 
 	var account models.BillingAccount
-	row := s.db.QueryRow(context.Background(), query, scopeType, scopeID)
+	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID)
 
 	err := row.Scan(
 		&account.BillingAccountID,
@@ -72,17 +65,10 @@ func (s *BillingService) GetBillingAccount(scopeType, scopeID string) (*models.B
 func (s *BillingService) createBillingAccount(scopeType, scopeID string) (*models.BillingAccount, error) {
 	billingAccountID := fmt.Sprintf("bill_%s", scopeID)
 
-	query := `
-		INSERT INTO ktrlplane.billing_accounts 
-		(billing_account_id, scope_type, scope_id, subscription_status, subscription_plan, created_at, updated_at)
-		VALUES ($1, $2, $3, 'trial', 'starter', NOW(), NOW())
-		RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-		          stripe_subscription_id, subscription_status, subscription_plan, 
-		          billing_email, created_at, updated_at
-	`
+	 query := db.CreateBillingAccountQuery
 
 	var account models.BillingAccount
-	row := s.db.QueryRow(context.Background(), query, billingAccountID, scopeType, scopeID)
+	 row := db.GetDB().QueryRow(context.Background(), query, billingAccountID, scopeType, scopeID)
 
 	err := row.Scan(
 		&account.BillingAccountID,
@@ -106,19 +92,10 @@ func (s *BillingService) createBillingAccount(scopeType, scopeID string) (*model
 
 // UpdateBillingAccount updates billing account information
 func (s *BillingService) UpdateBillingAccount(scopeType, scopeID string, req models.UpdateBillingRequest) (*models.BillingAccount, error) {
-	query := `
-		UPDATE ktrlplane.billing_accounts 
-		SET billing_email = COALESCE($3, billing_email),
-		    subscription_plan = COALESCE($4, subscription_plan),
-		    updated_at = NOW()
-		WHERE scope_type = $1 AND scope_id = $2
-		RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-		          stripe_subscription_id, subscription_status, subscription_plan, 
-		          billing_email, created_at, updated_at
-	`
+	 query := db.UpdateBillingAccountQuery
 
 	var account models.BillingAccount
-	row := s.db.QueryRow(context.Background(), query, scopeType, scopeID, req.BillingEmail, req.SubscriptionPlan)
+	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, req.BillingEmail, req.SubscriptionPlan)
 
 	err := row.Scan(
 		&account.BillingAccountID,
@@ -179,17 +156,10 @@ func (s *BillingService) CreateStripeCustomer(scopeType, scopeID string, req mod
 	}
 
 	// Update billing account with Stripe customer ID and subscription ID (if created)
-	query := `
-		UPDATE ktrlplane.billing_accounts 
-		SET stripe_customer_id = $3, stripe_subscription_id = $4, subscription_status = $5, billing_email = $6, updated_at = NOW()
-		WHERE scope_type = $1 AND scope_id = $2
-		RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-		          stripe_subscription_id, subscription_status, subscription_plan, 
-		          billing_email, created_at, updated_at
-	`
+	 query := db.UpdateBillingAccountStripeQuery
 
 	var account models.BillingAccount
-	row := s.db.QueryRow(context.Background(), query, scopeType, scopeID, stripeCustomer.ID, subscriptionID, subscriptionStatus, req.Email)
+	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, stripeCustomer.ID, subscriptionID, subscriptionStatus, req.Email)
 
 	err = row.Scan(
 		&account.BillingAccountID,
@@ -220,7 +190,7 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 	}
 
 	if account.StripeCustomerID == nil {
-		return nil, errors.New("Stripe customer not found")
+		return nil, errors.New("stripe customer not found")
 	}
 
 	// Get resource counts for subscription items
@@ -254,6 +224,9 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 	params := &stripe.SubscriptionParams{
 		Customer: stripe.String(*account.StripeCustomerID),
 		Items:    items,
+		BillingMode: &stripe.SubscriptionBillingModeParams{
+			Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
+		},
 	}
 
 	stripeSubscription, err := subscription.New(params)
@@ -262,16 +235,9 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 	}
 
 	// Update billing account with subscription ID and status
-	query := `
-		UPDATE ktrlplane.billing_accounts 
-		SET stripe_subscription_id = $3, subscription_status = $4, updated_at = NOW()
-		WHERE scope_type = $1 AND scope_id = $2
-		RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-		          stripe_subscription_id, subscription_status, subscription_plan, 
-		          billing_email, created_at, updated_at
-	`
+	 query := db.UpdateBillingAccountSubscriptionQuery
 
-	row := s.db.QueryRow(context.Background(), query, scopeType, scopeID, stripeSubscription.ID, string(stripeSubscription.Status))
+	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, stripeSubscription.ID, string(stripeSubscription.Status))
 
 	err = row.Scan(
 		&account.BillingAccountID,
@@ -302,7 +268,7 @@ func (s *BillingService) CreateStripeCustomerPortal(scopeType, scopeID, returnUR
 	}
 
 	if account.StripeCustomerID == nil {
-		return "", errors.New("Stripe customer not found")
+		return "", errors.New("stripe customer not found")
 	}
 
 	// Create customer portal session
@@ -342,16 +308,9 @@ func (s *BillingService) CancelSubscription(scopeType, scopeID string) (*models.
 	}
 
 	// Update billing account status
-	query := `
-		UPDATE ktrlplane.billing_accounts 
-		SET subscription_status = $3, updated_at = NOW()
-		WHERE scope_type = $1 AND scope_id = $2
-		RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-		          stripe_subscription_id, subscription_status, subscription_plan, 
-		          billing_email, created_at, updated_at
-	`
+	 query := db.UpdateBillingAccountStatusQuery
 
-	row := s.db.QueryRow(context.Background(), query, scopeType, scopeID, string(stripeSubscription.Status))
+	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, string(stripeSubscription.Status))
 
 	err = row.Scan(
 		&account.BillingAccountID,
@@ -520,6 +479,26 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 	return billingInfo, nil
 }
 
+// CreateStripeSetupIntent creates a Stripe SetupIntent for payment onboarding
+func (s *BillingService) CreateStripeSetupIntent(scopeType, scopeID string) (string, error) {
+	account, err := s.GetBillingAccount(scopeType, scopeID)
+	if err != nil {
+		return "", err
+	}
+	if account.StripeCustomerID == nil {
+		return "", fmt.Errorf("Stripe customer not found for scope")
+	}
+	params := &stripe.SetupIntentParams{
+		Customer: stripe.String(*account.StripeCustomerID),
+		Usage:    stripe.String("off_session"),
+	}
+	intent, err := setupintent.New(params)
+	if err != nil {
+		return "", fmt.Errorf("failed to create Stripe SetupIntent: %w", err)
+	}
+	return intent.ClientSecret, nil
+}
+
 // getProductIDForResourceType maps resource types and SKUs to Stripe product IDs
 func (s *BillingService) getProductIDForResourceType(resourceType, sku string) string {
 	for _, product := range s.config.Stripe.Products {
@@ -580,27 +559,14 @@ func (s *BillingService) getDefaultPriceForProduct(productID string) (string, er
 func (s *BillingService) getResourceCounts(scopeType, scopeID string) (map[string]int, error) {
 	resourceCounts := make(map[string]int)
 
-	var query string
-	if scopeType == "organization" {
-		// For organizations, count resources across all projects in the organization
-		query = `
-			SELECT r.type, COALESCE(r.sku, 'free') as sku, COUNT(*) as count
-			FROM ktrlplane.resources r
-			JOIN ktrlplane.projects p ON r.project_id = p.project_id
-			WHERE p.org_id = $1
-			GROUP BY r.type, COALESCE(r.sku, 'free')
-		`
-	} else {
-		// For projects, count resources directly in the project
-		query = `
-			SELECT r.type, COALESCE(r.sku, 'free') as sku, COUNT(*) as count
-			FROM ktrlplane.resources r
-			WHERE r.project_id = $1
-			GROUP BY r.type, COALESCE(r.sku, 'free')
-		`
-	}
+	 var query string
+	 if scopeType == "organization" {
+		 query = db.GetResourceCountsOrgQuery
+	 } else {
+		 query = db.GetResourceCountsProjectQuery
+	 }
 
-	rows, err := s.db.Query(context.Background(), query, scopeID)
+	 rows, err := db.GetDB().Query(context.Background(), query, scopeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query resource counts: %w", err)
 	}

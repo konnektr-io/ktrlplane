@@ -2,15 +2,24 @@ package service
 
 import (
 	"encoding/json"
+	"ktrlplane/internal/config"
 	"ktrlplane/internal/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func getMockConfig() *config.Config {
+	return &config.Config{
+		Stripe: config.StripeConfig{
+			Products: []config.StripeProduct{},
+		},
+	}
+}
+
 func TestResourceService_Initialization(t *testing.T) {
 	// Test that we can create a resource service
-	service := NewResourceService()
+	service := NewResourceService(getMockConfig())
 	assert.NotNil(t, service, "Resource service should not be nil")
 	assert.NotNil(t, service.rbacService, "RBAC service should be initialized")
 }
@@ -130,7 +139,7 @@ func TestResourceService_ListResources_Validation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: This test validates input handling
 			// The actual database query would be tested in integration tests
-			resourceService := NewResourceService()
+			resourceService := NewResourceService(getMockConfig())
 			assert.NotNil(t, resourceService, "Service should be initialized")
 
 			// Test parameter validation logic for critical parameters

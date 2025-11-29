@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { loadStripe } from "@stripe/stripe-js";
+import { AddPaymentMethodModal } from "../components/AddPaymentMethodModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +41,7 @@ import {
   useOpenCustomerPortal,
   useCreateSubscription,
   useCancelSubscription,
+  useCreateSetupIntent,
 } from "../hooks/useBillingApi";
 
 export default function BillingPage() {
@@ -60,6 +63,15 @@ export default function BillingPage() {
     scopeType,
     scopeId
   );
+  // Stripe publishable key from env/config (replace with actual value or import)
+  const STRIPE_PUBLISHABLE_KEY =
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
+  const stripePromise = STRIPE_PUBLISHABLE_KEY
+    ? loadStripe(STRIPE_PUBLISHABLE_KEY)
+    : null;
+  // SetupIntent mutation for payment method modal
+  const createSetupIntent = useCreateSetupIntent(scopeType, scopeId);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const openCustomerPortalMutation = useOpenCustomerPortal(scopeType, scopeId);
   const createSubscriptionMutation = useCreateSubscription(scopeType, scopeId);
   const cancelSubscriptionMutation = useCancelSubscription(scopeType, scopeId);
@@ -482,6 +494,25 @@ export default function BillingPage() {
                 {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Open Payment Management Portal
               </Button>
+              {/* Add Payment Method Button if no payment method is present */}
+              {hasStripeCustomer &&
+                (!payment_methods || payment_methods.length === 0) &&
+                stripePromise && (
+                  <Button
+                    variant="default"
+                    onClick={() => setShowPaymentModal(true)}
+                    className="w-full mt-2"
+                  >
+                    Add Payment Method
+                  </Button>
+                )}
+              {showPaymentModal && stripePromise && (
+                <AddPaymentMethodModal
+                  stripePromise={stripePromise}
+                  createSetupIntent={createSetupIntent}
+                  onClose={() => setShowPaymentModal(false)}
+                />
+              )}
               <p className="text-sm text-muted-foreground">
                 The customer portal allows you to update payment methods,
                 download invoices, and manage your subscription settings.
