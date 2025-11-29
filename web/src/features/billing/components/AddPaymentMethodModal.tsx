@@ -7,17 +7,17 @@ import {
 } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 
-interface StripeOnboardingModalProps {
+interface AddPaymentMethodModalProps {
   stripePromise: Promise<any>;
   createSetupIntent: any;
   onClose: () => void;
 }
 
-export function StripeOnboardingModal({
+export function AddPaymentMethodModal({
   stripePromise,
   createSetupIntent,
   onClose,
-}: StripeOnboardingModalProps) {
+}: AddPaymentMethodModalProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

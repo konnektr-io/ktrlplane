@@ -28,7 +28,7 @@ import {
   useBillingStatus,
   useCreateSetupIntent,
 } from "@/features/billing/hooks/useBillingApi";
-import { StripeOnboardingModal } from "@/features/billing/components/StripeOnboardingModal";
+import { AddPaymentMethodModal } from "@/features/billing/components/AddPaymentMethodModal";
 import { BillingSetupModal } from "@/features/billing/components/BillingSetupModal";
 import type { CreateResourceData } from "../types/resource.types";
 import type { ResourceType } from "../schemas";
@@ -697,7 +697,7 @@ export default function CreateResourcePage() {
 
           {/* Stripe Elements Modal for payment onboarding */}
           {showPaymentModal && stripePromise && (
-            <StripeOnboardingModal
+            <AddPaymentMethodModal
               stripePromise={stripePromise}
               createSetupIntent={createSetupIntent}
               onClose={() => setShowPaymentModal(false)}
