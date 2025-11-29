@@ -5,20 +5,27 @@ import { handleApiError } from "@/lib/errorHandler";
 import type { BillingInfo } from "../types/billing.types";
 
 // Fetch billing info for org or project
-export function useBilling(scopeType: "organization" | "project", scopeId: string) {
+export function useBilling(
+  scopeType: "organization" | "project",
+  scopeId: string
+) {
   const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const baseURL = scopeType === "organization"
-    ? `/organizations/${scopeId}`
-    : `/projects/${scopeId}`;
+  const baseURL =
+    scopeType === "organization"
+      ? `/organizations/${scopeId}`
+      : `/projects/${scopeId}`;
   return useQuery({
     queryKey: ["billing", scopeType, scopeId],
     queryFn: async () => {
       if (!scopeId) return null;
       try {
         const token = await getAccessTokenSilently();
-        const response = await apiClient.get<BillingInfo>(`${baseURL}/billing`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await apiClient.get<BillingInfo>(
+          `${baseURL}/billing`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         return response.data;
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
@@ -29,18 +36,26 @@ export function useBilling(scopeType: "organization" | "project", scopeId: strin
 }
 
 // Update billing email
-export function useUpdateBillingEmail(scopeType: "organization" | "project", scopeId: string) {
+export function useUpdateBillingEmail(
+  scopeType: "organization" | "project",
+  scopeId: string
+) {
   const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const baseURL = scopeType === "organization"
-    ? `/organizations/${scopeId}`
-    : `/projects/${scopeId}`;
+  const baseURL =
+    scopeType === "organization"
+      ? `/organizations/${scopeId}`
+      : `/projects/${scopeId}`;
   return useMutation({
     mutationFn: async (billing_email: string) => {
       try {
         const token = await getAccessTokenSilently();
-        await apiClient.put(`${baseURL}/billing`, { billing_email }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await apiClient.put(
+          `${baseURL}/billing`,
+          { billing_email },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }
@@ -49,13 +64,21 @@ export function useUpdateBillingEmail(scopeType: "organization" | "project", sco
 }
 
 // Setup Stripe customer
-export function useSetupStripeCustomer(scopeType: "organization" | "project", scopeId: string) {
+export function useSetupStripeCustomer(
+  scopeType: "organization" | "project",
+  scopeId: string
+) {
   const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const baseURL = scopeType === "organization"
-    ? `/organizations/${scopeId}`
-    : `/projects/${scopeId}`;
+  const baseURL =
+    scopeType === "organization"
+      ? `/organizations/${scopeId}`
+      : `/projects/${scopeId}`;
   return useMutation({
-    mutationFn: async (data: { email: string; name: string; description?: string }) => {
+    mutationFn: async (data: {
+      email: string;
+      name: string;
+      description?: string;
+    }) => {
       try {
         const token = await getAccessTokenSilently();
         await apiClient.post(`${baseURL}/billing/customer`, data, {
@@ -69,18 +92,26 @@ export function useSetupStripeCustomer(scopeType: "organization" | "project", sc
 }
 
 // Open Stripe customer portal
-export function useOpenCustomerPortal(scopeType: "organization" | "project", scopeId: string) {
+export function useOpenCustomerPortal(
+  scopeType: "organization" | "project",
+  scopeId: string
+) {
   const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const baseURL = scopeType === "organization"
-    ? `/organizations/${scopeId}`
-    : `/projects/${scopeId}`;
+  const baseURL =
+    scopeType === "organization"
+      ? `/organizations/${scopeId}`
+      : `/projects/${scopeId}`;
   return useMutation({
     mutationFn: async (return_url: string) => {
       try {
         const token = await getAccessTokenSilently();
-        const response = await apiClient.post(`${baseURL}/billing/portal`, { return_url }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await apiClient.post(
+          `${baseURL}/billing/portal`,
+          { return_url },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         return response.data.portal_url;
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
@@ -90,18 +121,26 @@ export function useOpenCustomerPortal(scopeType: "organization" | "project", sco
 }
 
 // Create subscription
-export function useCreateSubscription(scopeType: "organization" | "project", scopeId: string) {
+export function useCreateSubscription(
+  scopeType: "organization" | "project",
+  scopeId: string
+) {
   const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const baseURL = scopeType === "organization"
-    ? `/organizations/${scopeId}`
-    : `/projects/${scopeId}`;
+  const baseURL =
+    scopeType === "organization"
+      ? `/organizations/${scopeId}`
+      : `/projects/${scopeId}`;
   return useMutation({
     mutationFn: async () => {
       try {
         const token = await getAccessTokenSilently();
-        await apiClient.post(`${baseURL}/billing/subscription`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await apiClient.post(
+          `${baseURL}/billing/subscription`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }
@@ -110,18 +149,26 @@ export function useCreateSubscription(scopeType: "organization" | "project", sco
 }
 
 // Cancel subscription
-export function useCancelSubscription(scopeType: "organization" | "project", scopeId: string) {
+export function useCancelSubscription(
+  scopeType: "organization" | "project",
+  scopeId: string
+) {
   const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const baseURL = scopeType === "organization"
-    ? `/organizations/${scopeId}`
-    : `/projects/${scopeId}`;
+  const baseURL =
+    scopeType === "organization"
+      ? `/organizations/${scopeId}`
+      : `/projects/${scopeId}`;
   return useMutation({
     mutationFn: async () => {
       try {
         const token = await getAccessTokenSilently();
-        await apiClient.post(`${baseURL}/billing/cancel`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await apiClient.post(
+          `${baseURL}/billing/cancel`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }

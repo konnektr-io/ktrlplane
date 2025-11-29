@@ -57,7 +57,10 @@ export default function BillingPage() {
     refetch,
   } = useBilling(scopeType, scopeId);
   const updateBillingEmailMutation = useUpdateBillingEmail(scopeType, scopeId);
-  const setupStripeCustomerMutation = useSetupStripeCustomer(scopeType, scopeId);
+  const setupStripeCustomerMutation = useSetupStripeCustomer(
+    scopeType,
+    scopeId
+  );
   const openCustomerPortalMutation = useOpenCustomerPortal(scopeType, scopeId);
   const createSubscriptionMutation = useCreateSubscription(scopeType, scopeId);
   const cancelSubscriptionMutation = useCancelSubscription(scopeType, scopeId);
