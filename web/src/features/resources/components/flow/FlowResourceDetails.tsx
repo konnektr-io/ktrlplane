@@ -1,34 +1,41 @@
 import type { Resource } from "../../types/resource.types";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
-
-const DOCS_URL = "https://docs.konnektr.io/flow";
 
 export default function FlowResourceDetails({
   resource,
 }: {
   resource: Resource;
 }) {
+  const flowEditorUrl = `https://flow.konnektr.io/${resource.resource_id}`;
   return (
     <Card className="mb-4">
-      <CardHeader>
+      {/* <CardHeader>
         <CardTitle>Flow Resource Details</CardTitle>
-      </CardHeader>
+      </CardHeader> */}
       <CardContent>
         <span className="font-medium">Flow resource details coming soon.</span>
-        <div className="flex items-center gap-2 mt-2">
-          <Button
-            variant="link"
-            size="sm"
-            asChild
-            className="p-0 h-auto text-blue-700"
+        <div className="h-6">
+          <span className="font-medium">Flow Editor:</span>
+          <a
+            href={flowEditorUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 text-primary hover:underline focus-visible:outline-primary"
           >
-            <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-              <BookOpen className="h-4 w-4 mr-1 inline" />
-              Documentation
-            </a>
-          </Button>
+            Open Explorer
+          </a>
+        </div>
+        <div className="flex items-center h-6">
+          <BookOpen className="h-4 w-4 mr-1 inline" />
+          <a
+            href="https://docs.konnektr.io/docs/flow"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 text-primary hover:underline focus-visible:outline-primary"
+          >
+            Documentation
+          </a>
         </div>
       </CardContent>
     </Card>

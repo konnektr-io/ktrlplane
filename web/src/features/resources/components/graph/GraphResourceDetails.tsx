@@ -1,10 +1,8 @@
 import type { Resource } from "../../types/resource.types";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, BookOpen } from "lucide-react";
 import { useState } from "react";
-
-const DOCS_URL = "https://docs.konnektr.io/graph";
 
 export default function GraphResourceDetails({
   resource,
