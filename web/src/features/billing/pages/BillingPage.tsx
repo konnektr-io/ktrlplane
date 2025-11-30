@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import {
   Card,
@@ -31,12 +31,10 @@ import {
   Download,
   Settings,
   AlertTriangle,
-  Calendar,
   Package,
 } from "lucide-react";
 import {
   useBilling,
-  useUpdateBillingEmail,
   useSetupStripeCustomer,
   useOpenCustomerPortal,
   useCreateSubscription,
@@ -52,13 +50,11 @@ export default function BillingPage() {
   const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [billingEmail, setBillingEmail] = useState("");
   const {
     data: billingInfo,
     isLoading: loading,
     refetch,
   } = useBilling(scopeType, scopeId);
-  const updateBillingEmailMutation = useUpdateBillingEmail(scopeType, scopeId);
   const setupStripeCustomerMutation = useSetupStripeCustomer(
     scopeType,
     scopeId
@@ -78,24 +74,7 @@ export default function BillingPage() {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (billingInfo && billingInfo.billing_account) {
-      setBillingEmail(billingInfo.billing_account.billing_email || "");
-    }
-  }, [billingInfo]);
-
-  // Handlers using mutations
-  const updateBillingEmail = async () => {
-    setUpdating(true);
-    try {
-      await updateBillingEmailMutation.mutateAsync(billingEmail);
-      await refetch();
-    } catch (err) {
-      setError("Failed to update billing email");
-    } finally {
-      setUpdating(false);
-    }
-  };
+  // Removed billingEmail state and updateBillingEmail mutation; billing email is managed in Stripe portal
 
   const setupStripeCustomer = async () => {
     setUpdating(true);
@@ -203,16 +182,16 @@ export default function BillingPage() {
   }
 
   const {
-    billing_account: account,
+    subscription_details,
     upcoming_invoice,
+    stripe_customer,
     payment_methods,
     subscription_items,
-    subscription_details,
   } = billingInfo;
-  const hasStripeCustomer = !!account.stripe_customer_id;
+
+  const hasStripeCustomer = !!stripe_customer?.id;
   const hasActiveSubscription =
-    !!account.stripe_subscription_id &&
-    account.subscription_status === "active";
+    !!subscription_details?.id && subscription_details.status === "active";
 
   return (
     <div className="space-y-6 p-6">
@@ -230,54 +209,16 @@ export default function BillingPage() {
         </Alert>
       )}
 
-      {/* Subscription Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Subscription Overview
-          </CardTitle>
-          <CardDescription>
-            Current subscription status and plan information
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Status:</span>
-            <Badge className={getStatusColor(account.subscription_status)}>
-              {account.subscription_status || "No subscription"}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Billing Email:</span>
-            <span>{account.billing_email || "Not set"}</span>
-          </div>
-          {/* Create subscription button if no subscription exists but customer exists */}
-          {hasStripeCustomer && !hasActiveSubscription && (
-            <div className="pt-2">
-              <Button
-                onClick={createSubscription}
-                disabled={updating}
-                className="w-full"
-              >
-                {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Subscription with Current Resources
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Subscription Details */}
-      {hasActiveSubscription && subscription_details && (
+      {/* Combined Subscription Card: only show if subscription_details exists */}
+      {subscription_details ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Subscription Details
+              <CreditCard className="h-5 w-5" />
+              Subscription
             </CardTitle>
             <CardDescription>
-              Detailed information about your current subscription
+              Subscription details are fetched live from Stripe.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -292,12 +233,29 @@ export default function BillingPage() {
               <Badge className={getStatusColor(subscription_details.status)}>
                 {subscription_details.status}
               </Badge>
+              {subscription_details.cancel_at_period_end &&
+              subscription_details.current_period_end ? (
+                <span className="text-xs text-muted-foreground mt-1">
+                  Your subscription will end on{" "}
+                  {formatDate(subscription_details.current_period_end)}.
+                </span>
+              ) : null}
             </div>
             <div className="flex items-center justify-between">
               <span className="font-medium">Current Period:</span>
               <span>
-                {formatDate(subscription_details.current_period_start)} -{" "}
-                {formatDate(subscription_details.current_period_end)}
+                {upcoming_invoice?.period_start && upcoming_invoice?.period_end
+                  ? `Upcoming: ${formatDate(
+                      upcoming_invoice.period_start
+                    )} - ${formatDate(upcoming_invoice.period_end)}`
+                  : subscription_details.current_period_start &&
+                    subscription_details.current_period_end &&
+                    subscription_details.current_period_start > 0 &&
+                    subscription_details.current_period_end > 0
+                  ? `${formatDate(
+                      subscription_details.current_period_start
+                    )} - ${formatDate(subscription_details.current_period_end)}`
+                  : "Period unavailable"}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -312,8 +270,43 @@ export default function BillingPage() {
                 {subscription_details.cancel_at_period_end ? "Yes" : "No"}
               </Badge>
             </div>
+            {/* Billing Email: now shown from Stripe customer info, not DB */}
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Billing Email:</span>
+              <span>{stripe_customer?.email || "Not set"}</span>
+            </div>
           </CardContent>
         </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Subscription
+            </CardTitle>
+            <CardDescription>
+              No active subscription. You can create one below.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* Create subscription button if no subscription exists but customer exists */}
+      {hasStripeCustomer && !hasActiveSubscription && (
+        <div className="flex flex-col gap-2 items-start mt-4">
+          <Button
+            variant="default"
+            onClick={createSubscription}
+            disabled={updating}
+          >
+            Create subscription
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            You can create a subscription now to enable paid resources later.
+            <br />
+            Free resources remain available without a subscription.
+          </span>
+        </div>
       )}
 
       {/* Subscription Items */}
@@ -381,35 +374,6 @@ export default function BillingPage() {
             </CardContent>
           </Card>
         )}
-
-      {/* Billing Email Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Billing Email</CardTitle>
-          <CardDescription>
-            Update the email address for billing notifications
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="billing-email">Email Address</Label>
-            <Input
-              id="billing-email"
-              type="email"
-              value={billingEmail}
-              onChange={(e) => setBillingEmail(e.target.value)}
-              placeholder="billing@example.com"
-            />
-          </div>
-          <Button
-            onClick={updateBillingEmail}
-            disabled={updating || billingEmail === account.billing_email}
-          >
-            {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Update Email
-          </Button>
-        </CardContent>
-      </Card>
 
       {/* Stripe Integration */}
       {!hasStripeCustomer ? (

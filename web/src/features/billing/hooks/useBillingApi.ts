@@ -36,32 +36,7 @@ export function useBilling(
 }
 
 // Update billing email
-export function useUpdateBillingEmail(
-  scopeType: "organization" | "project",
-  scopeId: string
-) {
-  const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const baseURL =
-    scopeType === "organization"
-      ? `/organizations/${scopeId}`
-      : `/projects/${scopeId}`;
-  return useMutation({
-    mutationFn: async (billing_email: string) => {
-      try {
-        const token = await getAccessTokenSilently();
-        await apiClient.put(
-          `${baseURL}/billing`,
-          { billing_email },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } catch (err: unknown) {
-        await handleApiError(err, loginWithRedirect);
-      }
-    },
-  });
-}
+// useUpdateBillingEmail removed; billing email is managed in Stripe portal
 
 // Setup Stripe customer
 export function useSetupStripeCustomer(

@@ -96,11 +96,10 @@ func (h *Handler) GetBillingStatus(c *gin.Context) {
 
 	// Return only status-relevant fields for onboarding
 	resp := gin.H{
-		"subscription_status": billingInfo.BillingAccount.SubscriptionStatus,
 		"has_payment_method": len(billingInfo.PaymentMethods) > 0,
 		"payment_methods": billingInfo.PaymentMethods,
 		"subscription_details": billingInfo.SubscriptionDetails,
-		"billing_email": billingInfo.BillingAccount.BillingEmail,
+		"stripe_customer": billingInfo.StripeCustomer, // Stripe customer info (includes email)
 	}
 	c.JSON(http.StatusOK, resp)
 }
@@ -898,59 +897,6 @@ func (h *Handler) GetBillingInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, billingInfo)
-}
-
-// UpdateBillingInfo updates billing settings for organization or project.
-func (h *Handler) UpdateBillingInfo(c *gin.Context) {
-	// Determine scope type and ID from URL
-	var scopeType, scopeID string
-
-	if orgID := c.Param("orgId"); orgID != "" {
-		scopeType = "organization"
-		scopeID = orgID
-	} else if projectID := c.Param("projectId"); projectID != "" {
-		scopeType = "project"
-		scopeID = projectID
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid scope"})
-		return
-	}
-
-	var req models.UpdateBillingRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	user, err := h.getUserFromContext(c)
-	if err != nil {
-		_ = c.Error(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-		return
-	}
-
-	// Check manage_billing permission
-	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "manage_billing", scopeType, scopeID)
-	if err != nil {
-		_ = c.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
-		return
-	}
-
-	if !hasPermission {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to manage billing"})
-		return
-	}
-
-	account, err := h.BillingService.UpdateBillingAccount(scopeType, scopeID, req)
-	if err != nil {
-		_ = c.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update billing information", "details": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, account)
 }
 
 // CreateStripeCustomer creates a Stripe customer for organization or project.

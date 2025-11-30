@@ -64,7 +64,7 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 		// Check billing account and subscription for project
 		billingSvc := NewBillingService(s.config)
 		billingAccount, err := billingSvc.GetBillingAccount("project", projectID)
-		if err != nil || billingAccount == nil || billingAccount.StripeCustomerID == nil || billingAccount.StripeSubscriptionID == nil || billingAccount.SubscriptionStatus != "active" {
+		if err != nil || billingAccount == nil || billingAccount.StripeCustomerID == nil || billingAccount.StripeSubscriptionID == nil {
 			return nil, fmt.Errorf("billing account with active subscription required for paid resources")
 		}
 

@@ -77,7 +77,6 @@ func SetupRouter(handler *Handler) *gin.Engine {
 				orgBilling := organizationDetail.Group("/billing")
 				{
 					orgBilling.GET("", handler.GetBillingInfo)                                // Get billing information
-					orgBilling.PUT("", handler.UpdateBillingInfo)                             // Update billing settings
 					orgBilling.POST("/customer", handler.CreateStripeCustomer)                // Create Stripe customer
 					orgBilling.POST("/subscription", handler.CreateStripeSubscription)        // Create subscription
 					orgBilling.POST("/portal", handler.CreateStripeCustomerPortal)            // Create customer portal session
@@ -112,7 +111,6 @@ func SetupRouter(handler *Handler) *gin.Engine {
 				projectBilling := projectDetail.Group("/billing")
 				{
 					projectBilling.GET("", handler.GetBillingInfo)                         // Get billing information
-					projectBilling.PUT("", handler.UpdateBillingInfo)                      // Update billing settings
 					projectBilling.POST("/customer", handler.CreateStripeCustomer)         // Create Stripe customer
 					projectBilling.POST("/subscription", handler.CreateStripeSubscription) // Create subscription
 					projectBilling.POST("/portal", handler.CreateStripeCustomerPortal)     // Create customer portal session

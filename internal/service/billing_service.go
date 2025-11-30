@@ -12,6 +12,7 @@ import (
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/billingportal/session"
 	"github.com/stripe/stripe-go/v82/customer"
+	"github.com/stripe/stripe-go/v82/invoice"
 	"github.com/stripe/stripe-go/v82/paymentmethod"
 	"github.com/stripe/stripe-go/v82/price"
 	"github.com/stripe/stripe-go/v82/setupintent"
@@ -32,10 +33,10 @@ func NewBillingService(cfg *config.Config) *BillingService {
 
 // GetBillingAccount retrieves billing information for a scope (organization or project)
 func (s *BillingService) GetBillingAccount(scopeType, scopeID string) (*models.BillingAccount, error) {
-	 query := db.GetBillingAccountQuery
+	query := db.GetBillingAccountQuery
 
 	var account models.BillingAccount
-	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID)
+	row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID)
 
 	err := row.Scan(
 		&account.BillingAccountID,
@@ -43,9 +44,6 @@ func (s *BillingService) GetBillingAccount(scopeType, scopeID string) (*models.B
 		&account.ScopeID,
 		&account.StripeCustomerID,
 		&account.StripeSubscriptionID,
-		&account.SubscriptionStatus,
-		&account.SubscriptionPlan,
-		&account.BillingEmail,
 		&account.CreatedAt,
 		&account.UpdatedAt,
 	)
@@ -76,42 +74,12 @@ func (s *BillingService) createBillingAccount(scopeType, scopeID string) (*model
 		&account.ScopeID,
 		&account.StripeCustomerID,
 		&account.StripeSubscriptionID,
-		&account.SubscriptionStatus,
-		&account.SubscriptionPlan,
-		&account.BillingEmail,
 		&account.CreatedAt,
 		&account.UpdatedAt,
 	)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create billing account: %w", err)
-	}
-
-	return &account, nil
-}
-
-// UpdateBillingAccount updates billing account information
-func (s *BillingService) UpdateBillingAccount(scopeType, scopeID string, req models.UpdateBillingRequest) (*models.BillingAccount, error) {
-	 query := db.UpdateBillingAccountQuery
-
-	var account models.BillingAccount
-	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, req.BillingEmail, req.SubscriptionPlan)
-
-	err := row.Scan(
-		&account.BillingAccountID,
-		&account.ScopeType,
-		&account.ScopeID,
-		&account.StripeCustomerID,
-		&account.StripeSubscriptionID,
-		&account.SubscriptionStatus,
-		&account.SubscriptionPlan,
-		&account.BillingEmail,
-		&account.CreatedAt,
-		&account.UpdatedAt,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to update billing account: %w", err)
 	}
 
 	return &account, nil
@@ -143,7 +111,6 @@ func (s *BillingService) CreateStripeCustomer(scopeType, scopeID string, req mod
 
 	// Create subscription with resource-based items if we have resources
 	var subscriptionID *string
-	var subscriptionStatus string = "trial"
 
 	if len(resourceCounts) > 0 {
 		subscription, err := s.createSubscriptionWithResources(stripeCustomer.ID, resourceCounts)
@@ -151,15 +118,14 @@ func (s *BillingService) CreateStripeCustomer(scopeType, scopeID string, req mod
 			fmt.Printf("Warning: Failed to create subscription: %v\n", err)
 		} else if subscription != nil {
 			subscriptionID = &subscription.ID
-			subscriptionStatus = string(subscription.Status)
 		}
 	}
 
 	// Update billing account with Stripe customer ID and subscription ID (if created)
-	 query := db.UpdateBillingAccountStripeQuery
+	query := db.UpdateBillingAccountStripeQuery
 
 	var account models.BillingAccount
-	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, stripeCustomer.ID, subscriptionID, subscriptionStatus, req.Email)
+	row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, stripeCustomer.ID, subscriptionID, req.Email)
 
 	err = row.Scan(
 		&account.BillingAccountID,
@@ -167,9 +133,6 @@ func (s *BillingService) CreateStripeCustomer(scopeType, scopeID string, req mod
 		&account.ScopeID,
 		&account.StripeCustomerID,
 		&account.StripeSubscriptionID,
-		&account.SubscriptionStatus,
-		&account.SubscriptionPlan,
-		&account.BillingEmail,
 		&account.CreatedAt,
 		&account.UpdatedAt,
 	)
@@ -234,10 +197,10 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 		return nil, fmt.Errorf("failed to create Stripe subscription: %w", err)
 	}
 
-	// Update billing account with subscription ID and status
-	 query := db.UpdateBillingAccountSubscriptionQuery
+	// Update billing account with subscription ID
+	query := db.UpdateBillingAccountSubscriptionQuery
 
-	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, stripeSubscription.ID, string(stripeSubscription.Status))
+	row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, stripeSubscription.ID)
 
 	err = row.Scan(
 		&account.BillingAccountID,
@@ -245,9 +208,6 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 		&account.ScopeID,
 		&account.StripeCustomerID,
 		&account.StripeSubscriptionID,
-		&account.SubscriptionStatus,
-		&account.SubscriptionPlan,
-		&account.BillingEmail,
 		&account.CreatedAt,
 		&account.UpdatedAt,
 	)
@@ -302,15 +262,15 @@ func (s *BillingService) CancelSubscription(scopeType, scopeID string) (*models.
 		CancelAtPeriodEnd: stripe.Bool(true),
 	}
 
-	stripeSubscription, err := subscription.Update(*account.StripeSubscriptionID, params)
+	_, err = subscription.Update(*account.StripeSubscriptionID, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to cancel Stripe subscription: %w", err)
 	}
 
-	// Update billing account status
-	 query := db.UpdateBillingAccountStatusQuery
+	// Update billing account
+	query := db.UpdateBillingAccountStatusQuery
 
-	 row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, string(stripeSubscription.Status))
+	row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID)
 
 	err = row.Scan(
 		&account.BillingAccountID,
@@ -318,9 +278,6 @@ func (s *BillingService) CancelSubscription(scopeType, scopeID string) (*models.
 		&account.ScopeID,
 		&account.StripeCustomerID,
 		&account.StripeSubscriptionID,
-		&account.SubscriptionStatus,
-		&account.SubscriptionPlan,
-		&account.BillingEmail,
 		&account.CreatedAt,
 		&account.UpdatedAt,
 	)
@@ -344,26 +301,41 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 		BillingAccount: *account,
 	}
 
+	// Add Stripe customer info
+	if account.StripeCustomerID != nil {
+		cust, err := customer.Get(*account.StripeCustomerID, nil)
+		if err == nil {
+			billingInfo.StripeCustomer = &models.StripeCustomer{
+				ID:          cust.ID,
+				Email:       cust.Email,
+				Name:        cust.Name,
+				Description: cust.Description,
+			}
+		}
+	}
+
 	// If Stripe customer exists, get additional Stripe data
 	if account.StripeCustomerID != nil {
-		// Get upcoming invoice
-		/* if account.StripeSubscriptionID != nil {
-			upcomingInvoice, err := invoice.Upcoming(&stripe.InvoiceUpcomingParams{
+		// Get latest invoice using invoice.List
+		if account.StripeSubscriptionID != nil {
+			params := &stripe.InvoiceListParams{
 				Customer:     stripe.String(*account.StripeCustomerID),
 				Subscription: stripe.String(*account.StripeSubscriptionID),
-			})
-			if err == nil {
+			}
+			iter := invoice.List(params)
+			if iter.Next() {
+				latestInvoice := iter.Invoice()
 				billingInfo.UpcomingInvoice = &models.StripeInvoice{
-					ID:               upcomingInvoice.ID,
-					AmountDue:        upcomingInvoice.AmountDue,
-					Currency:         string(upcomingInvoice.Currency),
-					PeriodStart:      upcomingInvoice.PeriodStart,
-					PeriodEnd:        upcomingInvoice.PeriodEnd,
-					Status:           string(upcomingInvoice.Status),
-					HostedInvoiceURL: &upcomingInvoice.HostedInvoiceURL,
+					ID:               latestInvoice.ID,
+					AmountDue:        latestInvoice.AmountDue,
+					Currency:         string(latestInvoice.Currency),
+					PeriodStart:      latestInvoice.PeriodStart,
+					PeriodEnd:        latestInvoice.PeriodEnd,
+					Status:           string(latestInvoice.Status),
+					HostedInvoiceURL: &latestInvoice.HostedInvoiceURL,
 				}
 			}
-		} */
+		}
 
 		// Get payment methods
 		pmParams := &stripe.PaymentMethodListParams{
@@ -486,7 +458,7 @@ func (s *BillingService) CreateStripeSetupIntent(scopeType, scopeID string) (str
 		return "", err
 	}
 	if account.StripeCustomerID == nil {
-		return "", fmt.Errorf("Stripe customer not found for scope")
+		return "", fmt.Errorf("stripe customer not found for scope")
 	}
 	params := &stripe.SetupIntentParams{
 		Customer: stripe.String(*account.StripeCustomerID),
