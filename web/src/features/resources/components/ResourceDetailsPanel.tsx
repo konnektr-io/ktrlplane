@@ -1,6 +1,5 @@
 import type { Resource } from "../types/resource.types";
 
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
@@ -23,15 +22,39 @@ function GraphResourceDetails({ resource }: { resource: Resource }) {
       <CardContent className="space-y-2">
         <div className="flex items-center gap-2">
           <span className="font-medium">API URL:</span>
-          <a href={`https://${apiUrl}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline focus-visible:outline-primary">{apiUrl}</a>
-          <Button variant="ghost" size="icon" onClick={handleCopy} title="Copy API URL" className="p-1">
-            <Copy className={`h-4 w-4 ${copied ? 'text-primary' : 'text-muted-foreground'}`} />
+          <a
+            href={`https://${apiUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline focus-visible:outline-primary"
+          >
+            {apiUrl}
+          </a>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleCopy}
+            title="Copy API URL"
+            className="p-1"
+          >
+            <Copy
+              className={`h-4 w-4 ${
+                copied ? "text-primary" : "text-muted-foreground"
+              }`}
+            />
           </Button>
           {copied && <span className="text-xs text-primary ml-1">Copied!</span>}
         </div>
         <div>
           <span className="font-medium">Graph Explorer:</span>
-          <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-primary hover:underline focus-visible:outline-primary">Open Explorer</a>
+          <a
+            href={explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 text-primary hover:underline focus-visible:outline-primary"
+          >
+            Open Explorer
+          </a>
         </div>
       </CardContent>
     </Card>
@@ -65,7 +88,9 @@ export function ResourceDetailsPanel({ resource }: { resource: Resource }) {
             <CardTitle>Resource Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground">No additional details for this resource type.</div>
+            <div className="text-muted-foreground">
+              No additional details for this resource type.
+            </div>
           </CardContent>
         </Card>
       );
