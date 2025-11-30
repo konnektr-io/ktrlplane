@@ -46,7 +46,7 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, req models
 		Name:  req.Name,
 	}
 
-	err = tx.QueryRow(ctx, db.CreateOrganizationWithTimestampsQuery,
+	err = tx.QueryRow(ctx, db.CreateOrganization,
 		org.OrgID, org.Name).Scan(&org.CreatedAt, &org.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create organization: %w", err)

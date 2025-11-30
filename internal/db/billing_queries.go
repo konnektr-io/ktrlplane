@@ -4,7 +4,7 @@ package db
 
 const GetBillingAccountQuery = `
 SELECT billing_account_id, scope_type, scope_id, stripe_customer_id, 
-       stripe_subscription_id, billing_email, created_at, updated_at
+       stripe_subscription_id, created_at, updated_at
 FROM ktrlplane.billing_accounts 
 WHERE scope_type = $1 AND scope_id = $2
 `
@@ -14,24 +14,23 @@ INSERT INTO ktrlplane.billing_accounts
 (billing_account_id, scope_type, scope_id, created_at, updated_at)
 VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-          stripe_subscription_id, billing_email, created_at, updated_at
+          stripe_subscription_id, created_at, updated_at
 `
 
 const UpdateBillingAccountQuery = `
 UPDATE ktrlplane.billing_accounts 
-SET billing_email = COALESCE($3, billing_email),
-    updated_at = NOW()
+SET updated_at = NOW()
 WHERE scope_type = $1 AND scope_id = $2
 RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-          stripe_subscription_id, billing_email, created_at, updated_at
+          stripe_subscription_id, created_at, updated_at
 `
 
 const UpdateBillingAccountStripeQuery = `
 UPDATE ktrlplane.billing_accounts 
-SET stripe_customer_id = $3, stripe_subscription_id = $4, billing_email = $5, updated_at = NOW()
+SET stripe_customer_id = $3, stripe_subscription_id = $4, updated_at = NOW()
 WHERE scope_type = $1 AND scope_id = $2
 RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-          stripe_subscription_id, billing_email, created_at, updated_at
+          stripe_subscription_id, created_at, updated_at
 `
 
 const UpdateBillingAccountSubscriptionQuery = `
@@ -39,7 +38,7 @@ UPDATE ktrlplane.billing_accounts
 SET stripe_subscription_id = $3, updated_at = NOW()
 WHERE scope_type = $1 AND scope_id = $2
 RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-          stripe_subscription_id, billing_email, created_at, updated_at
+          stripe_subscription_id, created_at, updated_at
 `
 
 const UpdateBillingAccountStatusQuery = `
@@ -47,7 +46,7 @@ UPDATE ktrlplane.billing_accounts
 SET updated_at = NOW()
 WHERE scope_type = $1 AND scope_id = $2
 RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
-          stripe_subscription_id, billing_email, created_at, updated_at
+          stripe_subscription_id, created_at, updated_at
 `
 
 const GetResourceCountsOrgQuery = `
