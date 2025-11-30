@@ -25,11 +25,44 @@ import { ResourceLogsPage } from "@/features/resources/pages/ResourceLogsPage";
 import { ResourceMonitoringPage } from "@/features/resources/pages/ResourceMonitoringPage";
 import BillingPage from "@/features/billing/pages/BillingPage";
 import ProjectAutoRedirect from "@/features/projects/components/ProjectAutoRedirect";
+import { CookieConsent } from "@/components/cookie-consent";
 
 function App() {
   const onRedirectCallback = (appState?: { returnTo?: string }) => {
-    // Navigate to the return URL or default to projects
     window.location.replace(appState?.returnTo || "/projects");
+  };
+
+  // GTAG consent logic
+  const setGtagConsent = (consent: "accepted" | "declined") => {
+    if (typeof window !== "undefined") {
+      // Declare window.gtag for TypeScript
+      type GtagFn = (
+        command: string,
+        action: string,
+        params: Record<string, string>
+      ) => void;
+      const gtag = (window as typeof window & { gtag?: GtagFn }).gtag;
+      if (gtag) {
+        if (consent === "accepted") {
+          gtag("consent", "update", {
+            ad_storage: "granted",
+            analytics_storage: "granted",
+          });
+        } else {
+          gtag("consent", "update", {
+            ad_storage: "denied",
+            analytics_storage: "denied",
+          });
+        }
+      }
+    }
+  };
+
+  const handleAccept = () => {
+    setGtagConsent("accepted");
+  };
+  const handleDecline = () => {
+    setGtagConsent("declined");
   };
 
   return (
@@ -49,7 +82,6 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/callback" element={<AuthCallbackPage />} />
-
           {/* Project Selection: auto-redirect only on root */}
           <Route
             element={
@@ -136,6 +168,12 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
+      {/* Cookie Consent Popup */}
+      <CookieConsent
+        variant="minimal"
+        onAcceptCallback={handleAccept}
+        onDeclineCallback={handleDecline}
+      />
       {/* <Toaster richColors position="top-right" /> */}
     </Auth0Provider>
   );
