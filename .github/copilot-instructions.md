@@ -86,6 +86,7 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - Authentication/authorization on all endpoints
 - API documentation in `docs/api-reference.md`
 
+
 ### 5. Billing & Payment Integration
 
 - Use Stripe for payment processing
@@ -93,6 +94,12 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - Resource-based billing model (not seat-based)
 - Billing inheritance: projects can inherit from organization billing
 - Remove Stripe branding in UI (use generic payment terminology)
+- **Stripe is the single source of truth for billing info.**
+- **Do not store SubscriptionStatus, SubscriptionPlan, or BillingEmail in the database or models.**
+- **The `billing_accounts` table is the canonical source for Stripe IDs (customer, subscription, etc.). Projects and organizations reference billing_accounts only.**
+- **UI must show the last invoice (not upcoming) and remove the "Current Period" field.**
+- **If a subscription is pending cancellation (`cancel_at_period_end` is true), show a clear warning and disable the cancel button, guiding users to the Payment Management Portal to continue their subscription.**
+
 
 
 ### 6. UI/UX Guidelines
@@ -103,6 +110,7 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - Mobile-responsive design
 - Follow Konnektr Design System for consistency across platform
 - Clear visual hierarchy and intuitive navigation
+- **Billing UI must clearly indicate when a subscription is pending cancellation, disable the cancel button, and provide guidance to continue the subscription via the Payment Management Portal.**
 
 ### 7. Security Requirements
 
@@ -171,6 +179,7 @@ When the user requests instructions for another project:
 - Provide the instructions as text only.
 - ALWAYS add these instructions to this copilot-instructions file for future reference.
 
+
 ## 🚫 What NOT to Do
 
 - Do not implement business logic of other Konnektr products
@@ -181,6 +190,7 @@ When the user requests instructions for another project:
 - Do not create separate user management systems
 - Do not implement separate billing systems in other products
 - Do not deploy infrastructure directly (use declarative requests to Control Plane)
+- **Do not store SubscriptionStatus, SubscriptionPlan, or BillingEmail in the database or models. Stripe is the only source of truth for billing info.**
 
 ## 📝 Change Log
 
