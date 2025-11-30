@@ -48,7 +48,7 @@ export function BillingSetupModal({
       await createSubscription.mutateAsync();
       setStep("done");
       if (onBillingSetupComplete) onBillingSetupComplete();
-    } catch (err) {
+    } catch {
       setError("Failed to setup billing. Please try again.");
     }
   };

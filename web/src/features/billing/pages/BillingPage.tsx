@@ -88,7 +88,7 @@ export default function BillingPage() {
       setShowSetupDialog(false);
       setCustomerName("");
       setCustomerEmail("");
-    } catch (err) {
+    } catch {
       setError("Failed to setup billing customer");
     } finally {
       setUpdating(false);
@@ -101,7 +101,7 @@ export default function BillingPage() {
       const returnUrl = `${window.location.origin}${location.pathname}`;
       const portalUrl = await openCustomerPortalMutation.mutateAsync(returnUrl);
       window.location.href = portalUrl;
-    } catch (err) {
+    } catch {
       setError("Failed to open customer portal");
     } finally {
       setUpdating(false);
@@ -113,7 +113,7 @@ export default function BillingPage() {
     try {
       await createSubscriptionMutation.mutateAsync();
       await refetch();
-    } catch (err) {
+    } catch {
       setError("Failed to create subscription");
     } finally {
       setUpdating(false);
@@ -125,7 +125,7 @@ export default function BillingPage() {
     try {
       await cancelSubscriptionMutation.mutateAsync();
       await refetch();
-    } catch (err) {
+    } catch {
       setError("Failed to cancel subscription");
     } finally {
       setUpdating(false);

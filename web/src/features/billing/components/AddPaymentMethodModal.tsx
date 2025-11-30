@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Elements } from "@stripe/react-stripe-js";
+import type { Stripe } from "@stripe/stripe-js";
 import {
   PaymentElement,
   useStripe,
@@ -8,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface AddPaymentMethodModalProps {
-  stripePromise: Promise<any>;
-  createSetupIntent: any;
+  stripePromise: Promise<Stripe | null>;
+  createSetupIntent: { mutateAsync: () => Promise<string> };
   onClose: () => void;
 }
 
@@ -27,7 +28,7 @@ export function AddPaymentMethodModal({
       try {
         const secret = await createSetupIntent.mutateAsync();
         setClientSecret(secret);
-      } catch (err: any) {
+      } catch {
         setError("Failed to create SetupIntent. Please try again.");
       }
     }
