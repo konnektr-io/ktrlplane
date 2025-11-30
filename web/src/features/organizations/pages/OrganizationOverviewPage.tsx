@@ -170,33 +170,6 @@ export default function OrganizationOverviewPage() {
         </Card>
       )}
 
-      {/* Quick Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Organization Metrics</CardTitle>
-          <CardDescription>High-level organization statistics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold">{orgProjects.length}</div>
-              <div className="text-sm text-muted-foreground">Projects</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Members</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Resources</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Storage Used</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

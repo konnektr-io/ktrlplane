@@ -1,18 +1,22 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useProject } from "../hooks/useProjectApi";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useResources } from "../../resources/hooks/useResourceApi";
+import { useBilling } from "../../billing/hooks/useBillingApi";
+import { useRoleAssignments } from "../../access/hooks/useAccessApi";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Building2, Activity } from "lucide-react";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
   const { data: currentProject } = useProject(projectId ?? "");
+  const { data: resources = [] } = useResources(projectId ?? "");
+  const { data: billingInfo } = useBilling("project", projectId ?? "");
+  // Fetch all role assignments for this project (including inherited)
+  const { data: roleAssignments = [] } = useRoleAssignments({ scopeType: "project", scopeId: projectId ?? "", scopeName: currentProject?.name ?? "" });
+  // Count unique users (prefer user.id, fallback to user_id on assignment)
+  const uniqueUserCount = Array.from(new Set(roleAssignments.map(a => a.user?.id ?? a.user_id).filter(Boolean))).length;
 
   return (
     <div className="space-y-6">
@@ -74,12 +78,12 @@ export default function ProjectDetailPage() {
             {currentProject?.org_id ? (
               <div>
                 <p className="text-sm font-medium">Organization ID</p>
-                <Link
-                  to={`/organizations/${currentProject.org_id}/settings`}
+                <a
+                  href={`/organizations/${currentProject.org_id}/settings`}
                   className="text-sm text-muted-foreground font-mono hover:text-foreground"
                 >
                   {currentProject.org_id}
-                </Link>
+                </a>
               </div>
             ) : (
               <div>
@@ -119,35 +123,93 @@ export default function ProjectDetailPage() {
         </Card>
       </div>
 
-      {/* Quick Actions or Additional Info */}
+      {/* Project Metrics */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Stats</CardTitle>
-          <CardDescription>
-            Project metrics and overview information
-          </CardDescription>
+          <CardTitle>Project Metrics</CardTitle>
+          <CardDescription>High-level project statistics</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
+              <div className="text-2xl font-bold">{resources.length}</div>
               <div className="text-sm text-muted-foreground">Resources</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Members</div>
+              <div className="text-2xl font-bold">{uniqueUserCount}</div>
+              <div className="text-sm text-muted-foreground">Users</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Deployments</div>
+              <div className="text-2xl font-bold">
+                {billingInfo?.billing_account?.stripe_customer_id ? (
+                  <span className="text-green-600">Linked</span>
+                ) : (
+                  <span className="text-red-600">Not Linked</span>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground">Billing Account</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Uptime</div>
+              <div className="text-2xl font-bold">
+                {billingInfo?.subscription_items && billingInfo.subscription_items.length > 0
+                  ? `${billingInfo.subscription_items.reduce((sum, item) => sum + (item.price?.unit_amount ?? 0) * (item.quantity ?? 1), 0) / 100}${billingInfo.subscription_items[0].price?.currency ? ` ${billingInfo.subscription_items[0].price.currency.toUpperCase()}` : ""}`
+                  : "-"}
+              </div>
+              <div className="text-sm text-muted-foreground">Monthly Cost</div>
             </div>
           </div>
+          {!billingInfo?.billing_account?.stripe_customer_id && (
+            <div className="flex justify-end mt-4 gap-2">
+              <Button variant="outline" size="sm" onClick={() => window.location.href = `/projects/${projectId}/billing`}>
+                Add Billing Account
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Recent Resources List */}
+      {resources.length > 0 && (
+        <Card>
+          <CardHeader className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Resources</CardTitle>
+              <CardDescription>Resources in this project</CardDescription>
+            </div>
+            <Button variant="default" size="sm" onClick={() => window.location.href = `/projects/${projectId}/resources/create`}>
+              Add Resource
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {resources.slice(0, 5).map((resource) => (
+                <a
+                  key={resource.resource_id}
+                  href={`/projects/${projectId}/resources/${resource.resource_id}`}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+                  title={`View resource: ${resource.name}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium mb-0">{resource.name}</p>
+                      {resource.type && (
+                        <span className="text-xs text-muted-foreground">{resource.type}</span>
+                      )}
+                    </div>
+                  </div>
+                  <Badge
+                    variant={resource.status === "Active" ? "default" : "secondary"}
+                  >
+                    {resource.status}
+                  </Badge>
+                </a>
+              ))}
+            </div>
+            {/* Add Resource button moved to header */}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
