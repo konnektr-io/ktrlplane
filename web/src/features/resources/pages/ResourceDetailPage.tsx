@@ -63,6 +63,12 @@ export default function ResourceDetailPage() {
                 {currentResource?.resource_id || resourceId}
               </p>
             </div>
+            <div>
+              <p className="text-sm font-medium">Tier</p>
+              <p className="text-sm text-muted-foreground">
+                {currentResource?.sku || "Unknown"}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
