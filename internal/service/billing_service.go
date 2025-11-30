@@ -325,7 +325,7 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 			iter := invoice.List(params)
 			if iter.Next() {
 				latestInvoice := iter.Invoice()
-				billingInfo.UpcomingInvoice = &models.StripeInvoice{
+				billingInfo.LastestInvoice = &models.StripeInvoice{
 					ID:               latestInvoice.ID,
 					AmountDue:        latestInvoice.AmountDue,
 					Currency:         string(latestInvoice.Currency),
@@ -597,6 +597,9 @@ func (s *BillingService) createSubscriptionWithResources(customerID string, reso
 		subParams := &stripe.SubscriptionParams{
 			Customer: stripe.String(customerID),
 			Items:    []*stripe.SubscriptionItemsParams{},
+			BillingMode: &stripe.SubscriptionBillingModeParams{
+				Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
+			},
 		}
 		return subscription.New(subParams)
 	}

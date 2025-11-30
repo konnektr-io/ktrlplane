@@ -70,7 +70,7 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, req models
 func (s *OrganizationService) ListOrganizations(ctx context.Context, userID string) ([]models.Organization, error) {
 	pool := db.GetDB()
 
-	rows, err := pool.Query(ctx, db.GetOrganizationsForUserAdvancedQuery, userID)
+	rows, err := pool.Query(ctx, db.GetOrganizationsForUserQuery, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query organizations: %w", err)
 	}

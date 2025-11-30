@@ -205,7 +205,7 @@ type BillingInfo struct {
 	BillingAccount       BillingAccount             `json:"billing_account"`
 	StripeCustomer       *StripeCustomer            `json:"stripe_customer,omitempty"`
 	StripeCustomerPortal *string                    `json:"stripe_customer_portal,omitempty"`
-	UpcomingInvoice      *StripeInvoice             `json:"upcoming_invoice,omitempty"`
+	LastestInvoice       *StripeInvoice             `json:"latest_invoice,omitempty"`
 	PaymentMethods       []StripePaymentMethod      `json:"payment_methods,omitempty"`
 	SubscriptionItems    []StripeSubscriptionItem   `json:"subscription_items,omitempty"`
 	SubscriptionDetails  *StripeSubscriptionDetails `json:"subscription_details,omitempty"`

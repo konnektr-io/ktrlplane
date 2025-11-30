@@ -183,7 +183,7 @@ export default function BillingPage() {
 
   const {
     subscription_details,
-    upcoming_invoice,
+    latest_invoice,
     stripe_customer,
     payment_methods,
     subscription_items,
@@ -233,31 +233,18 @@ export default function BillingPage() {
               <Badge className={getStatusColor(subscription_details.status)}>
                 {subscription_details.status}
               </Badge>
-              {subscription_details.cancel_at_period_end &&
-              subscription_details.current_period_end ? (
-                <span className="text-xs text-muted-foreground mt-1">
-                  Your subscription will end on{" "}
-                  {formatDate(subscription_details.current_period_end)}.
+            </div>
+            {/* Pending cancellation note */}
+            {subscription_details.cancel_at_period_end && (
+              <div className="flex items-center mt-2">
+                <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
+                <span className="text-sm text-destructive">
+                  This subscription is pending cancellation and will end at the
+                  end of the current billing period. To continue your
+                  subscription, open the Payment Management Portal below.
                 </span>
-              ) : null}
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Current Period:</span>
-              <span>
-                {upcoming_invoice?.period_start && upcoming_invoice?.period_end
-                  ? `Upcoming: ${formatDate(
-                      upcoming_invoice.period_start
-                    )} - ${formatDate(upcoming_invoice.period_end)}`
-                  : subscription_details.current_period_start &&
-                    subscription_details.current_period_end &&
-                    subscription_details.current_period_start > 0 &&
-                    subscription_details.current_period_end > 0
-                  ? `${formatDate(
-                      subscription_details.current_period_start
-                    )} - ${formatDate(subscription_details.current_period_end)}`
-                  : "Period unavailable"}
-              </span>
-            </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="font-medium">Cancel at Period End:</span>
               <Badge
@@ -516,15 +503,15 @@ export default function BillingPage() {
           )}
 
           {/* Upcoming Invoice */}
-          {upcoming_invoice && (
+          {latest_invoice && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Download className="h-5 w-5" />
-                  Upcoming Invoice
+                  Last Invoice
                 </CardTitle>
                 <CardDescription>
-                  Next billing period information
+                  Last billing period information
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -532,29 +519,29 @@ export default function BillingPage() {
                   <span className="font-medium">Amount Due:</span>
                   <span className="text-2xl font-bold">
                     {formatCurrency(
-                      upcoming_invoice.amount_due,
-                      upcoming_invoice.currency
+                      latest_invoice.amount_due,
+                      latest_invoice.currency
                     )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Billing Period:</span>
                   <span>
-                    {formatDate(upcoming_invoice.period_start)} -{" "}
-                    {formatDate(upcoming_invoice.period_end)}
+                    {formatDate(latest_invoice.period_start)} -{" "}
+                    {formatDate(latest_invoice.period_end)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Status:</span>
-                  <Badge className={getStatusColor(upcoming_invoice.status)}>
-                    {upcoming_invoice.status}
+                  <Badge className={getStatusColor(latest_invoice.status)}>
+                    {latest_invoice.status}
                   </Badge>
                 </div>
-                {upcoming_invoice.hosted_invoice_url && (
+                {latest_invoice.hosted_invoice_url && (
                   <Button
                     variant="outline"
                     onClick={() =>
-                      window.open(upcoming_invoice.hosted_invoice_url, "_blank")
+                      window.open(latest_invoice.hosted_invoice_url, "_blank")
                     }
                     className="w-full"
                   >
@@ -574,34 +561,58 @@ export default function BillingPage() {
                 <CardDescription>Manage your subscription</CardDescription>
               </CardHeader>
               <CardContent>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive">Cancel Subscription</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to cancel your subscription? This
-                        action will cancel your subscription at the end of the
+                {subscription_details?.cancel_at_period_end ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center">
+                      <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
+                      <span className="text-sm text-destructive">
+                        Your subscription will be cancelled at the end of the
                         current billing period.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={cancelSubscription}
-                        disabled={updating}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        {updating && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Cancel Subscription
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      To continue your subscription, open the Payment Management
+                      Portal below.
+                    </span>
+                    <Button
+                      variant="outline"
+                      onClick={openCustomerPortal}
+                      disabled={updating}
+                      className="w-full mt-2"
+                    >
+                      Open Payment Management Portal
+                    </Button>
+                  </div>
+                ) : (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">Cancel Subscription</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to cancel your subscription?
+                          This action will cancel your subscription at the end
+                          of the current billing period.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={cancelSubscription}
+                          disabled={updating}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {updating && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Cancel Subscription
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </CardContent>
             </Card>
           )}

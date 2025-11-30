@@ -35,9 +35,6 @@ export function useBilling(
   });
 }
 
-// Update billing email
-// useUpdateBillingEmail removed; billing email is managed in Stripe portal
-
 // Setup Stripe customer
 export function useSetupStripeCustomer(
   scopeType: "organization" | "project",

@@ -66,7 +66,7 @@ export interface BillingInfo {
     description?: string;
   };
   stripe_customer_portal?: string;
-  upcoming_invoice?: StripeInvoice;
+  latest_invoice?: StripeInvoice;
   payment_methods?: StripePaymentMethod[];
   subscription_items?: StripeSubscriptionItem[];
   subscription_details?: StripeSubscriptionDetails;

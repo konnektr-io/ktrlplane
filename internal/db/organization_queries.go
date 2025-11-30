@@ -8,15 +8,8 @@ const (
 		VALUES ($1, $2, NOW(), NOW()) 
 		RETURNING created_at, updated_at`
 
-	// GetOrganizationsForUserQuery selects organizations for a user.
+	// GetOrganizationsForUserQuery selects organizations for a user with advanced logic.
 	GetOrganizationsForUserQuery = `
-		SELECT DISTINCT o.org_id, o.name, o.created_at, o.updated_at 
-		FROM ktrlplane.organizations o
-		INNER JOIN ktrlplane.role_assignments ra ON ra.scope_type = 'organization' AND ra.scope_id = o.org_id
-		WHERE ra.user_id = $1`
-
-	// GetOrganizationsForUserAdvancedQuery selects organizations for a user with advanced logic.
-	GetOrganizationsForUserAdvancedQuery = `
 		SELECT DISTINCT o.org_id, o.name, o.created_at, o.updated_at
 		FROM ktrlplane.organizations o
 		JOIN ktrlplane.role_assignments ra ON ra.scope_id = o.org_id AND ra.scope_type = 'organization'

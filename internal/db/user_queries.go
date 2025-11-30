@@ -7,12 +7,6 @@ const (
 		INSERT INTO ktrlplane.users (user_id, email, name, external_auth_id, created_at)
 		VALUES ($1, $2, $3, $4, NOW())`
 
-	// CheckUserExistsQuery checks if a user exists.
-	CheckUserExistsQuery = `
-		SELECT user_id 
-		FROM ktrlplane.users 
-		WHERE user_id = $1`
-
 	// GetUserByIDQuery selects a user by ID.
 	GetUserByIDQuery = `
 		SELECT user_id, email, name
