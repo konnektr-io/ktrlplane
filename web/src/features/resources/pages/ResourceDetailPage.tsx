@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResourceStatusBadge } from "../components/ResourceStatusBadge";
+import { ResourceDetailsPanel } from "../components/ResourceDetailsPanel";
 
 export default function ResourceDetailPage() {
   const { projectId, resourceId } = useParams<{
@@ -50,18 +51,7 @@ export default function ResourceDetailPage() {
             Resource details and configuration
           </p>
         </div>
-        {currentResource?.access_url && (
-          <Button variant="outline" asChild>
-            <a
-              href={currentResource.access_url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open Resource
-            </a>
-          </Button>
-        )}
+        {/* Resource-specific quick actions (e.g., Open Graph Explorer) will go here */}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -74,10 +64,6 @@ export default function ResourceDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium">Status</p>
-              <ResourceStatusBadge status={currentResource?.status} />
-            </div>
             <div>
               <p className="text-sm font-medium">Type</p>
               <p className="text-sm text-muted-foreground">
@@ -104,9 +90,7 @@ export default function ResourceDetailPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium">Current Status</p>
-              <p className="text-sm text-muted-foreground">
-                {currentResource?.status || "Unknown"}
-              </p>
+              <ResourceStatusBadge status={currentResource?.status} />
             </div>
             {currentResource?.error_message && (
               <div>
@@ -118,19 +102,7 @@ export default function ResourceDetailPage() {
                 </p>
               </div>
             )}
-            {currentResource?.access_url && (
-              <div>
-                <p className="text-sm font-medium">Access URL</p>
-                <a
-                  href={currentResource.access_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  {currentResource.access_url}
-                </a>
-              </div>
-            )}
+            {/* Resource-type-specific details will go here (see ResourceDetailsPanel below) */}
           </CardContent>
         </Card>
 
@@ -163,55 +135,30 @@ export default function ResourceDetailPage() {
         </Card>
       </div>
 
-      {/* Configuration Card */}
-      {currentResource?.settings_json && (
+      {/* Resource-type-specific details panel */}
+      {currentResource && <ResourceDetailsPanel resource={currentResource} />}
+
+      {/*
+        Future resource-specific cards:
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Configuration
-            </CardTitle>
-            <CardDescription>
-              Resource configuration and Helm values
-            </CardDescription>
+            <CardTitle>Quick Start</CardTitle>
+            <CardDescription>Get started with your resource</CardDescription>
           </CardHeader>
           <CardContent>
-            <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-              {JSON.stringify(currentResource.settings_json, null, 2)}
-            </pre>
+            // Quick start instructions, onboarding links, etc.
           </CardContent>
         </Card>
-      )}
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Resource Metrics</CardTitle>
-          <CardDescription>
-            Resource usage and performance metrics
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">CPU Usage</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Memory</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Storage</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">-</div>
-              <div className="text-sm text-muted-foreground">Uptime</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Documentation</CardTitle>
+            <CardDescription>Links to API docs, guides, etc.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            // Documentation links, API reference, etc.
+          </CardContent>
+        </Card>
+      */}
     </div>
   );
 }
