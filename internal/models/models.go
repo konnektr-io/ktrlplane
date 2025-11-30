@@ -7,11 +7,11 @@ import (
 
 // Project represents a project in the system.
 type Project struct {
-	ProjectID              string    `json:"project_id" agtype:"project_id"`
-	OrgID                  *string   `json:"org_id" agtype:"org_id" db:"org_id"`
-	Name                   string    `json:"name" agtype:"name"`
-	Description            string    `json:"description,omitempty" agtype:"description"`
-	Status                 string    `json:"status" agtype:"status"`
+	ProjectID   string  `json:"project_id" agtype:"project_id"`
+	OrgID       *string `json:"org_id" agtype:"org_id" db:"org_id"`
+	Name        string  `json:"name" agtype:"name"`
+	Description string  `json:"description,omitempty" agtype:"description"`
+	Status      string  `json:"status" agtype:"status"`
 	// StripeCustomerID and StripeSubscriptionID removed; use BillingAccount
 	BillingEmail           *string   `json:"billing_email,omitempty" db:"billing_email"`
 	InheritsBillingFromOrg bool      `json:"inherits_billing_from_org" db:"inherits_billing_from_org"`
@@ -104,12 +104,12 @@ type User struct {
 
 // Organization represents an organization in the system.
 type Organization struct {
-	OrgID                string    `json:"org_id" db:"org_id"`
-	Name                 string    `json:"name" db:"name"`
+	OrgID string `json:"org_id" db:"org_id"`
+	Name  string `json:"name" db:"name"`
 	// StripeCustomerID and StripeSubscriptionID removed; use BillingAccount
-	BillingEmail         *string   `json:"billing_email,omitempty" db:"billing_email"`
-	CreatedAt            time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt            time.Time `json:"updated_at" db:"updated_at"`
+	BillingEmail *string   `json:"billing_email,omitempty" db:"billing_email"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // Role represents a role in the RBAC system.
@@ -269,4 +269,13 @@ type StripeCustomer struct {
 	Email       string `json:"email"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
+}
+
+type ResourceTierPrice struct {
+	PriceID      string `json:"price_id"`
+	Amount       int64  `json:"amount"`
+	Currency     string `json:"currency"`
+	Interval     string `json:"interval"`
+	SKU          string `json:"sku"`
+	ResourceType string `json:"resource_type"`
 }

@@ -70,7 +70,7 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 
 		// Validate Stripe price ID for resource type and SKU
 		resourceType := req.Type
-		priceID, err := billingSvc.getPriceIDForResourceType(resourceType, sku)
+		priceID, err := billingSvc.GetPriceIDForResourceType(resourceType, sku)
 		if err != nil || priceID == "" {
 			return nil, fmt.Errorf("no Stripe price ID configured for resource type '%s' and SKU '%s': %v", resourceType, sku, err)
 		}

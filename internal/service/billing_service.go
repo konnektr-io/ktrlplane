@@ -26,9 +26,9 @@ type BillingService struct {
 
 // NewBillingService creates a new BillingService.
 func NewBillingService(cfg *config.Config) *BillingService {
-	 return &BillingService{
-	 config: cfg,
-	 }
+	return &BillingService{
+		config: cfg,
+	}
 }
 
 // GetBillingAccount retrieves billing information for a scope (organization or project)
@@ -63,10 +63,10 @@ func (s *BillingService) GetBillingAccount(scopeType, scopeID string) (*models.B
 func (s *BillingService) createBillingAccount(scopeType, scopeID string) (*models.BillingAccount, error) {
 	billingAccountID := fmt.Sprintf("bill_%s", scopeID)
 
-	 query := db.CreateBillingAccountQuery
+	query := db.CreateBillingAccountQuery
 
 	var account models.BillingAccount
-	 row := db.GetDB().QueryRow(context.Background(), query, billingAccountID, scopeType, scopeID)
+	row := db.GetDB().QueryRow(context.Background(), query, billingAccountID, scopeType, scopeID)
 
 	err := row.Scan(
 		&account.BillingAccountID,
@@ -168,7 +168,7 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 		if count > 0 {
 			// Parse resourceKey which is now "resourceType:sku"
 			resourceType, sku := parseResourceKey(resourceKey)
-			priceID, err := s.getPriceIDForResourceType(resourceType, sku)
+			priceID, err := s.GetPriceIDForResourceType(resourceType, sku)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get price ID for resource type %s with SKU %s: %w", resourceType, sku, err)
 			}
@@ -481,8 +481,8 @@ func (s *BillingService) getProductIDForResourceType(resourceType, sku string) s
 	return ""
 }
 
-// getPriceIDForResourceType gets the default price ID for a resource type and SKU
-func (s *BillingService) getPriceIDForResourceType(resourceType, sku string) (string, error) {
+// GetPriceIDForResourceType gets the default price ID for a resource type and SKU
+func (s *BillingService) GetPriceIDForResourceType(resourceType, sku string) (string, error) {
 	productID := s.getProductIDForResourceType(resourceType, sku)
 	if productID == "" {
 		return "", fmt.Errorf("no product ID configured for resource type %s with SKU %s", resourceType, sku)
@@ -494,6 +494,28 @@ func (s *BillingService) getPriceIDForResourceType(resourceType, sku string) (st
 	}
 
 	return priceID, nil
+}
+
+func (s *BillingService) GetResourceTierPrice(resourceType, sku string) (*models.ResourceTierPrice, error) {
+	priceID, err := s.GetPriceIDForResourceType(resourceType, sku)
+	if err != nil || priceID == "" {
+		return nil, fmt.Errorf("no product ID configured for resource type %s with SKU %s", resourceType, sku)
+	}
+	priceObj, err := price.Get(priceID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get price details for price ID %s: %w", priceID, err)
+	}
+
+	resourceTierPrice := &models.ResourceTierPrice{
+		PriceID:      priceObj.ID,
+		Amount:       priceObj.UnitAmount,
+		Currency:     string(priceObj.Currency),
+		Interval:     string(priceObj.Recurring.Interval),
+		SKU:          sku,
+		ResourceType: resourceType,
+	}
+
+	return resourceTierPrice, nil
 }
 
 // parseResourceKey splits a resourceKey like "Konnektr.DigitalTwins:free" into resourceType and sku
@@ -531,14 +553,14 @@ func (s *BillingService) getDefaultPriceForProduct(productID string) (string, er
 func (s *BillingService) getResourceCounts(scopeType, scopeID string) (map[string]int, error) {
 	resourceCounts := make(map[string]int)
 
-	 var query string
-	 if scopeType == "organization" {
-		 query = db.GetResourceCountsOrgQuery
-	 } else {
-		 query = db.GetResourceCountsProjectQuery
-	 }
+	var query string
+	if scopeType == "organization" {
+		query = db.GetResourceCountsOrgQuery
+	} else {
+		query = db.GetResourceCountsProjectQuery
+	}
 
-	 rows, err := db.GetDB().Query(context.Background(), query, scopeID)
+	rows, err := db.GetDB().Query(context.Background(), query, scopeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query resource counts: %w", err)
 	}

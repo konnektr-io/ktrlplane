@@ -37,6 +37,7 @@ import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
 import { generateDNSId, validateDNSId, slugify } from "@/lib/dnsUtils";
 import { useProjects } from "@/features/projects/hooks/useProjectApi";
 import { resourceTypes as catalogResourceTypes } from "@/features/resources/catalog/resourceTypes";
+import { ResourceTierCard } from "../components/ResourceTierCard";
 
 export default function CreateResourcePage() {
   const { projectId: urlProjectId } = useParams<{ projectId: string }>();
@@ -394,16 +395,20 @@ export default function CreateResourcePage() {
                 {catalogResourceTypes.map((resourceType) => {
                   const IconComponent = resourceType.icon;
                   const isSelected = basicData.type === resourceType.id;
+                  const isDisabled = resourceType.disable;
 
                   return (
                     <div
                       key={resourceType.id}
-                      className={`relative cursor-pointer rounded-lg border-2 p-4 transition-colors hover:border-primary/50 ${
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-muted"
+                      className={`relative rounded-lg border-2 p-4 transition-colors ${
+                        isDisabled
+                          ? "border-muted bg-muted cursor-not-allowed opacity-60"
+                          : isSelected
+                          ? "border-primary bg-primary/5 cursor-pointer hover:border-primary/50"
+                          : "border-muted cursor-pointer hover:border-primary/50"
                       }`}
                       onClick={() => {
+                        if (isDisabled) return;
                         setBasicData((prev) => ({
                           ...prev,
                           type: resourceType.id as ResourceType,
@@ -420,6 +425,7 @@ export default function CreateResourcePage() {
                           }));
                         }
                       }}
+                      aria-disabled={isDisabled}
                     >
                       <div className="flex items-start space-x-3">
                         <IconComponent className="h-6 w-6 text-primary mt-1" />
@@ -430,8 +436,13 @@ export default function CreateResourcePage() {
                           <p className="text-sm text-muted-foreground mt-1">
                             {resourceType.description}
                           </p>
+                          {isDisabled && (
+                            <span className="text-xs text-muted-foreground mt-2 block">
+                              Coming soon
+                            </span>
+                          )}
                         </div>
-                        {isSelected && (
+                        {isSelected && !isDisabled && (
                           <Check className="h-5 w-5 text-primary" />
                         )}
                       </div>
@@ -508,118 +519,35 @@ export default function CreateResourcePage() {
 
           {/* Tier Selection */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {selectedResourceType && (
-                  <selectedResourceType.icon className="h-5 w-5" />
-                )}
-                Select {preselectedResourceType} Tier
-              </CardTitle>
-              <CardDescription>
-                Choose the tier that best fits your needs. You can upgrade or
-                downgrade at any time.
-              </CardDescription>
-            </CardHeader>
             <CardContent>
               {/* Tier Options */}
-              {selectedCatalogType ? (
-                <div className="grid gap-6">
-                  {selectedCatalogType.skus.map((tier) => (
-                    <Card
-                      key={tier.sku}
-                      className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                        basicData.sku === tier.sku
-                          ? "ring-2 ring-primary shadow-md scale-[1.02]"
-                          : "hover:bg-accent/50"
-                      }`}
-                      onClick={() =>
-                        setBasicData((prev) => ({ ...prev, sku: tier.sku }))
-                      }
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <div className="mt-1">
-                            <input
-                              type="radio"
-                              name="resourceTier"
-                              value={tier.sku}
-                              checked={basicData.sku === tier.sku}
-                              onChange={() =>
-                                setBasicData((prev) => ({
-                                  ...prev,
-                                  sku: tier.sku,
-                                }))
-                              }
-                              className="h-4 w-4"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-bold text-xl text-foreground">
-                                {tier.name}
-                              </h4>
-                              <div className="text-right">
-                                <span className="text-2xl font-bold text-primary">
-                                  {tier.price}
-                                </span>
-                                {tier.price !== "$0/mo" && (
-                                  <p className="text-xs text-muted-foreground">
-                                    per month
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <ul className="space-y-2 mb-4">
-                              {tier.features.map((feature, index) => (
-                                <li
-                                  key={index}
-                                  className="text-sm text-muted-foreground flex items-center gap-2"
-                                >
-                                  <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
-                                  <span>{feature}</span>
-                                </li>
-                              ))}
-                            </ul>
-                            {Object.entries(tier.limits).length > 0 && (
-                              <div className="border-t pt-3">
-                                <p className="text-sm font-medium mb-2">
-                                  Resource Limits:
-                                </p>
-                                <div className="grid grid-cols-2 gap-2">
-                                  {Object.entries(tier.limits).map(
-                                    ([key, value]) => (
-                                      <div
-                                        key={key}
-                                        className="text-xs text-muted-foreground"
-                                      >
-                                        <span className="font-medium">
-                                          {key}:
-                                        </span>{" "}
-                                        {value}
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                /* Fallback for resource types without catalog definition */
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    This resource type uses the free tier by default.
-                  </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <Check className="h-4 w-4 text-green-600" />
-                    <span>Free tier selected</span>
+              <div>
+                {selectedCatalogType ? (
+                  <div className="grid gap-6">
+                    {selectedCatalogType.skus.map((tier) => (
+                      <ResourceTierCard
+                        key={tier.sku}
+                        tier={tier}
+                        resourceTypeId={selectedCatalogType.id}
+                        selected={basicData.sku === tier.sku}
+                        onSelect={() =>
+                          setBasicData((prev) => ({ ...prev, sku: tier.sku }))
+                        }
+                      />
+                    ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">
+                      This resource type uses the free tier by default.
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span>Free tier selected</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 

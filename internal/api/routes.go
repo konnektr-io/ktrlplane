@@ -1,3 +1,4 @@
+// ...existing code...
 package api
 
 import (
@@ -43,8 +44,11 @@ func SetupRouter(handler *Handler) *gin.Engine {
 
 	// API v1 routes
 	apiV1 := r.Group("/api/v1")
+	
+	// Public route to get resource tier pricing info
+	apiV1.GET("/resource-pricing", handler.GetResourceTierPrice) // Get resource tier pricing info
 
-	// Apply Auth middleware to all /api/v1 routes
+	// Apply Auth middleware to all other /api/v1 routes
 	apiV1.Use(auth.Middleware()) // Enable Auth middleware
 	{
 		// --- Global RBAC Routes ---

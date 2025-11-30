@@ -497,6 +497,24 @@ func (h *Handler) DeleteResource(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"message": "Resource deletion initiated"})
 }
 
+// GetResourceTierPrice returns Stripe price details for a resource type and SKU
+func (h *Handler) GetResourceTierPrice(c *gin.Context) {
+	resourceType := c.Query("type")
+	sku := c.Query("sku")
+	if resourceType == "" || sku == "" {
+		c.JSON(400, gin.H{"error": "Missing type or sku parameter"})
+		return
+	}
+
+	resourceTierPrice, err := h.BillingService.GetResourceTierPrice(resourceType, sku)
+	if err != nil {
+		c.JSON(404, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, resourceTierPrice)
+}
+
 // --- RBAC Handlers ---
 
 // ListRoles returns all available roles in the system.

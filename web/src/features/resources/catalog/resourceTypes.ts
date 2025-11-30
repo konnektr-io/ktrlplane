@@ -20,6 +20,7 @@ export interface ResourceType {
   documentationUrl: string;
   isPopular?: boolean;
   isNew?: boolean;
+  disable?: boolean;
 }
 
 export const resourceTypes: ResourceType[] = [
@@ -80,6 +81,7 @@ export const resourceTypes: ResourceType[] = [
     ],
     documentationUrl: "https://docs.konnektr.io/flow",
     isNew: true,
+    disable: true,
   },
   {
     id: "Konnektr.Assembler",
@@ -109,6 +111,7 @@ export const resourceTypes: ResourceType[] = [
     ],
     documentationUrl: "https://docs.konnektr.io/assembler",
     isNew: true,
+    disable: true,
   },
   {
     id: "Konnektr.Compass",
@@ -138,5 +141,6 @@ export const resourceTypes: ResourceType[] = [
     ],
     documentationUrl: "https://docs.konnektr.io/compass",
     isNew: true,
+    disable: true,
   },
 ];
