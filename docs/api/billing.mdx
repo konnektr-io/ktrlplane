@@ -17,6 +17,8 @@ POST /api/v1/organizations/{orgId}/billing/customer
 POST /api/v1/organizations/{orgId}/billing/subscription
 POST /api/v1/organizations/{orgId}/billing/portal
 POST /api/v1/organizations/{orgId}/billing/cancel
+GET  /api/v1/organizations/{orgId}/billing/status
+POST /api/v1/organizations/{orgId}/billing/setup-intent
 ```
 
 ## Project Billing Endpoints
@@ -27,41 +29,77 @@ POST /api/v1/projects/{projectId}/billing/customer
 POST /api/v1/projects/{projectId}/billing/subscription
 POST /api/v1/projects/{projectId}/billing/portal
 POST /api/v1/projects/{projectId}/billing/cancel
+GET  /api/v1/projects/{projectId}/billing/status
+POST /api/v1/projects/{projectId}/billing/setup-intent
 ```
+## Billing Status Endpoint
 
-## Billing Object (Conceptual)
-```typescript
-interface BillingSettings {
-  scope_type: "organization" | "project";
-  scope_id: string;
-  stripe_customer_id?: string;
-  subscription_status?: string; // active | canceled | past_due
-  inherited?: boolean; // true if project inherits from org
+Returns billing status, payment method status, and Stripe subscription info for onboarding/payment enforcement.
+
+**GET /api/v1/organizations/{orgId}/billing/status**
+**GET /api/v1/projects/{projectId}/billing/status**
+
+**Response:**
+
+## Billing API Overview
+
+KtrlPlane uses Stripe for all billing and payment processing. Billing information is managed centrally and inherited by projects and resources as needed. All billing info is sourced directly from Stripe; the database does **not** store SubscriptionStatus, SubscriptionPlan, or BillingEmail fields.
+
+### Key Concepts
+
+- **Billing Account**: Each organization or project can have a billing account, managed via Stripe. The `billing_accounts` table is the canonical source for Stripe IDs (customer, subscription, etc.). Projects and organizations reference billing_accounts only; Stripe IDs are not stored in their tables.
+- **Subscription**: Subscriptions are managed via Stripe and linked to billing accounts. Subscription status and cancellation are reflected live from Stripe.
+- **Invoices**: The UI displays the **last invoice** (not upcoming) from Stripe. The "Current Period" field has been removed for clarity.
+
+### API Endpoints
+
+- `GET /api/v1/billing/account` - Retrieve billing account details
+- `POST /api/v1/billing/account` - Create or update billing account
+- `GET /api/v1/billing/invoices` - List invoices for the billing account
+- `GET /api/v1/billing/subscription` - Get subscription details
+- `POST /api/v1/billing/subscription/cancel` - Cancel subscription at period end
+
+### UI/UX Behavior
+
+- Stripe is the single source of truth for billing info.
+- The UI shows the last invoice, not upcoming.
+- If a subscription is pending cancellation (`cancel_at_period_end` is true), the UI displays a clear warning and disables the cancel button, guiding users to the Payment Management Portal to continue their subscription.
+- All billing and subscription actions are managed via Stripe and surfaced in the UI.
+
+### Cancellation Workflow
+
+- To cancel a subscription, users schedule cancellation at the end of the current billing period.
+- If cancellation is already scheduled, the UI shows a warning and provides a link to the Payment Management Portal to continue the subscription if desired.
+
+### Security & Compliance
+
+- All billing endpoints require JWT authentication and RBAC enforcement.
+- No sensitive payment data is stored in the KtrlPlane database.
+
+### Example Response
+
+```json
+{
+  "billing_account": {
+    "id": "acct_123",
+    "stripe_customer_id": "cus_abc",
+    "stripe_subscription_id": "sub_xyz"
+  },
+  "subscription_details": {
+    "id": "sub_xyz",
+    "status": "active",
+    "cancel_at_period_end": true,
+    "current_period_end": 1704067200
+  },
+  "latest_invoice": {
+    "id": "in_456",
+    "amount_due": 1000,
+    "currency": "usd",
+    "period_start": 1701388800,
+    "period_end": 1704067200,
+    "status": "paid",
+    "hosted_invoice_url": "https://..."
+  }
 }
 ```
-
-## Subscription Lifecycle
-1. Customer created (Stripe customer ID stored)
-2. Subscription initiated (plan/tier configured)
-3. Portal session available for management
-4. Cancellation endpoint stops future billing
-
-## Error Responses
-| Status | Description |
-|--------|-------------|
-| 400 Bad Request | Invalid billing data |
-| 401 Unauthorized | Missing/invalid token |
-| 403 Forbidden | Insufficient permission |
-| 404 Not Found | Scope not found |
-
-## Environment Variables
-| Variable | Purpose |
-|----------|---------|
-| STRIPE_SECRET_KEY | Server-side Stripe API key |
-| STRIPE_PUBLISHABLE_KEY | Client-side Stripe key |
-{/* | STRIPE_WEBHOOK_SECRET | Verify incoming Stripe webhooks | */}
-
-## Next Steps
-- [Organizations API](/api/organizations)
-- [Projects API](/api/projects)
 - [Resources API](/api/resources)

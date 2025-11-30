@@ -57,14 +57,16 @@ export default function ResourceSidebarNav() {
             const fullPath = `/projects/${projectId}/resources/${resourceId}${item.path ? `/${item.path}` : ''}`;
             // Allow /projects/:projectId/resources/:resourceId and /projects/:projectId/resources/:resourceId/ to both match Overview
             const isActive = location.pathname === fullPath || (item.path === '' && (location.pathname === `/projects/${projectId}/resources/${resourceId}` || location.pathname === `/projects/${projectId}/resources/${resourceId}/`));
+            const isDisabled = ['logs', 'monitoring', 'settings'].includes(item.path);
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton 
                   asChild
                   isActive={isActive}
-                  onClick={() => navigate(fullPath)}
+                  onClick={isDisabled ? undefined : () => navigate(fullPath)}
+                  disabled={isDisabled}
                 >
-                  <div className="flex items-center gap-2 cursor-pointer">
+                  <div className={`flex items-center gap-2 ${isDisabled ? 'text-muted-foreground cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
                   </div>

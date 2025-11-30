@@ -35,34 +35,6 @@ export function useBilling(
   });
 }
 
-// Update billing email
-export function useUpdateBillingEmail(
-  scopeType: "organization" | "project",
-  scopeId: string
-) {
-  const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const baseURL =
-    scopeType === "organization"
-      ? `/organizations/${scopeId}`
-      : `/projects/${scopeId}`;
-  return useMutation({
-    mutationFn: async (billing_email: string) => {
-      try {
-        const token = await getAccessTokenSilently();
-        await apiClient.put(
-          `${baseURL}/billing`,
-          { billing_email },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } catch (err: unknown) {
-        await handleApiError(err, loginWithRedirect);
-      }
-    },
-  });
-}
-
 // Setup Stripe customer
 export function useSetupStripeCustomer(
   scopeType: "organization" | "project",
@@ -169,6 +141,62 @@ export function useCancelSubscription(
             headers: { Authorization: `Bearer ${token}` },
           }
         );
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
+      }
+    },
+  });
+}
+// Get billing status for org or project (for onboarding/payment enforcement)
+export function useBillingStatus(
+  scopeType: "organization" | "project",
+  scopeId: string
+) {
+  const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
+  const baseURL =
+    scopeType === "organization"
+      ? `/organizations/${scopeId}`
+      : `/projects/${scopeId}`;
+  return useQuery({
+    queryKey: ["billing-status", scopeType, scopeId],
+    queryFn: async () => {
+      if (!scopeId) return null;
+      try {
+        const token = await getAccessTokenSilently();
+        const response = await apiClient.get(`${baseURL}/billing/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+      } catch (err: unknown) {
+        await handleApiError(err, loginWithRedirect);
+      }
+    },
+    enabled: !!scopeId,
+  });
+}
+
+// Create Stripe SetupIntent for payment onboarding (Stripe Elements)
+export function useCreateSetupIntent(
+  scopeType: "organization" | "project",
+  scopeId: string
+) {
+  const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
+  const baseURL =
+    scopeType === "organization"
+      ? `/organizations/${scopeId}`
+      : `/projects/${scopeId}`;
+  return useMutation({
+    mutationFn: async () => {
+      try {
+        const token = await getAccessTokenSilently();
+        const response = await apiClient.post(
+          `${baseURL}/billing/setup-intent`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        return response.data.client_secret;
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }

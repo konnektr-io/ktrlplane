@@ -4,9 +4,7 @@ export interface BillingAccount {
   scope_id: string;
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
-  subscription_status: string;
-  subscription_plan: string;
-  billing_email?: string;
+  // Removed subscription_status, subscription_plan, billing_email; use Stripe API only
   created_at: string;
   updated_at: string;
 }
@@ -61,8 +59,14 @@ export interface StripeSubscriptionDetails {
 
 export interface BillingInfo {
   billing_account: BillingAccount;
+  stripe_customer?: {
+    id: string;
+    email: string;
+    name?: string;
+    description?: string;
+  };
   stripe_customer_portal?: string;
-  upcoming_invoice?: StripeInvoice;
+  latest_invoice?: StripeInvoice;
   payment_methods?: StripePaymentMethod[];
   subscription_items?: StripeSubscriptionItem[];
   subscription_details?: StripeSubscriptionDetails;

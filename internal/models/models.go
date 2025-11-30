@@ -5,20 +5,14 @@ import (
 	"time"
 )
 
-// Using map[string]interface{} for flexibility with AGE properties initially.
-// Consider defining more specific structs if properties are stable.
-
 // Project represents a project in the system.
 type Project struct {
-	ProjectID              string    `json:"project_id" agtype:"project_id"`
-	OrgID                  *string   `json:"org_id" agtype:"org_id" db:"org_id"`
-	Name                   string    `json:"name" agtype:"name"`
-	Description            string    `json:"description,omitempty" agtype:"description"`
-	Status                 string    `json:"status" agtype:"status"`
-	StripeCustomerID       *string   `json:"stripe_customer_id,omitempty" db:"stripe_customer_id"`
-	StripeSubscriptionID   *string   `json:"stripe_subscription_id,omitempty" db:"stripe_subscription_id"`
-	SubscriptionStatus     string    `json:"subscription_status" db:"subscription_status"`
-	SubscriptionPlan       string    `json:"subscription_plan" db:"subscription_plan"`
+	ProjectID   string  `json:"project_id" agtype:"project_id"`
+	OrgID       *string `json:"org_id" agtype:"org_id" db:"org_id"`
+	Name        string  `json:"name" agtype:"name"`
+	Description string  `json:"description,omitempty" agtype:"description"`
+	Status      string  `json:"status" agtype:"status"`
+	// StripeCustomerID and StripeSubscriptionID removed; use BillingAccount
 	BillingEmail           *string   `json:"billing_email,omitempty" db:"billing_email"`
 	InheritsBillingFromOrg bool      `json:"inherits_billing_from_org" db:"inherits_billing_from_org"`
 	CreatedAt              time.Time `json:"created_at" agtype:"created_at"`
@@ -110,15 +104,12 @@ type User struct {
 
 // Organization represents an organization in the system.
 type Organization struct {
-	OrgID                string    `json:"org_id" db:"org_id"`
-	Name                 string    `json:"name" db:"name"`
-	StripeCustomerID     *string   `json:"stripe_customer_id,omitempty" db:"stripe_customer_id"`
-	StripeSubscriptionID *string   `json:"stripe_subscription_id,omitempty" db:"stripe_subscription_id"`
-	SubscriptionStatus   string    `json:"subscription_status" db:"subscription_status"`
-	SubscriptionPlan     string    `json:"subscription_plan" db:"subscription_plan"`
-	BillingEmail         *string   `json:"billing_email,omitempty" db:"billing_email"`
-	CreatedAt            time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt            time.Time `json:"updated_at" db:"updated_at"`
+	OrgID string `json:"org_id" db:"org_id"`
+	Name  string `json:"name" db:"name"`
+	// StripeCustomerID and StripeSubscriptionID removed; use BillingAccount
+	BillingEmail *string   `json:"billing_email,omitempty" db:"billing_email"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // Role represents a role in the RBAC system.
@@ -192,9 +183,6 @@ type BillingAccount struct {
 	ScopeID              string    `json:"scope_id" db:"scope_id"`
 	StripeCustomerID     *string   `json:"stripe_customer_id,omitempty" db:"stripe_customer_id"`
 	StripeSubscriptionID *string   `json:"stripe_subscription_id,omitempty" db:"stripe_subscription_id"`
-	SubscriptionStatus   string    `json:"subscription_status" db:"subscription_status"`
-	SubscriptionPlan     string    `json:"subscription_plan" db:"subscription_plan"`
-	BillingEmail         *string   `json:"billing_email,omitempty" db:"billing_email"`
 	CreatedAt            time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt            time.Time `json:"updated_at" db:"updated_at"`
 }
@@ -212,17 +200,12 @@ type CreateStripeSubscriptionRequest struct {
 	PaymentMethodID string `json:"payment_method_id,omitempty"`
 }
 
-// UpdateBillingRequest is the payload for updating billing information.
-type UpdateBillingRequest struct {
-	BillingEmail     *string `json:"billing_email"`
-	SubscriptionPlan *string `json:"subscription_plan"`
-}
-
 // BillingInfo contains billing information for an organization or project.
 type BillingInfo struct {
 	BillingAccount       BillingAccount             `json:"billing_account"`
+	StripeCustomer       *StripeCustomer            `json:"stripe_customer,omitempty"`
 	StripeCustomerPortal *string                    `json:"stripe_customer_portal,omitempty"`
-	UpcomingInvoice      *StripeInvoice             `json:"upcoming_invoice,omitempty"`
+	LastestInvoice       *StripeInvoice             `json:"latest_invoice,omitempty"`
 	PaymentMethods       []StripePaymentMethod      `json:"payment_methods,omitempty"`
 	SubscriptionItems    []StripeSubscriptionItem   `json:"subscription_items,omitempty"`
 	SubscriptionDetails  *StripeSubscriptionDetails `json:"subscription_details,omitempty"`
@@ -278,4 +261,21 @@ type StripeSubscriptionDetails struct {
 	CurrentPeriodStart int64  `json:"current_period_start"`
 	CurrentPeriodEnd   int64  `json:"current_period_end"`
 	CancelAtPeriodEnd  bool   `json:"cancel_at_period_end"`
+}
+
+// StripeCustomer represents a Stripe customer for billing info
+type StripeCustomer struct {
+	ID          string `json:"id"`
+	Email       string `json:"email"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type ResourceTierPrice struct {
+	PriceID      string `json:"price_id"`
+	Amount       int64  `json:"amount"`
+	Currency     string `json:"currency"`
+	Interval     string `json:"interval"`
+	SKU          string `json:"sku"`
+	ResourceType string `json:"resource_type"`
 }

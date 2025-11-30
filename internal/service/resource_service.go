@@ -2,21 +2,29 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"ktrlplane/internal/config"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
 	"ktrlplane/internal/utils"
+
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/subscription"
+	"github.com/stripe/stripe-go/v82/subscriptionitem"
 )
 
 // ResourceService handles resource-related operations.
 type ResourceService struct {
 	rbacService *RBACService
+	config      *config.Config
 }
 
 // NewResourceService creates a new ResourceService.
-func NewResourceService() *ResourceService {
+func NewResourceService(cfg *config.Config) *ResourceService {
 	return &ResourceService{
 		rbacService: NewRBACService(),
+		config:      cfg,
 	}
 }
 
@@ -34,6 +42,82 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 	}
 	if !hasPermission {
 		return nil, fmt.Errorf("insufficient permissions to create resource")
+	}
+	
+	// Determine if resource is paid (not free)
+	isPaidResource := true
+	sku := "free"
+	// Try to extract SKU from settings_json if present, otherwise default to free
+	if len(req.SettingsJSON) > 0 {
+		var settings map[string]interface{}
+		if err := json.Unmarshal(req.SettingsJSON, &settings); err == nil {
+			if val, ok := settings["sku"].(string); ok {
+				sku = val
+			}
+		}
+	}
+	if sku == "free" {
+		isPaidResource = false
+	}
+
+	if isPaidResource {
+		// Check billing account and subscription for project
+		billingSvc := NewBillingService(s.config)
+		billingAccount, err := billingSvc.GetBillingAccount("project", projectID)
+		if err != nil || billingAccount == nil || billingAccount.StripeCustomerID == nil || billingAccount.StripeSubscriptionID == nil {
+			return nil, fmt.Errorf("billing account with active subscription required for paid resources")
+		}
+
+		// Validate Stripe price ID for resource type and SKU
+		resourceType := req.Type
+		priceID, err := billingSvc.GetPriceIDForResourceType(resourceType, sku)
+		if err != nil || priceID == "" {
+			return nil, fmt.Errorf("no Stripe price ID configured for resource type '%s' and SKU '%s': %v", resourceType, sku, err)
+		}
+
+		// Update Stripe subscription: increment quantity if item exists, else add new item
+		subID := *billingAccount.StripeSubscriptionID
+		sub, err := subscription.Get(subID, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch Stripe subscription: %w", err)
+		}
+
+		var itemID string
+		for _, item := range sub.Items.Data {
+			if item.Price != nil && item.Price.ID == priceID {
+				itemID = item.ID
+				break
+			}
+		}
+
+		if itemID != "" {
+			// Item exists, increment quantity
+			newQty := int64(1)
+			for _, item := range sub.Items.Data {
+				if item.ID == itemID {
+					newQty = item.Quantity + 1
+					break
+				}
+			}
+			params := &stripe.SubscriptionItemParams{
+				Quantity: stripe.Int64(newQty),
+			}
+			_, err := subscriptionitem.Update(itemID, params)
+			if err != nil {
+				return nil, fmt.Errorf("failed to update Stripe subscription item quantity: %w", err)
+			}
+		} else {
+			// Item does not exist, add new item
+			params := &stripe.SubscriptionItemParams{
+				Subscription: stripe.String(subID),
+				Price:        stripe.String(priceID),
+				Quantity:     stripe.Int64(1),
+			}
+			_, err := subscriptionitem.New(params)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add new Stripe subscription item: %w", err)
+			}
+		}
 	}
 
 	err = db.ExecQuery(ctx, db.CreateResourceQuery, req.ID, projectID, req.Name, req.Type, req.SettingsJSON)

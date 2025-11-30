@@ -6,6 +6,7 @@ KtrlPlane serves as the **Control Plane** for the Konnektr Platform - managing u
 
 ## 📊 Current Status
 
+
 ### ✅ Completed Infrastructure
 
 - [x] Go backend with PostgreSQL database
@@ -20,6 +21,11 @@ KtrlPlane serves as the **Control Plane** for the Konnektr Platform - managing u
 - [x] Resource forms for all 4 product types (Graph, Assembler, Flow, Compass)
 - [x] Access control UI with role management
 - [x] Comprehensive billing UI with Stripe integration
+- [x] Stripe-only billing info (no SubscriptionStatus, SubscriptionPlan, BillingEmail in DB/models)
+- [x] Canonical billing_accounts table for Stripe IDs
+- [x] UI/UX: last invoice shown, not upcoming; "Current Period" field removed; pending cancellation state clearly indicated
+- [x] Subscription cancellation workflow and portal guidance
+- [x] Documentation accuracy improvements for billing and subscription flows
 
 ### 🔄 In Progress
 

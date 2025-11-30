@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import {
   Card,
@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { loadStripe } from "@stripe/stripe-js";
+import { AddPaymentMethodModal } from "../components/AddPaymentMethodModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,16 +31,15 @@ import {
   Download,
   Settings,
   AlertTriangle,
-  Calendar,
   Package,
 } from "lucide-react";
 import {
   useBilling,
-  useUpdateBillingEmail,
   useSetupStripeCustomer,
   useOpenCustomerPortal,
   useCreateSubscription,
   useCancelSubscription,
+  useCreateSetupIntent,
 } from "../hooks/useBillingApi";
 
 export default function BillingPage() {
@@ -49,41 +50,31 @@ export default function BillingPage() {
   const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [billingEmail, setBillingEmail] = useState("");
   const {
     data: billingInfo,
     isLoading: loading,
     refetch,
   } = useBilling(scopeType, scopeId);
-  const updateBillingEmailMutation = useUpdateBillingEmail(scopeType, scopeId);
   const setupStripeCustomerMutation = useSetupStripeCustomer(
     scopeType,
     scopeId
   );
+  // Stripe publishable key from env/config (replace with actual value or import)
+  const STRIPE_PUBLISHABLE_KEY =
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
+  const stripePromise = STRIPE_PUBLISHABLE_KEY
+    ? loadStripe(STRIPE_PUBLISHABLE_KEY)
+    : null;
+  // SetupIntent mutation for payment method modal
+  const createSetupIntent = useCreateSetupIntent(scopeType, scopeId);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const openCustomerPortalMutation = useOpenCustomerPortal(scopeType, scopeId);
   const createSubscriptionMutation = useCreateSubscription(scopeType, scopeId);
   const cancelSubscriptionMutation = useCancelSubscription(scopeType, scopeId);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (billingInfo && billingInfo.billing_account) {
-      setBillingEmail(billingInfo.billing_account.billing_email || "");
-    }
-  }, [billingInfo]);
-
-  // Handlers using mutations
-  const updateBillingEmail = async () => {
-    setUpdating(true);
-    try {
-      await updateBillingEmailMutation.mutateAsync(billingEmail);
-      await refetch();
-    } catch (err) {
-      setError("Failed to update billing email");
-    } finally {
-      setUpdating(false);
-    }
-  };
+  // Removed billingEmail state and updateBillingEmail mutation; billing email is managed in Stripe portal
 
   const setupStripeCustomer = async () => {
     setUpdating(true);
@@ -97,7 +88,7 @@ export default function BillingPage() {
       setShowSetupDialog(false);
       setCustomerName("");
       setCustomerEmail("");
-    } catch (err) {
+    } catch {
       setError("Failed to setup billing customer");
     } finally {
       setUpdating(false);
@@ -110,7 +101,7 @@ export default function BillingPage() {
       const returnUrl = `${window.location.origin}${location.pathname}`;
       const portalUrl = await openCustomerPortalMutation.mutateAsync(returnUrl);
       window.location.href = portalUrl;
-    } catch (err) {
+    } catch {
       setError("Failed to open customer portal");
     } finally {
       setUpdating(false);
@@ -122,7 +113,7 @@ export default function BillingPage() {
     try {
       await createSubscriptionMutation.mutateAsync();
       await refetch();
-    } catch (err) {
+    } catch {
       setError("Failed to create subscription");
     } finally {
       setUpdating(false);
@@ -134,7 +125,7 @@ export default function BillingPage() {
     try {
       await cancelSubscriptionMutation.mutateAsync();
       await refetch();
-    } catch (err) {
+    } catch {
       setError("Failed to cancel subscription");
     } finally {
       setUpdating(false);
@@ -191,16 +182,16 @@ export default function BillingPage() {
   }
 
   const {
-    billing_account: account,
-    upcoming_invoice,
+    subscription_details,
+    latest_invoice,
+    stripe_customer,
     payment_methods,
     subscription_items,
-    subscription_details,
   } = billingInfo;
-  const hasStripeCustomer = !!account.stripe_customer_id;
+
+  const hasStripeCustomer = !!stripe_customer?.id;
   const hasActiveSubscription =
-    !!account.stripe_subscription_id &&
-    account.subscription_status === "active";
+    !!subscription_details?.id && subscription_details.status === "active";
 
   return (
     <div className="space-y-6 p-6">
@@ -218,54 +209,16 @@ export default function BillingPage() {
         </Alert>
       )}
 
-      {/* Subscription Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Subscription Overview
-          </CardTitle>
-          <CardDescription>
-            Current subscription status and plan information
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Status:</span>
-            <Badge className={getStatusColor(account.subscription_status)}>
-              {account.subscription_status || "No subscription"}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Billing Email:</span>
-            <span>{account.billing_email || "Not set"}</span>
-          </div>
-          {/* Create subscription button if no subscription exists but customer exists */}
-          {hasStripeCustomer && !hasActiveSubscription && (
-            <div className="pt-2">
-              <Button
-                onClick={createSubscription}
-                disabled={updating}
-                className="w-full"
-              >
-                {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Subscription with Current Resources
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Subscription Details */}
-      {hasActiveSubscription && subscription_details && (
+      {/* Combined Subscription Card: only show if subscription_details exists */}
+      {subscription_details ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Subscription Details
+              <CreditCard className="h-5 w-5" />
+              Subscription
             </CardTitle>
             <CardDescription>
-              Detailed information about your current subscription
+              Subscription details are fetched live from Stripe.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -281,13 +234,17 @@ export default function BillingPage() {
                 {subscription_details.status}
               </Badge>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Current Period:</span>
-              <span>
-                {formatDate(subscription_details.current_period_start)} -{" "}
-                {formatDate(subscription_details.current_period_end)}
-              </span>
-            </div>
+            {/* Pending cancellation note */}
+            {subscription_details.cancel_at_period_end && (
+              <div className="flex items-center mt-2">
+                <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
+                <span className="text-sm text-destructive">
+                  This subscription is pending cancellation and will end at the
+                  end of the current billing period. To continue your
+                  subscription, open the Payment Management Portal below.
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="font-medium">Cancel at Period End:</span>
               <Badge
@@ -300,8 +257,43 @@ export default function BillingPage() {
                 {subscription_details.cancel_at_period_end ? "Yes" : "No"}
               </Badge>
             </div>
+            {/* Billing Email: now shown from Stripe customer info, not DB */}
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Billing Email:</span>
+              <span>{stripe_customer?.email || "Not set"}</span>
+            </div>
           </CardContent>
         </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Subscription
+            </CardTitle>
+            <CardDescription>
+              No active subscription. You can create one below.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* Create subscription button if no subscription exists but customer exists */}
+      {hasStripeCustomer && !hasActiveSubscription && (
+        <div className="flex flex-col gap-2 items-start mt-4">
+          <Button
+            variant="default"
+            onClick={createSubscription}
+            disabled={updating}
+          >
+            Create subscription
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            You can create a subscription now to enable paid resources later.
+            <br />
+            Free resources remain available without a subscription.
+          </span>
+        </div>
       )}
 
       {/* Subscription Items */}
@@ -369,35 +361,6 @@ export default function BillingPage() {
             </CardContent>
           </Card>
         )}
-
-      {/* Billing Email Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Billing Email</CardTitle>
-          <CardDescription>
-            Update the email address for billing notifications
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="billing-email">Email Address</Label>
-            <Input
-              id="billing-email"
-              type="email"
-              value={billingEmail}
-              onChange={(e) => setBillingEmail(e.target.value)}
-              placeholder="billing@example.com"
-            />
-          </div>
-          <Button
-            onClick={updateBillingEmail}
-            disabled={updating || billingEmail === account.billing_email}
-          >
-            {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Update Email
-          </Button>
-        </CardContent>
-      </Card>
 
       {/* Stripe Integration */}
       {!hasStripeCustomer ? (
@@ -482,6 +445,25 @@ export default function BillingPage() {
                 {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Open Payment Management Portal
               </Button>
+              {/* Add Payment Method Button if no payment method is present */}
+              {hasStripeCustomer &&
+                (!payment_methods || payment_methods.length === 0) &&
+                stripePromise && (
+                  <Button
+                    variant="default"
+                    onClick={() => setShowPaymentModal(true)}
+                    className="w-full mt-2"
+                  >
+                    Add Payment Method
+                  </Button>
+                )}
+              {showPaymentModal && stripePromise && (
+                <AddPaymentMethodModal
+                  stripePromise={stripePromise}
+                  createSetupIntent={createSetupIntent}
+                  onClose={() => setShowPaymentModal(false)}
+                />
+              )}
               <p className="text-sm text-muted-foreground">
                 The customer portal allows you to update payment methods,
                 download invoices, and manage your subscription settings.
@@ -521,15 +503,15 @@ export default function BillingPage() {
           )}
 
           {/* Upcoming Invoice */}
-          {upcoming_invoice && (
+          {latest_invoice && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Download className="h-5 w-5" />
-                  Upcoming Invoice
+                  Last Invoice
                 </CardTitle>
                 <CardDescription>
-                  Next billing period information
+                  Last billing period information
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -537,29 +519,29 @@ export default function BillingPage() {
                   <span className="font-medium">Amount Due:</span>
                   <span className="text-2xl font-bold">
                     {formatCurrency(
-                      upcoming_invoice.amount_due,
-                      upcoming_invoice.currency
+                      latest_invoice.amount_due,
+                      latest_invoice.currency
                     )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Billing Period:</span>
                   <span>
-                    {formatDate(upcoming_invoice.period_start)} -{" "}
-                    {formatDate(upcoming_invoice.period_end)}
+                    {formatDate(latest_invoice.period_start)} -{" "}
+                    {formatDate(latest_invoice.period_end)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Status:</span>
-                  <Badge className={getStatusColor(upcoming_invoice.status)}>
-                    {upcoming_invoice.status}
+                  <Badge className={getStatusColor(latest_invoice.status)}>
+                    {latest_invoice.status}
                   </Badge>
                 </div>
-                {upcoming_invoice.hosted_invoice_url && (
+                {latest_invoice.hosted_invoice_url && (
                   <Button
                     variant="outline"
                     onClick={() =>
-                      window.open(upcoming_invoice.hosted_invoice_url, "_blank")
+                      window.open(latest_invoice.hosted_invoice_url, "_blank")
                     }
                     className="w-full"
                   >
@@ -579,34 +561,58 @@ export default function BillingPage() {
                 <CardDescription>Manage your subscription</CardDescription>
               </CardHeader>
               <CardContent>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive">Cancel Subscription</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to cancel your subscription? This
-                        action will cancel your subscription at the end of the
+                {subscription_details?.cancel_at_period_end ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center">
+                      <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
+                      <span className="text-sm text-destructive">
+                        Your subscription will be cancelled at the end of the
                         current billing period.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={cancelSubscription}
-                        disabled={updating}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        {updating && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Cancel Subscription
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      To continue your subscription, open the Payment Management
+                      Portal below.
+                    </span>
+                    <Button
+                      variant="outline"
+                      onClick={openCustomerPortal}
+                      disabled={updating}
+                      className="w-full mt-2"
+                    >
+                      Open Payment Management Portal
+                    </Button>
+                  </div>
+                ) : (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">Cancel Subscription</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to cancel your subscription?
+                          This action will cancel your subscription at the end
+                          of the current billing period.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={cancelSubscription}
+                          disabled={updating}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {updating && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Cancel Subscription
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </CardContent>
             </Card>
           )}

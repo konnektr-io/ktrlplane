@@ -1,3 +1,4 @@
+// ...existing code...
 package api
 
 import (
@@ -18,40 +19,43 @@ func SetupRouter(handler *Handler) *gin.Engine {
 	r.Use(CORSMiddleware())
 
 	// --- Public Routes (Example: Health Check) ---
-	 r.GET("/health", func(c *gin.Context) {
-	 	pool := db.GetDB()
-	 	if pool == nil {
-	 		c.JSON(503, gin.H{"status": "DOWN", "error": "DB pool not initialized"})
-	 		return
-	 	}
-	 	ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
-	 	defer cancel()
-	 	conn, err := pool.Acquire(ctx)
-	 	if err != nil {
-	 		c.JSON(503, gin.H{"status": "DOWN", "error": err.Error()})
-	 		return
-	 	}
-	 	defer conn.Release()
-	 	var one int
-	 	err = conn.QueryRow(ctx, "SELECT 1").Scan(&one)
-	 	if err != nil || one != 1 {
-	 		c.JSON(503, gin.H{"status": "DOWN", "error": err.Error()})
-	 		return
-	 	}
-	 	c.JSON(200, gin.H{"status": "UP"})
-	 })
+	r.GET("/health", func(c *gin.Context) {
+		pool := db.GetDB()
+		if pool == nil {
+			c.JSON(503, gin.H{"status": "DOWN", "error": "DB pool not initialized"})
+			return
+		}
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+		defer cancel()
+		conn, err := pool.Acquire(ctx)
+		if err != nil {
+			c.JSON(503, gin.H{"status": "DOWN", "error": err.Error()})
+			return
+		}
+		defer conn.Release()
+		var one int
+		err = conn.QueryRow(ctx, "SELECT 1").Scan(&one)
+		if err != nil || one != 1 {
+			c.JSON(503, gin.H{"status": "DOWN", "error": err.Error()})
+			return
+		}
+		c.JSON(200, gin.H{"status": "UP"})
+	})
 
 	// API v1 routes
 	apiV1 := r.Group("/api/v1")
+	
+	// Public route to get resource tier pricing info
+	apiV1.GET("/resource-pricing", handler.GetResourceTierPrice) // Get resource tier pricing info
 
-	// Apply Auth middleware to all /api/v1 routes
+	// Apply Auth middleware to all other /api/v1 routes
 	apiV1.Use(auth.Middleware()) // Enable Auth middleware
 	{
 		// --- Global RBAC Routes ---
-		apiV1.GET("/roles", handler.ListRoles)                          // List all available roles
-        apiV1.GET("/roles/:roleId/permissions", handler.ListRolePermissions) // List permissions for a specific role
-		apiV1.GET("/users/search", handler.SearchUsers)                 // Search users
-		apiV1.GET("/permissions/check", handler.ListPermissionsHandler) // List all permissions for current user/scope
+		apiV1.GET("/roles", handler.ListRoles)                               // List all available roles
+		apiV1.GET("/roles/:roleId/permissions", handler.ListRolePermissions) // List permissions for a specific role
+		apiV1.GET("/users/search", handler.SearchUsers)                      // Search users
+		apiV1.GET("/permissions/check", handler.ListPermissionsHandler)      // List all permissions for current user/scope
 
 		// --- Organization Routes ---
 		organizations := apiV1.Group("/organizations")
@@ -76,12 +80,13 @@ func SetupRouter(handler *Handler) *gin.Engine {
 				// Organization Billing routes
 				orgBilling := organizationDetail.Group("/billing")
 				{
-					orgBilling.GET("", handler.GetBillingInfo)                         // Get billing information
-					orgBilling.PUT("", handler.UpdateBillingInfo)                      // Update billing settings
-					orgBilling.POST("/customer", handler.CreateStripeCustomer)         // Create Stripe customer
-					orgBilling.POST("/subscription", handler.CreateStripeSubscription) // Create subscription
-					orgBilling.POST("/portal", handler.CreateStripeCustomerPortal)     // Create customer portal session
-					orgBilling.POST("/cancel", handler.CancelSubscription)             // Cancel subscription
+					orgBilling.GET("", handler.GetBillingInfo)                                // Get billing information
+					orgBilling.POST("/customer", handler.CreateStripeCustomer)                // Create Stripe customer
+					orgBilling.POST("/subscription", handler.CreateStripeSubscription)        // Create subscription
+					orgBilling.POST("/portal", handler.CreateStripeCustomerPortal)            // Create customer portal session
+					orgBilling.POST("/cancel", handler.CancelSubscription)                    // Cancel subscription
+					orgBilling.GET("/billing/status", handler.GetBillingStatus)               // Billing status endpoint for onboarding/payment enforcement
+					orgBilling.POST("/billing/setup-intent", handler.CreateStripeSetupIntent) // Stripe SetupIntent endpoint for payment onboarding
 				}
 			}
 		}
@@ -110,11 +115,12 @@ func SetupRouter(handler *Handler) *gin.Engine {
 				projectBilling := projectDetail.Group("/billing")
 				{
 					projectBilling.GET("", handler.GetBillingInfo)                         // Get billing information
-					projectBilling.PUT("", handler.UpdateBillingInfo)                      // Update billing settings
 					projectBilling.POST("/customer", handler.CreateStripeCustomer)         // Create Stripe customer
 					projectBilling.POST("/subscription", handler.CreateStripeSubscription) // Create subscription
 					projectBilling.POST("/portal", handler.CreateStripeCustomerPortal)     // Create customer portal session
 					projectBilling.POST("/cancel", handler.CancelSubscription)             // Cancel subscription
+					projectBilling.GET("/status", handler.GetBillingStatus)                // Billing status endpoint for onboarding/payment enforcement
+					projectBilling.POST("/setup-intent", handler.CreateStripeSetupIntent)  // Stripe SetupIntent endpoint for payment onboarding
 				}
 
 				// --- Resource Routes (nested under project) ---
@@ -138,7 +144,7 @@ func SetupRouter(handler *Handler) *gin.Engine {
 						}
 
 						// --- Logging & Metrics Proxy Endpoints ---
-						resourceDetail.GET("/logs", handler.LogsProxyHandler)                    // Loki logs proxy
+						resourceDetail.GET("/logs", handler.LogsProxyHandler)                   // Loki logs proxy
 						resourceDetail.GET("/metrics/query_range", handler.MetricsProxyHandler) // Mimir metrics proxy
 					}
 				}
