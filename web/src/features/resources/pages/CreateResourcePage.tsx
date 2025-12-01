@@ -122,11 +122,21 @@ export default function CreateResourcePage() {
       if (settings && typeof settings === "object") {
         settingsJson = settings as Record<string, unknown>;
       }
+      // Normalize/validate SKU before creating
+      let sku = flow.state.sku;
+      const type = flow.state.resourceType;
+      const rt = catalogResourceTypes.find((r) => r.id === type);
+      if (!sku || (rt && !rt.skus.some((s) => s.sku === sku))) {
+        sku =
+          rt?.skus.find((s) => s.sku === "free")?.sku ||
+          rt?.skus[0]?.sku ||
+          "free";
+      }
       const payload: CreateResourceData = {
         id: flow.state.resourceId.trim(),
         name: flow.state.resourceName.trim(),
         type: flow.state.resourceType as ResourceType,
-        sku: flow.state.sku,
+        sku,
         settings_json: settingsJson,
       };
       const newResource = await createResourceMutation.mutateAsync(payload);

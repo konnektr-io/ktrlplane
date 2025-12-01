@@ -162,14 +162,34 @@ export function useResourceCreationFlow({
   // Get current step
   const currentStep = steps[currentStepIndex];
 
-  // Auto-select SKU if preselected from URL
+  // Helper: validate whether a sku belongs to a resource type
+  const isSkuValidForType = (type: ResourceType | "", sku: string) => {
+    if (!type || !sku) return false;
+    const t = catalogResourceTypes.find((rt) => rt.id === type);
+    return !!t?.skus.some((s) => s.sku === sku);
+  };
+
+  // Auto-select/normalize SKU if preselected from URL
   useEffect(() => {
-    if (preselectedResourceType && preselectedSku) {
+    if (preselectedResourceType) {
       const catalogType = catalogResourceTypes.find(
         (rt) => rt.id === preselectedResourceType
       );
-      if (catalogType?.skus.some((s) => s.sku === preselectedSku)) {
-        setState((prev) => ({ ...prev, sku: preselectedSku }));
+      if (catalogType) {
+        if (
+          preselectedSku &&
+          catalogType.skus.some((s) => s.sku === preselectedSku)
+        ) {
+          // Valid preselected sku
+          setState((prev) => ({ ...prev, sku: preselectedSku }));
+        } else {
+          // Fallback to free or first available
+          const fallbackSku =
+            catalogType.skus.find((s) => s.sku === "free")?.sku ||
+            catalogType.skus[0]?.sku ||
+            "free";
+          setState((prev) => ({ ...prev, sku: fallbackSku }));
+        }
       }
     }
   }, [preselectedResourceType, preselectedSku]);
@@ -187,7 +207,8 @@ export function useResourceCreationFlow({
         return (
           !!state.resourceName.trim() &&
           !!state.resourceId.trim() &&
-          !!state.sku
+          !!state.sku &&
+          isSkuValidForType(state.resourceType, state.sku)
         );
       case "billing":
         return billingStatus?.hasPaymentMethod || false;
@@ -248,6 +269,18 @@ export function useResourceCreationFlow({
     setState((prev) => ({ ...prev, ...updates }));
   };
 
+  // Ensure sku remains valid when resource type changes
+  useEffect(() => {
+    if (!isSkuValidForType(state.resourceType, state.sku)) {
+      const t = catalogResourceTypes.find((rt) => rt.id === state.resourceType);
+      if (t) {
+        const fallbackSku =
+          t.skus.find((s) => s.sku === "free")?.sku || t.skus[0]?.sku || "free";
+        setState((prev) => ({ ...prev, sku: fallbackSku }));
+      }
+    }
+  }, [state.resourceType]);
+
   return {
     state,
     setState: updateState,
@@ -265,5 +298,6 @@ export function useResourceCreationFlow({
     isLastStep: isLastStep(),
     preselectedResourceType,
     preselectedSku,
+    isSkuValidForType,
   };
 }
