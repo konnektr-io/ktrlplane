@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Eye, EyeOff, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +26,11 @@ export function ProjectSecretViewer({
   title = "Secret Credentials",
   description = "Securely stored credentials for this project",
 }: ProjectSecretViewerProps) {
-  const { data: secret, isLoading, error } = useProjectSecret(projectId, secretName);
+  const {
+    data: secret,
+    isLoading,
+    error,
+  } = useProjectSecret(projectId, secretName);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [copiedKeys, setCopiedKeys] = useState<Set<string>>(new Set());
 
@@ -78,7 +88,8 @@ export function ProjectSecretViewer({
         <CardContent>
           <Alert variant="destructive">
             <AlertDescription>
-              Failed to load credentials. You may not have permission to access this secret.
+              Failed to load credentials. You may not have permission to access
+              this secret.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -119,11 +130,15 @@ export function ProjectSecretViewer({
         {Object.entries(secret.data).map(([key, value]) => {
           const isVisible = visibleKeys.has(key);
           const isCopied = copiedKeys.has(key);
-          const decodedValue = isVisible ? decodeSecretValue(value) : "••••••••••••••••";
+          const decodedValue = isVisible
+            ? decodeSecretValue(value)
+            : "••••••••••••••••";
 
           return (
             <div key={key} className="flex flex-col space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">{key}</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                {key}
+              </label>
               <div className="flex items-center space-x-2">
                 <div className="flex-1 font-mono text-sm bg-muted rounded-md px-3 py-2 break-all">
                   {decodedValue}
@@ -135,7 +150,11 @@ export function ProjectSecretViewer({
                   onClick={() => toggleVisibility(key)}
                   title={isVisible ? "Hide value" : "Show value"}
                 >
-                  {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {isVisible ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
                 <Button
                   type="button"
@@ -154,10 +173,11 @@ export function ProjectSecretViewer({
             </div>
           );
         })}
-        
+
         <Alert>
           <AlertDescription className="text-xs">
-            <strong>Security Note:</strong> These credentials are sensitive. Never share them or commit them to version control.
+            <strong>Security Note:</strong> These credentials are sensitive.
+            Never share them or commit them to version control.
           </AlertDescription>
         </Alert>
       </CardContent>

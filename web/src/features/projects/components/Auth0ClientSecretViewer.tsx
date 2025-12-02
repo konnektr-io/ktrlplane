@@ -9,7 +9,9 @@ interface Auth0ClientSecretViewerProps {
  * The secret is automatically generated when the project is deployed
  * through the Auth0 operator in Kubernetes.
  */
-export function Auth0ClientSecretViewer({ projectId }: Auth0ClientSecretViewerProps) {
+export function Auth0ClientSecretViewer({
+  projectId,
+}: Auth0ClientSecretViewerProps) {
   // The Auth0 operator creates a secret named "{projectId}-auth0-client"
   const secretName = `${projectId}-auth0-client`;
 

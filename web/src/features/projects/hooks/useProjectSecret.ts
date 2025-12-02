@@ -14,7 +14,7 @@ export interface SecretData {
 // Fetch a specific secret from a project
 export function useProjectSecret(projectId: string, secretName: string) {
   const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  
+
   return useQuery({
     queryKey: ["project-secret", projectId, secretName],
     queryFn: async () => {
