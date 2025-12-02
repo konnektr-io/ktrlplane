@@ -49,17 +49,24 @@ function ProjectDetailsPage({ projectId }: { projectId: string }) {
 For advanced use cases where you need direct access to secret data:
 
 ```tsx
-import { useProjectSecret, decodeSecretValue } from "@/features/projects/hooks/useProjectSecret";
+import {
+  useProjectSecret,
+  decodeSecretValue,
+} from "@/features/projects/hooks/useProjectSecret";
 
 function CustomSecretComponent({ projectId, secretName }: Props) {
-  const { data: secret, isLoading, error } = useProjectSecret(projectId, secretName);
+  const {
+    data: secret,
+    isLoading,
+    error,
+  } = useProjectSecret(projectId, secretName);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading secret</div>;
 
   // Access base64-encoded data
   const clientId = secret?.data["client-id"];
-  
+
   // Decode when needed
   const decodedClientId = clientId ? decodeSecretValue(clientId) : "";
 
@@ -110,9 +117,9 @@ export function ProjectSettingsPage() {
   return (
     <div className="container mx-auto py-8 space-y-8">
       <h1>Project Settings</h1>
-      
+
       {/* Other settings sections */}
-      
+
       <section>
         <h2>API Credentials</h2>
         <Auth0ClientSecretViewer projectId={projectId!} />
