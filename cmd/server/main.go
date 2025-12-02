@@ -51,6 +51,15 @@ func main() {
 	organizationService := service.NewOrganizationService()
 	rbacService := service.NewRBACService()
 	billingService := service.NewBillingService(&cfg)
+	
+	// --- Secret Service Initialization ---
+	secretService, err := service.NewSecretService()
+	if err != nil {
+		log.Printf("Warning: Failed to initialize secret service: %v. Secret endpoints will not be available.", err)
+		secretService = nil
+	} else {
+		log.Println("Secret service initialized successfully")
+	}
 
 	// --- Proxy Service Initialization ---
 	var proxyService *api.ProxyService
@@ -79,7 +88,7 @@ func main() {
 	}
 
 	// --- API Handler Initialization ---
-	apiHandler := api.NewHandler(projectService, resourceService, organizationService, rbacService, billingService, proxyService)
+	apiHandler := api.NewHandler(projectService, resourceService, organizationService, rbacService, billingService, secretService, proxyService)
 
 	// --- Router Setup ---
 	router := api.SetupRouter(apiHandler)

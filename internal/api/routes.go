@@ -148,6 +148,12 @@ func SetupRouter(handler *Handler) *gin.Engine {
 						resourceDetail.GET("/metrics/query_range", handler.MetricsProxyHandler) // Mimir metrics proxy
 					}
 				}
+
+				// --- Secret Routes (nested under project) ---
+				secrets := projectDetail.Group("/secrets")
+				{
+					secrets.GET("/:secretName", handler.GetProjectSecret) // Get specific secret (requires read permission on project)
+				}
 			}
 		}
 	}

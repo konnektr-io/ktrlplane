@@ -16,17 +16,19 @@ type Handler struct {
 	OrganizationService *service.OrganizationService
 	RBACService         *service.RBACService
 	BillingService      *service.BillingService
+	SecretService       *service.SecretService
 	ProxyService        *ProxyService // For logs and metrics proxying
 }
 
 // NewHandler creates a new Handler with the provided services.
-func NewHandler(ps *service.ProjectService, rs *service.ResourceService, os *service.OrganizationService, rbac *service.RBACService, bs *service.BillingService, proxySvc *ProxyService) *Handler {
+func NewHandler(ps *service.ProjectService, rs *service.ResourceService, os *service.OrganizationService, rbac *service.RBACService, bs *service.BillingService, ss *service.SecretService, proxySvc *ProxyService) *Handler {
 	return &Handler{
 		ProjectService:      ps,
 		ResourceService:     rs,
 		OrganizationService: os,
 		RBACService:         rbac,
 		BillingService:      bs,
+		SecretService:       ss,
 		ProxyService:        proxySvc,
 	}
 }
@@ -1178,4 +1180,35 @@ func (h *Handler) MetricsProxyHandler(c *gin.Context) {
 
 	// Convert Gin context to standard http.ResponseWriter and http.Request for proxy
 	h.ProxyService.MetricsProxy().ServeHTTP(c.Writer, c.Request)
+}
+
+// --- Secret Management Handlers ---
+
+// GetProjectSecret retrieves a specific secret from a project's namespace.
+// Returns base64-encoded secret values that should be decoded in the frontend.
+// GET /api/v1/projects/:projectId/secrets/:secretName
+func (h *Handler) GetProjectSecret(c *gin.Context) {
+	projectID := c.Param("projectId")
+	secretName := c.Param("secretName")
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		_ = c.Error(err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	if h.SecretService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Secret service not available"})
+		return
+	}
+
+	secretData, err := h.SecretService.GetProjectSecret(c.Request.Context(), projectID, secretName, user.ID)
+	if err != nil {
+		_ = c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve secret", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, secretData)
 }
