@@ -1,27 +1,9 @@
-import CreateProjectDialog from "@/features/projects/components/CreateProjectDialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Check } from "lucide-react";
-import { PlusCircle } from "lucide-react";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useCreateResource } from "../hooks/useResourceApi";
 import { isPaidResource } from "@/features/billing/utils/isPaidResource";
 import {
@@ -33,100 +15,129 @@ import { BillingSetupModal } from "@/features/billing/components/BillingSetupMod
 import type { CreateResourceData } from "../types/resource.types";
 import type { ResourceType } from "../schemas";
 import { defaultConfigurations } from "@/features/resources/schemas";
-import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
-import { generateDNSId, validateDNSId, slugify } from "@/lib/dnsUtils";
+import { generateDNSId, slugify } from "@/lib/dnsUtils";
 import { useProjects } from "@/features/projects/hooks/useProjectApi";
 import { resourceTypes as catalogResourceTypes } from "@/features/resources/catalog/resourceTypes";
-import { ResourceTierCard } from "../components/ResourceTierCard";
+import { useResourceCreationFlow } from "../hooks/useResourceCreationFlow";
+import {
+  CreationProgressBar,
+  ProjectSelectionStep,
+  ResourceTypeStep,
+  TierSelectionStep,
+  BillingSetupStep,
+  SettingsConfigurationStep,
+  AccessControlStep,
+} from "../components/creation";
 
 export default function CreateResourcePage() {
   const { projectId: urlProjectId } = useParams<{ projectId: string }>();
   const { data: projects = [] } = useProjects();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Get the resource type from URL - it may be provided from external links
-  const preselectedResourceType = searchParams.get("resourceType");
+  // Determine if we're on the global create route
+  const isGlobalCreateRoute = window.location.pathname === "/resources/create";
 
-  // Project selection logic
+  // Billing status for selected project
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     urlProjectId || (projects.length > 0 ? projects[0].project_id : null)
   );
 
-  useEffect(() => {
-    if (!selectedProjectId && projects.length > 0) {
-      setSelectedProjectId(projects[0].project_id);
-    }
-  }, [projects, selectedProjectId]);
-
-  const [step, setStep] = useState<"resourceType" | "tier" | "configuration">(
-    preselectedResourceType ? "tier" : "resourceType"
+  const { data: billingStatus, isLoading: billingLoading } = useBillingStatus(
+    "project",
+    selectedProjectId || ""
   );
-  const [isCreating, setIsCreating] = useState(false);
-  const [basicData, setBasicData] = useState<{
-    id: string;
-    name: string;
-    type: ResourceType | "";
-    sku: string;
-  }>({
-    id: "",
-    name: "",
-    type: (preselectedResourceType as ResourceType) || "",
-    sku: "free",
+
+  // Initialize flow management
+  const flow = useResourceCreationFlow({
+    urlProjectId,
+    hasProjects: projects.length > 0,
+    billingStatus,
+    billingLoading,
+    isGlobalRoute: isGlobalCreateRoute,
   });
 
-  useEffect(() => {
-    if (
-      preselectedResourceType &&
-      catalogResourceTypes.find((rt) => rt.id === preselectedResourceType)
-    ) {
-      setBasicData((prev) => ({
-        ...prev,
-        type: preselectedResourceType as ResourceType,
-      }));
-
-      // Auto-select first available SKU for this resource type
-      const catalogType = catalogResourceTypes.find(
-        (rt) => rt.id === preselectedResourceType
-      );
-      if (catalogType && catalogType.skus.length > 0) {
-        setBasicData((prev) => ({ ...prev, sku: catalogType.skus[0].sku }));
-      }
-    }
-  }, [preselectedResourceType]);
-
-  const handleNameChange = (name: string) => {
-    setBasicData((prev) => ({
-      ...prev,
-      name,
-      // Auto-generate ID from name if ID is empty or was auto-generated
-      id:
-        prev.id === "" ||
-        prev.id === slugify(prev.name) + "-" + prev.id.slice(-4)
-          ? generateDNSId(name)
-          : prev.id,
-    }));
+  // Update project ID when flow state changes
+  const handleProjectSelect = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    flow.setState({ projectId });
   };
 
+  const handleProjectCreated = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    flow.setState({ projectId });
+    flow.goNext();
+  };
+
+  // Resource type selection
+  const handleResourceTypeSelect = (type: ResourceType) => {
+    flow.setState({ resourceType: type });
+
+    // Auto-select first available SKU for this resource type
+    const catalogType = catalogResourceTypes.find((rt) => rt.id === type);
+    if (catalogType && catalogType.skus.length > 0) {
+      flow.setState({ sku: catalogType.skus[0].sku });
+    }
+  };
+
+  // Name change handler with auto-ID generation
+  const handleNameChange = (name: string) => {
+    const currentId = flow.state.resourceId;
+    const currentName = flow.state.resourceName;
+    
+    flow.setState({
+      resourceName: name,
+      resourceId:
+        currentId === "" ||
+        currentId === slugify(currentName) + "-" + currentId.slice(-4)
+          ? generateDNSId(name)
+          : currentId,
+    });
+  };
+
+  // Stripe setup
+  const STRIPE_PUBLISHABLE_KEY =
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
+  const stripePromise = STRIPE_PUBLISHABLE_KEY
+    ? loadStripe(STRIPE_PUBLISHABLE_KEY)
+    : null;
+  const createSetupIntent = useCreateSetupIntent(
+    "project",
+    selectedProjectId || ""
+  );
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showBillingSetupModal, setShowBillingSetupModal] = useState(false);
+
+  // Resource creation
+  const [isCreating, setIsCreating] = useState(false);
   const createResourceMutation = useCreateResource(selectedProjectId || "");
 
-  const handleConfigurationSubmit = async (configuration: unknown) => {
+  const handleCreateResource = async (settings?: unknown) => {
     if (!selectedProjectId) {
       toast.error("Please select a project before creating a resource.");
       return;
     }
     setIsCreating(true);
     try {
-      let settings: Record<string, unknown> | undefined = undefined;
-      if (configuration && typeof configuration === "object") {
-        settings = configuration as Record<string, unknown>;
+      let settingsJson: Record<string, unknown> | undefined = undefined;
+      if (settings && typeof settings === "object") {
+        settingsJson = settings as Record<string, unknown>;
+      }
+      // Normalize/validate SKU before creating
+      let sku = flow.state.sku;
+      const type = flow.state.resourceType;
+      const rt = catalogResourceTypes.find((r) => r.id === type);
+      if (!sku || (rt && !rt.skus.some((s) => s.sku === sku))) {
+        sku =
+          rt?.skus.find((s) => s.sku === "free")?.sku ||
+          rt?.skus[0]?.sku ||
+          "free";
       }
       const payload: CreateResourceData = {
-        id: basicData.id.trim(),
-        name: basicData.name.trim(),
-        type: basicData.type as ResourceType,
-        sku: basicData.sku,
-        settings_json: settings,
+        id: flow.state.resourceId.trim(),
+        name: flow.state.resourceName.trim(),
+        type: flow.state.resourceType as ResourceType,
+        sku,
+        settings_json: settingsJson,
       };
       const newResource = await createResourceMutation.mutateAsync(payload);
       if (newResource) {
@@ -143,65 +154,70 @@ export default function CreateResourcePage() {
     }
   };
 
+  // Get selected resource type details
   const selectedResourceType = catalogResourceTypes.find(
-    (rt) => rt.id === basicData.type
+    (rt) => rt.id === flow.state.resourceType
   );
-  const selectedCatalogType = catalogResourceTypes.find(
-    (rt) => rt.id === basicData.type
+  const selectedTier = selectedResourceType?.skus.find(
+    (s) => s.sku === flow.state.sku
   );
 
-  // Stripe publishable key from env/config (replace with actual value or import)
-  const STRIPE_PUBLISHABLE_KEY =
-    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
-  const stripePromise = STRIPE_PUBLISHABLE_KEY
-    ? loadStripe(STRIPE_PUBLISHABLE_KEY)
-    : null;
-  // Billing enforcement: check if selected resource is paid
-  const isPaid = isPaidResource(basicData.type, basicData.sku);
-  // Fetch billing status for selected project (could inherit from org)
-  const { data: billingStatus, isLoading: billingLoading } = useBillingStatus(
-    "project",
-    selectedProjectId || ""
-  );
-  // Stripe SetupIntent mutation for onboarding
-  const createSetupIntent = useCreateSetupIntent(
-    "project",
-    selectedProjectId || ""
-  );
-  // Track if payment onboarding modal is open
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  // Track if billing setup modal is open
-  const [showBillingSetupModal, setShowBillingSetupModal] = useState(false);
-  // Helper: should block paid resource creation if not onboarded
-  const shouldBlockPaidCreation =
-    isPaid && billingStatus && !billingStatus.hasPaymentMethod;
+  // Check if current resource selection is paid
+  const isPaid = isPaidResource(flow.state.resourceType, flow.state.sku);
 
-  const getBackButtonText = () => {
-    if (step === "configuration") {
-      return "Back to Tier Selection";
-    } else if (step === "tier") {
-      return "Back to Resource Selection";
+  // Navigation handlers
+  const handleBack = () => {
+    if (flow.canGoBack) {
+      flow.goBack();
     } else {
-      return "Back to Resources";
+      // If can't go back, navigate away
+      if (urlProjectId) {
+        navigate(`/projects/${urlProjectId}/resources`);
+      } else {
+        navigate("/projects");
+      }
     }
   };
 
-  const handleBackClick = () => {
-    if (step === "configuration") {
-      setStep("tier");
-    } else if (step === "tier") {
-      setStep("resourceType");
+  const handleNext = () => {
+    if (flow.currentStep.id === "tier") {
+      // Check if billing is needed before proceeding
+      if (isPaid && billingStatus && !billingStatus.hasPaymentMethod) {
+        // Will show billing step next
+        flow.goNext();
+      } else {
+        // Skip billing, check if settings are needed
+        const needsSettings =
+          selectedResourceType?.hasSettings &&
+          selectedResourceType?.settingsReady &&
+          !flow.state.skipSettings;
+        
+        if (needsSettings) {
+          flow.goNext();
+        } else {
+          // Skip to final creation
+          handleCreateResource();
+        }
+      }
+    } else if (flow.isLastStep) {
+      // Final step - create resource
+      if (flow.currentStep.id === "settings") {
+        // Settings will be submitted via form
+        return;
+      } else if (flow.currentStep.id === "access") {
+        // Skip access and create
+        handleCreateResource();
+      } else {
+        handleCreateResource();
+      }
     } else {
-      navigate(`/projects/${selectedProjectId}/resources`);
+      flow.goNext();
     }
   };
-
-  // Determine if we're on the global create route
-  const isGlobalCreateRoute = window.location.pathname === "/resources/create";
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      {/* Billing Setup Modal for missing billing account/subscription */}
+      {/* Billing Setup Modal */}
       <BillingSetupModal
         open={showBillingSetupModal}
         onClose={() => setShowBillingSetupModal(false)}
@@ -209,461 +225,177 @@ export default function CreateResourcePage() {
         scopeId={selectedProjectId || ""}
         onBillingSetupComplete={() => {
           setShowBillingSetupModal(false);
-          if (typeof billingStatus?.refetch === "function") {
+          if (billingStatus && typeof billingStatus.refetch === "function") {
             billingStatus.refetch();
           }
+          flow.goNext();
         }}
       />
+
+      {/* Stripe Payment Modal */}
+      {showPaymentModal && stripePromise && (
+        <AddPaymentMethodModal
+          stripePromise={stripePromise}
+          createSetupIntent={createSetupIntent}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
+
       {/* Header */}
       <div className="mb-6">
-        {/* Project Selection Dropdown - only show on global create route */}
-        {isGlobalCreateRoute && (
-          <div className="mb-4 flex flex-col gap-2">
-            <Label htmlFor="project-select">Select Project *</Label>
-            {projects.length === 0 ? (
-              <div className="text-muted-foreground text-sm flex flex-col gap-2 items-start">
-                <span>No projects found.</span>
-                <CreateProjectDialog
-                  trigger={
-                    <Button variant="outline" size="sm">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Create a project
-                    </Button>
-                  }
-                />
-              </div>
-            ) : (
-              <>
-                <Select
-                  value={selectedProjectId || ""}
-                  onValueChange={setSelectedProjectId}
-                >
-                  <SelectTrigger className="w-full mt-1">
-                    <SelectValue placeholder="Select a project..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem
-                        key={project.project_id}
-                        value={project.project_id}
-                      >
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="mt-2">
-                  <CreateProjectDialog
-                    trigger={
-                      <Button variant="outline" size="sm">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        New Project
-                      </Button>
-                    }
-                  />
-                </div>
-              </>
-            )}
-          </div>
-        )}
         <div className="flex items-center gap-2 mb-2">
-          <Button variant="ghost" size="sm" onClick={handleBackClick}>
+          <Button variant="ghost" size="sm" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            {getBackButtonText()}
+            {flow.canGoBack ? `Back to ${flow.getPreviousStepLabel()}` : "Back"}
           </Button>
         </div>
         <h1 className="text-2xl font-bold">Create New Resource</h1>
         <p className="text-muted-foreground">
-          {step === "resourceType"
-            ? "Choose the type of resource you want to create"
-            : step === "tier"
-            ? "Select a tier that fits your needs"
-            : "Configure your resource settings for deployment"}
+          {flow.currentStep?.label || "Set up your new resource"}
         </p>
-        {/* Show helpful message if resource type was preselected */}
-        {preselectedResourceType && selectedResourceType && (
-          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-800">
+
+        {/* Pre-selected info banner */}
+        {flow.preselectedResourceType && selectedResourceType && (
+          <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
               <span className="font-medium">Pre-selected:</span>{" "}
-              {selectedResourceType.name} resource type
+              {selectedResourceType.name}
+              {flow.preselectedSku && ` - ${flow.preselectedSku}`}
             </p>
           </div>
         )}
       </div>
 
       {/* Progress Indicator */}
-      <div className="flex items-center mb-8">
-        {/* Step 1: Resource Type */}
-        <div
-          className={`flex items-center ${
-            step === "resourceType"
-              ? "text-primary"
-              : step === "tier" || step === "configuration"
-              ? "text-green-600"
-              : "text-muted-foreground"
-          }`}
-        >
-          <div
-            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-              step === "resourceType"
-                ? "border-primary bg-primary text-primary-foreground"
-                : step === "tier" || step === "configuration"
-                ? "border-green-600 bg-green-600 text-white"
-                : "border-muted-foreground"
-            }`}
-          >
-            {step === "resourceType" ? "1" : <Check className="h-4 w-4" />}
-          </div>
-          <span className="ml-2 font-medium">Select Resource Type</span>
-        </div>
-
-        <div
-          className={`flex-1 h-0.5 mx-4 ${
-            step === "tier" || step === "configuration"
-              ? "bg-primary"
-              : "bg-muted"
-          }`}
-        />
-
-        {/* Step 2: Tier Selection */}
-        <div
-          className={`flex items-center ${
-            step === "tier"
-              ? "text-primary"
-              : step === "configuration"
-              ? "text-green-600"
-              : "text-muted-foreground"
-          }`}
-        >
-          <div
-            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-              step === "tier"
-                ? "border-primary bg-primary text-primary-foreground"
-                : step === "configuration"
-                ? "border-green-600 bg-green-600 text-white"
-                : "border-muted-foreground"
-            }`}
-          >
-            {step === "tier" ? (
-              "2"
-            ) : step === "configuration" ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              "2"
-            )}
-          </div>
-          <span className="ml-2 font-medium">Select Tier</span>
-        </div>
-
-        <div
-          className={`flex-1 h-0.5 mx-4 ${
-            step === "configuration" ? "bg-primary" : "bg-muted"
-          }`}
-        />
-
-        {/* Step 3: Configuration */}
-        <div
-          className={`flex items-center ${
-            step === "configuration" ? "text-primary" : "text-muted-foreground"
-          }`}
-        >
-          <div
-            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-              step === "configuration"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-muted-foreground"
-            }`}
-          >
-            3
-          </div>
-          <span className="ml-2 font-medium">Configuration</span>
-        </div>
-      </div>
+      <CreationProgressBar
+        steps={flow.steps}
+        currentStepIndex={flow.currentStepIndex}
+      />
 
       {/* Step Content */}
-      {step === "resourceType" && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Select Resource Type</CardTitle>
-              <CardDescription>
-                Choose the type of resource you want to create for your project
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                {catalogResourceTypes.map((resourceType) => {
-                  const IconComponent = resourceType.icon;
-                  const isSelected = basicData.type === resourceType.id;
-                  const isDisabled = resourceType.disable;
+      <div className="space-y-6">
+        {flow.currentStep?.id === "project" && (
+          <ProjectSelectionStep
+            projects={projects}
+            selectedProjectId={selectedProjectId}
+            onProjectSelect={handleProjectSelect}
+            onProjectCreated={handleProjectCreated}
+          />
+        )}
 
-                  return (
-                    <div
-                      key={resourceType.id}
-                      className={`relative rounded-lg border-2 p-4 transition-colors ${
-                        isDisabled
-                          ? "border-muted bg-muted cursor-not-allowed opacity-60"
-                          : isSelected
-                          ? "border-primary bg-primary/5 cursor-pointer hover:border-primary/50"
-                          : "border-muted cursor-pointer hover:border-primary/50"
-                      }`}
-                      onClick={() => {
-                        if (isDisabled) return;
-                        setBasicData((prev) => ({
-                          ...prev,
-                          type: resourceType.id as ResourceType,
-                        }));
+        {flow.currentStep?.id === "resourceType" && (
+          <ResourceTypeStep
+            resourceTypes={catalogResourceTypes}
+            selectedType={flow.state.resourceType}
+            onTypeSelect={handleResourceTypeSelect}
+          />
+        )}
 
-                        // Auto-select first available SKU for this resource type
-                        const catalogType = catalogResourceTypes.find(
-                          (rt) => rt.id === resourceType.id
-                        );
-                        if (catalogType && catalogType.skus.length > 0) {
-                          setBasicData((prev) => ({
-                            ...prev,
-                            sku: catalogType.skus[0].sku,
-                          }));
-                        }
-                      }}
-                      aria-disabled={isDisabled}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <IconComponent className="h-6 w-6 text-primary mt-1" />
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">
-                            {resourceType.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {resourceType.description}
-                          </p>
-                          {isDisabled && (
-                            <span className="text-xs text-muted-foreground mt-2 block">
-                              Coming soon
-                            </span>
-                          )}
-                        </div>
-                        {isSelected && !isDisabled && (
-                          <Check className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+        {flow.currentStep?.id === "tier" && (
+          <TierSelectionStep
+            resourceType={selectedResourceType}
+            resourceName={flow.state.resourceName}
+            resourceId={flow.state.resourceId}
+            selectedSku={flow.state.sku}
+            onNameChange={handleNameChange}
+            onIdChange={(id) => flow.setState({ resourceId: id })}
+            onSkuSelect={(sku) => flow.setState({ sku })}
+            preselectedSku={flow.preselectedSku}
+          />
+        )}
 
-          {/* Actions */}
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={handleBackClick}>
-              {getBackButtonText()}
-            </Button>
-            <Button onClick={() => setStep("tier")} disabled={!basicData.type}>
-              Continue to Tier Selection
-            </Button>
-          </div>
-        </div>
-      )}
+        {flow.currentStep?.id === "billing" && (
+          <BillingSetupStep
+            projectId={selectedProjectId || ""}
+            resourceType={flow.state.resourceType}
+            sku={flow.state.sku}
+            tierName={selectedTier?.name}
+            tierPrice={selectedTier?.price}
+            onSetupBilling={() => setShowBillingSetupModal(true)}
+            isLoading={billingLoading}
+          />
+        )}
 
-      {step === "tier" && (
-        <div className="space-y-6">
-          {/* Resource Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Resource Information</CardTitle>
-              <CardDescription>
-                Choose a unique name and provide basic details for your{" "}
-                {selectedResourceType?.name || basicData.type}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={basicData.name}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    placeholder="e.g., production-digital-twins"
-                    className="w-full"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Display name for your resource
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="id">ID *</Label>
-                  <Input
-                    id="id"
-                    type="text"
-                    value={basicData.id}
-                    onChange={(e) =>
-                      setBasicData((prev) => ({ ...prev, id: e.target.value }))
-                    }
-                    placeholder="e.g., production-digital-twins-4f2a"
-                    className="w-full"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Leave empty to auto-generate.
-                  </p>
-                  {basicData.id && validateDNSId(basicData.id) && (
-                    <p className="text-sm text-red-500">
-                      {validateDNSId(basicData.id)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tier Selection */}
-          <Card>
-            <CardContent>
-              {/* Tier Options */}
-              <div>
-                {selectedCatalogType ? (
-                  <div className="grid gap-6">
-                    {selectedCatalogType.skus.map((tier) => (
-                      <ResourceTierCard
-                        key={tier.sku}
-                        tier={tier}
-                        resourceTypeId={selectedCatalogType.id}
-                        selected={basicData.sku === tier.sku}
-                        onSelect={() =>
-                          setBasicData((prev) => ({ ...prev, sku: tier.sku }))
-                        }
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">
-                      This resource type uses the free tier by default.
-                    </p>
-                    <div className="flex items-center justify-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span>Free tier selected</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Button
-              onClick={() => setStep("configuration")}
-              disabled={
-                !basicData.name.trim() ||
-                !basicData.id.trim() ||
-                (selectedCatalogType &&
-                  selectedCatalogType.skus.length > 0 &&
-                  !basicData.sku)
-              }
-              className="flex-1"
-            >
-              Continue to Configuration
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                navigate(`/projects/${selectedProjectId}/resources`)
-              }
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {step === "configuration" && selectedResourceType && (
-        <div className="space-y-6">
-          {/* Configuration Header */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <selectedResourceType.icon className="h-5 w-5" />
-                Configure {selectedResourceType.name}
-              </CardTitle>
-              <CardDescription>
-                <span className="font-medium">Resource:</span> {basicData.name}
-                <br />
-                <span className="font-medium">Tier:</span>{" "}
-                {selectedCatalogType?.skus.find((s) => s.sku === basicData.sku)
-                  ?.name || basicData.sku}
-                <br />
-                {selectedResourceType.description}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          {/* Billing Enforcement: Show payment onboarding if required */}
-          {isPaid && billingLoading && (
-            <div className="p-4 text-center text-muted-foreground">
-              Checking billing status...
-            </div>
-          )}
-          {shouldBlockPaidCreation && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-900 text-center mb-4">
-              <p className="font-medium mb-2">
-                Billing setup required to create paid resources.
-              </p>
-              <Button
-                variant="default"
-                onClick={() => setShowBillingSetupModal(true)}
-                disabled={billingLoading}
-              >
-                {billingLoading
-                  ? "Checking billing..."
-                  : "Setup Billing Account"}
-              </Button>
-            </div>
-          )}
-
-          {/* Stripe Elements Modal for payment onboarding */}
-          {showPaymentModal && stripePromise && (
-            <AddPaymentMethodModal
-              stripePromise={stripePromise}
-              createSetupIntent={createSetupIntent}
-              onClose={() => setShowPaymentModal(false)}
-            />
-          )}
-
-          {/* Configuration Form */}
-          {/* Only allow configuration/creation if not blocked by billing */}
-          <ResourceSettingsForm
-            resourceType={basicData.type}
+        {flow.currentStep?.id === "settings" && (
+          <SettingsConfigurationStep
+            resourceType={selectedResourceType}
+            resourceName={flow.state.resourceName}
+            tierName={selectedTier?.name}
             initialValues={
-              basicData.type === "Konnektr.Graph"
-                ? (defaultConfigurations[
-                    "Konnektr.Graph"
-                  ] as import("@/features/resources/schemas/GraphSchema").GraphSettings)
-                : basicData.type === "Konnektr.Flow"
-                ? (defaultConfigurations[
-                    "Konnektr.Flow"
-                  ] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
+              flow.state.resourceType === "Konnektr.Graph"
+                ? (defaultConfigurations["Konnektr.Graph"] as import("@/features/resources/schemas/GraphSchema").GraphSettings)
+                : flow.state.resourceType === "Konnektr.Flow"
+                ? (defaultConfigurations["Konnektr.Flow"] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
                 : undefined
             }
-            onSubmit={handleConfigurationSubmit}
-            disabled={isCreating || shouldBlockPaidCreation}
+            onSubmit={handleCreateResource}
+            disabled={isCreating}
           />
+        )}
 
-          {/* Cancel Action */}
+        {flow.currentStep?.id === "access" && (
+          <AccessControlStep
+            resourceName={flow.state.resourceName}
+            onSkip={() => handleCreateResource()}
+            onConfigure={() => {
+              // TODO: Implement access configuration
+              toast.info("Access configuration will be available after resource creation");
+              handleCreateResource();
+            }}
+          />
+        )}
+
+        {/* Navigation Buttons */}
+        {flow.currentStep?.id !== "settings" && flow.currentStep?.id !== "access" && (
+          <div className="flex justify-between gap-3">
+            {flow.canGoBack && (
+              <Button variant="outline" onClick={handleBack}>
+                Back
+              </Button>
+            )}
+            <div className="flex gap-3 ml-auto">
+              {!flow.currentStep?.required && flow.currentStep?.id !== "project" && (
+                <Button
+                  variant="ghost"
+                  onClick={flow.skipCurrentStep}
+                >
+                  Skip
+                </Button>
+              )}
+              <Button
+                onClick={handleNext}
+                disabled={!flow.canGoNext || isCreating}
+              >
+                {isCreating
+                  ? "Creating..."
+                  : flow.isLastStep
+                  ? "Create Resource"
+                  : `Continue to ${flow.getNextStepLabel()}`}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Cancel Button */}
+        {flow.currentStep?.id !== "settings" && (
           <div className="flex justify-center">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setStep("tier")}
+              onClick={() => {
+                if (urlProjectId) {
+                  navigate(`/projects/${urlProjectId}/resources`);
+                } else {
+                  navigate("/projects");
+                }
+              }}
               disabled={isCreating}
             >
-              Back to Tier Selection
+              Cancel
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

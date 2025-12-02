@@ -21,6 +21,9 @@ export interface ResourceType {
   isPopular?: boolean;
   isNew?: boolean;
   disable?: boolean;
+  hasSettings?: boolean; // Does this resource type have configuration settings?
+  settingsReady?: boolean; // Are the settings UI/schema ready for production?
+  requiresSettings?: boolean; // Are settings mandatory before creation?
 }
 
 export const resourceTypes: ResourceType[] = [
@@ -52,6 +55,9 @@ export const resourceTypes: ResourceType[] = [
     ],
     documentationUrl: "https://docs.konnektr.io/graph",
     isPopular: true,
+    hasSettings: true,
+    settingsReady: false, // Graph settings not ready for production yet
+    requiresSettings: false,
   },
   {
     id: "Konnektr.Flow",
@@ -82,6 +88,9 @@ export const resourceTypes: ResourceType[] = [
     documentationUrl: "https://docs.konnektr.io/flow",
     isNew: true,
     disable: true,
+    hasSettings: true,
+    settingsReady: false, // Flow settings not ready yet
+    requiresSettings: false,
   },
   {
     id: "Konnektr.Assembler",
@@ -112,6 +121,9 @@ export const resourceTypes: ResourceType[] = [
     documentationUrl: "https://docs.konnektr.io/assembler",
     isNew: true,
     disable: true,
+    hasSettings: true,
+    settingsReady: false, // Assembler settings not ready yet
+    requiresSettings: false,
   },
   {
     id: "Konnektr.Compass",
@@ -142,5 +154,8 @@ export const resourceTypes: ResourceType[] = [
     documentationUrl: "https://docs.konnektr.io/compass",
     isNew: true,
     disable: true,
+    hasSettings: true,
+    settingsReady: false, // Compass settings not ready yet
+    requiresSettings: false,
   },
 ];
