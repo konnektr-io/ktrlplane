@@ -3,6 +3,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import apiClient from "@/lib/axios";
 import type { Organization } from "../types/organization.types";
 import { handleApiError } from "@/lib/errorHandler";
+import { transformDates } from "@/lib/transformers";
 
 // Fetch all organizations
 export function useOrganizations() {
@@ -15,11 +16,7 @@ export function useOrganizations() {
         const response = await apiClient.get<Organization[]>("/organizations", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        return response.data.map((org) => ({
-          ...org,
-          created_at: new Date(org.created_at),
-          updated_at: new Date(org.updated_at),
-        }));
+        return response.data.map(transformDates<Organization>);
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }
@@ -42,12 +39,7 @@ export function useOrganization(orgId: string) {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        const org = response.data;
-        return {
-          ...org,
-          created_at: new Date(org.created_at),
-          updated_at: new Date(org.updated_at),
-        };
+        return transformDates<Organization>(response.data);
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }
@@ -70,11 +62,7 @@ export function useUpdateOrganization(orgId: string) {
           data,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        return {
-          ...response.data,
-          created_at: new Date(response.data.created_at),
-          updated_at: new Date(response.data.updated_at),
-        };
+        return transformDates<Organization>(response.data);
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }

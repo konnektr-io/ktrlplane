@@ -7,6 +7,7 @@ import {
   UpdateResourceData,
 } from "../types/resource.types";
 import { handleApiError } from "@/lib/errorHandler";
+import { transformDates } from "@/lib/transformers";
 
 // Fetch all resources for a project
 export function useResources(projectId: string) {
@@ -24,9 +25,7 @@ export function useResources(projectId: string) {
           }
         );
         return response.data.map((r) => ({
-          ...r,
-          created_at: new Date(r.created_at),
-          updated_at: new Date(r.updated_at),
+          ...transformDates<Resource>(r),
           settings_json:
             typeof r.settings_json === "string"
               ? JSON.parse(r.settings_json || "{}")
@@ -57,9 +56,7 @@ export function useResource(projectId: string, resourceId: string) {
         );
         const r = response.data;
         return {
-          ...r,
-          created_at: new Date(r.created_at),
-          updated_at: new Date(r.updated_at),
+          ...transformDates<Resource>(r),
           settings_json:
             typeof r.settings_json === "string"
               ? JSON.parse(r.settings_json || "{}")

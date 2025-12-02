@@ -7,6 +7,7 @@ import type {
   UpdateProjectData,
 } from "../types/project.types";
 import { handleApiError } from "@/lib/errorHandler";
+import { transformDates } from "@/lib/transformers";
 
 // Fetch all projects for the current user/org
 export function useProjects() {
@@ -19,7 +20,7 @@ export function useProjects() {
         const response = await apiClient.get<Project[]>(`/projects`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        return response.data;
+        return response.data.map(transformDates<Project>);
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }
@@ -42,7 +43,7 @@ export function useProject(projectId: string) {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        return response.data;
+        return transformDates<Project>(response.data);
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }
@@ -62,7 +63,7 @@ export function useCreateProject() {
         const response = await apiClient.post<Project>(`/projects`, data, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        return response.data;
+        return transformDates<Project>(response.data);
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }
@@ -89,7 +90,7 @@ export function useUpdateProject(projectId: string) {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        return response.data;
+        return transformDates<Project>(response.data);
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
       }
