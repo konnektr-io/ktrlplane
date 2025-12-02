@@ -164,6 +164,25 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - Never forward requests without RBAC check and tenant header.
 - All proxy logic is dependency-injected for testability and security.
 
+### 15. Secret Management (Kubernetes Secrets)
+
+- **Current Implementation**: Retrieve Kubernetes secrets from project namespaces
+- Endpoint: `GET /api/v1/projects/{projectId}/secrets/{secretName}`
+- RBAC: Requires `read` permission on project (inherits from project access)
+- Security: Secret values returned base64-encoded, decoded only in frontend
+- Use case: Auth0 M2M client credentials created by Auth0 operator
+- **Frontend Components**:
+  - `ProjectSecretViewer` - Generic secret display with show/hide and copy functionality
+  - `Auth0ClientSecretViewer` - Specific component for Auth0 client credentials
+- **No listing**: Secrets are accessed by exact namespace (projectId) + secret name
+- **Future Enhancement**: Implement `Konnektr.Secret` resource type for:
+  - User-created secrets (API keys, service accounts, etc.)
+  - More granular RBAC at secret level
+  - Metadata and versioning
+  - Secret creation/update/delete operations
+- Uses Kubernetes client-go library for cluster integration
+
+### 16. Deployment & Infrastructure
 
 - Uses db-query-operator for Kubernetes deployments
 - Database-driven configuration (operator queries DB for desired state)

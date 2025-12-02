@@ -26,10 +26,12 @@ KtrlPlane serves as the **Control Plane** for the Konnektr Platform - managing u
 - [x] UI/UX: last invoice shown, not upcoming; "Current Period" field removed; pending cancellation state clearly indicated
 - [x] Subscription cancellation workflow and portal guidance
 - [x] Documentation accuracy improvements for billing and subscription flows
+- [x] Kubernetes secret retrieval system with RBAC
+- [x] Auth0 M2M client credential viewer UI components
 
 ### 🔄 In Progress
 
-- [ ] Documentation accuracy improvements
+- [ ] Documentation updates for secret management
 - [ ] Enhanced API features and validation
 
 ### 📋 Priority Features (Previously Documented)
@@ -411,6 +413,92 @@ KtrlPlane will provide secure, multi-tenant proxy endpoints for logs and metrics
 - All code follows clean architecture and security best practices.
 
 ---
+
+## 🔐 Secret Management System
+
+### Current Implementation (✅ Completed)
+
+**Kubernetes Secret Retrieval:**
+- Backend service (`internal/service/secret_service.go`) for retrieving secrets from Kubernetes
+- API endpoint: `GET /api/v1/projects/{projectId}/secrets/{secretName}`
+- RBAC enforcement: Requires `read` permission on project
+- Security: Base64-encoded values returned to frontend, decoded client-side
+- Frontend components:
+  - `ProjectSecretViewer` - Generic secret viewer with show/hide and copy
+  - `Auth0ClientSecretViewer` - Specific component for Auth0 M2M credentials
+- Use case: Auth0 operator creates secrets with client credentials for each project
+
+**Design Decisions:**
+- No secret listing endpoint (secrets are accessed by exact name)
+- Project namespace = Project ID in Kubernetes
+- Secrets inherit project-level RBAC (no separate secret permissions yet)
+- Frontend handles decoding for security and flexibility
+
+### Future Enhancement: Konnektr.Secret Resource Type
+
+**Goal:** Extend secret management to support user-created secrets with full lifecycle management and granular RBAC.
+
+**Proposed Architecture:**
+
+1. **New Resource Type: `Konnektr.Secret`**
+   - Treat secrets as first-class resources (like Graph, Flow, etc.)
+   - Store metadata in `resources` table with `type = 'Konnektr.Secret'`
+   - Actual secret data stored in Kubernetes secrets
+   - Secret resource ID maps to Kubernetes secret name
+
+2. **Database Schema (Minimal Changes):**
+   ```sql
+   -- Use existing resources table
+   -- Example: INSERT INTO resources (resource_id, project_id, type, status, settings_json)
+   -- settings_json could contain: {"keys": ["api_key", "service_account"], "description": "Azure credentials"}
+   ```
+
+3. **RBAC at Secret Level:**
+   - Leverage existing RBAC system for resource-level permissions
+   - Users can assign roles (Owner, Editor, Viewer) to specific secrets
+   - Inherit project-level permissions by default
+   - Support data plane roles (e.g., `Konnektr.Secret.Reader`)
+
+4. **API Endpoints:**
+   ```
+   POST   /api/v1/projects/{projectId}/resources (type=Konnektr.Secret)
+   GET    /api/v1/projects/{projectId}/resources/{secretId}
+   PUT    /api/v1/projects/{projectId}/resources/{secretId}
+   DELETE /api/v1/projects/{projectId}/resources/{secretId}
+   GET    /api/v1/projects/{projectId}/resources/{secretId}/value  # Retrieve actual secret values
+   ```
+
+5. **UI/UX:**
+   - Secret creation form (similar to other resource types)
+   - Secret management page with list view
+   - Version history (optional, future)
+   - Audit log of access (who accessed when)
+
+6. **Use Cases:**
+   - API keys for third-party services
+   - Azure/AWS service account credentials
+   - Database connection strings
+   - Shared team credentials with access control
+
+7. **Implementation Phases:**
+   - **Phase 1**: Backend service and API endpoints
+   - **Phase 2**: Frontend UI for secret CRUD
+   - **Phase 3**: Versioning and audit logging
+   - **Phase 4**: Integration with db-query-operator for deployment
+
+**Benefits:**
+- Granular RBAC at secret level
+- Metadata tracking (creation date, owner, description)
+- Unified resource management experience
+- Kubernetes secrets remain as the underlying storage
+
+**Challenges:**
+- Secret rotation and versioning complexity
+- Encryption at rest vs. Kubernetes default
+- Performance considerations for large numbers of secrets
+
+---
+
 ## 🔄 Continuous Improvements
 
   - Resource creation page should auto-select last active project (from localStorage/Zustand)
