@@ -497,6 +497,27 @@ func (h *Handler) DeleteResource(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"message": "Resource deletion initiated"})
 }
 
+// ListAllResources returns all resources the user has access to across all projects
+// with optional filtering by resource_type query parameter
+func (h *Handler) ListAllResources(c *gin.Context) {
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get optional resource_type filter from query params
+	resourceType := c.Query("resource_type")
+
+	resources, err := h.ResourceService.ListAllUserResources(c.Request.Context(), user.ID, resourceType)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"resources": resources})
+}
+
 // GetResourceTierPrice returns Stripe price details for a resource type and SKU
 func (h *Handler) GetResourceTierPrice(c *gin.Context) {
 	resourceType := c.Query("type")

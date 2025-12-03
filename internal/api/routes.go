@@ -51,6 +51,8 @@ func SetupRouter(handler *Handler) *gin.Engine {
 	// Apply Auth middleware to all other /api/v1 routes
 	apiV1.Use(auth.Middleware()) // Enable Auth middleware
 	{
+		// --- Global Resource Routes ---
+		apiV1.GET("/resources", handler.ListAllResources) // List all resources user has access to (across projects)
 		// --- Global RBAC Routes ---
 		apiV1.GET("/roles", handler.ListRoles)                               // List all available roles
 		apiV1.GET("/roles/:roleId/permissions", handler.ListRolePermissions) // List permissions for a specific role
