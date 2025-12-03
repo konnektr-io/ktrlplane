@@ -5,7 +5,6 @@ import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
 import { resourceSchemas, ResourceType } from "../schemas";
 import { ZodObject, ZodRawShape } from "zod";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useResource, useUpdateResource } from "../hooks/useResourceApi";
 import type { UpdateResourceData } from "../types/resource.types";
@@ -32,7 +31,6 @@ export default function ResourceSettingsPage() {
     projectId ?? ""
   );
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(currentResource?.name || "");
   const [settingsJson, setSettingsJson] = useState(
     currentResource?.settings_json
       ? JSON.stringify(currentResource.settings_json, null, 2)
@@ -52,7 +50,6 @@ export default function ResourceSettingsPage() {
     }
     setSaving(true);
     const payload: UpdateResourceData = {
-      name,
       settings_json: JSON.parse(settingsJson),
     };
     await updateResourceMutation.mutateAsync(payload);
@@ -79,38 +76,20 @@ export default function ResourceSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Resource Settings</h1>
-        <p className="text-muted-foreground">Manage resource configuration</p>
+        <h1 className="text-2xl font-bold">Advanced Settings</h1>
+        <p className="text-muted-foreground">
+          Configure advanced resource-specific settings
+        </p>
       </div>
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Resource Information</CardTitle>
-            <CardDescription>Basic resource details</CardDescription>
+            <CardTitle>Configuration</CardTitle>
+            <CardDescription>
+              Advanced settings for {currentResource?.type || "this resource"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Resource ID</label>
-              <p className="text-sm text-muted-foreground font-mono">
-                {resourceId}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Name</label>
-              {editing ? (
-                <Input
-                  value={name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setName(e.target.value)
-                  }
-                  className="mt-1"
-                />
-              ) : (
-                <p className="text-sm">
-                  {currentResource?.name || "Loading..."}
-                </p>
-              )}
-            </div>
             {/* Show dynamic form if schema exists and has fields, else fallback */}
             {(() => {
               const type = currentResource?.type;
@@ -137,7 +116,6 @@ export default function ResourceSettingsPage() {
                     onSubmit={async (values) => {
                       setSaving(true);
                       const payload: UpdateResourceData = {
-                        name,
                         settings_json: values,
                       };
                       await updateResourceMutation.mutateAsync(payload);
