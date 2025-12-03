@@ -136,7 +136,7 @@ func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string,
 	if rows.Next() {
 		var resource models.Resource
 		var stripePriceID sql.NullString
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &stripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SKU, &stripePriceID, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		if stripePriceID.Valid {
@@ -174,7 +174,7 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string, u
 	for rows.Next() {
 		var resource models.Resource
 		var stripePriceID sql.NullString
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &stripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SKU, &stripePriceID, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		if stripePriceID.Valid {
@@ -390,7 +390,7 @@ func (s *ResourceService) ListAllUserResources(ctx context.Context, userID strin
 	for rows.Next() {
 		var resource models.Resource
 		var stripePriceID sql.NullString
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &stripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SKU, &stripePriceID, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		if stripePriceID.Valid {

@@ -88,8 +88,8 @@ export function ProjectSecretViewer({
         <CardContent>
           <Alert variant="destructive">
             <AlertDescription>
-              Failed to load credentials. You may not have permission to access
-              this secret.
+              Failed to load secret. You may not have permission to access this
+              secret.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -107,7 +107,7 @@ export function ProjectSecretViewer({
         <CardContent>
           <Alert>
             <AlertDescription>
-              No credentials found. The secret may not exist yet or is empty.
+              No secret found. The secret may not exist yet or is empty.
             </AlertDescription>
           </Alert>
         </CardContent>

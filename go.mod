@@ -9,7 +9,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v82 v82.5.0
-	k8s.io/api v0.31.4
+	k8s.io/api v0.31.4 // indirect
 	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.4
 )

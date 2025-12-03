@@ -19,7 +19,7 @@ export function Auth0ClientSecretViewer({
     <ProjectSecretViewer
       projectId={projectId}
       secretName={secretName}
-      title="Auth0 Client Credentials"
+      title="Client Credentials"
       description="Machine-to-machine client credentials for API authentication"
     />
   );
