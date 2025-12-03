@@ -222,4 +222,26 @@ func (s *ResourceService) DeleteResource(ctx context.Context, projectID string, 
 	return db.ExecQuery(ctx, db.DeleteResourceQuery, projectID, resourceID)
 }
 
+// ListAllUserResources returns all resources the user has access to across all projects
+// with optional filtering by resource type. Respects RBAC inheritance (organization -> project -> resource).
+func (s *ResourceService) ListAllUserResources(ctx context.Context, userID string, resourceType string) ([]models.Resource, error) {
+	pool := db.GetDB()
+	rows, err := pool.Query(ctx, db.ListAllUserResourcesQuery, userID, resourceType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list user resources: %w", err)
+	}
+	defer rows.Close()
+
+	resources := make([]models.Resource, 0)
+	for rows.Next() {
+		var resource models.Resource
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan resource: %w", err)
+		}
+		resources = append(resources, resource)
+	}
+
+	return resources, nil
+}
+
 
