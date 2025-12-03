@@ -7,6 +7,7 @@ import (
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
 	"ktrlplane/internal/utils"
+    "database/sql"
 
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/subscription"
@@ -134,8 +135,15 @@ func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string,
 
 	if rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &resource.StripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		var stripePriceID sql.NullString
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &stripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
+		}
+		if stripePriceID.Valid {
+			v := stripePriceID.String
+			resource.StripePriceID = &v
+		} else {
+			resource.StripePriceID = nil
 		}
 		return &resource, nil
 	}
@@ -165,8 +173,15 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string, u
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &resource.StripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		var stripePriceID sql.NullString
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &stripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
+		}
+		if stripePriceID.Valid {
+			v := stripePriceID.String
+			resource.StripePriceID = &v
+		} else {
+			resource.StripePriceID = nil
 		}
 		resources = append(resources, resource)
 	}
@@ -374,8 +389,15 @@ func (s *ResourceService) ListAllUserResources(ctx context.Context, userID strin
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &resource.StripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		var stripePriceID sql.NullString
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &stripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
+		}
+		if stripePriceID.Valid {
+			v := stripePriceID.String
+			resource.StripePriceID = &v
+		} else {
+			resource.StripePriceID = nil
 		}
 		resources = append(resources, resource)
 	}
