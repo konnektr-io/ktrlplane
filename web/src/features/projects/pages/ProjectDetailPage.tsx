@@ -6,7 +6,8 @@ import { useRoleAssignments } from "../../access/hooks/useAccessApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Building2, Activity } from "lucide-react";
+import { CalendarDays, Building2, Activity, Key } from "lucide-react";
+import { Auth0ClientSecretViewer } from "../components/Auth0ClientSecretViewer";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
@@ -14,9 +15,15 @@ export default function ProjectDetailPage() {
   const { data: resources = [] } = useResources(projectId ?? "");
   const { data: billingInfo } = useBilling("project", projectId ?? "");
   // Fetch all role assignments for this project (including inherited)
-  const { data: roleAssignments = [] } = useRoleAssignments({ scopeType: "project", scopeId: projectId ?? "", scopeName: currentProject?.name ?? "" });
+  const { data: roleAssignments = [] } = useRoleAssignments({
+    scopeType: "project",
+    scopeId: projectId ?? "",
+    scopeName: currentProject?.name ?? "",
+  });
   // Count unique users (prefer user.id, fallback to user_id on assignment)
-  const uniqueUserCount = Array.from(new Set(roleAssignments.map(a => a.user?.id ?? a.user_id).filter(Boolean))).length;
+  const uniqueUserCount = Array.from(
+    new Set(roleAssignments.map((a) => a.user?.id ?? a.user_id).filter(Boolean))
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -147,12 +154,26 @@ export default function ProjectDetailPage() {
                   <span className="text-red-600">Not Linked</span>
                 )}
               </div>
-              <div className="text-sm text-muted-foreground">Billing Account</div>
+              <div className="text-sm text-muted-foreground">
+                Billing Account
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {billingInfo?.subscription_items && billingInfo.subscription_items.length > 0
-                  ? `${billingInfo.subscription_items.reduce((sum, item) => sum + (item.price?.unit_amount ?? 0) * (item.quantity ?? 1), 0) / 100}${billingInfo.subscription_items[0].price?.currency ? ` ${billingInfo.subscription_items[0].price.currency.toUpperCase()}` : ""}`
+                {billingInfo?.subscription_items &&
+                billingInfo.subscription_items.length > 0
+                  ? `${
+                      billingInfo.subscription_items.reduce(
+                        (sum, item) =>
+                          sum +
+                          (item.price?.unit_amount ?? 0) * (item.quantity ?? 1),
+                        0
+                      ) / 100
+                    }${
+                      billingInfo.subscription_items[0].price?.currency
+                        ? ` ${billingInfo.subscription_items[0].price.currency.toUpperCase()}`
+                        : ""
+                    }`
                   : "-"}
               </div>
               <div className="text-sm text-muted-foreground">Monthly Cost</div>
@@ -160,11 +181,34 @@ export default function ProjectDetailPage() {
           </div>
           {!billingInfo?.billing_account?.stripe_customer_id && (
             <div className="flex justify-end mt-4 gap-2">
-              <Button variant="outline" size="sm" onClick={() => window.location.href = `/projects/${projectId}/billing`}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  (window.location.href = `/projects/${projectId}/billing`)
+                }
+              >
                 Add Billing Account
               </Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* API Authentication Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            API Authentication
+          </CardTitle>
+          <CardDescription>
+            Machine-to-machine credentials for programmatic access to your
+            project resources
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Auth0ClientSecretViewer projectId={projectId!} />
         </CardContent>
       </Card>
 
@@ -176,7 +220,13 @@ export default function ProjectDetailPage() {
               <CardTitle>Recent Resources</CardTitle>
               <CardDescription>Resources in this project</CardDescription>
             </div>
-            <Button variant="default" size="sm" onClick={() => window.location.href = `/projects/${projectId}/resources/create`}>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() =>
+                (window.location.href = `/projects/${projectId}/resources/create`)
+              }
+            >
               Add Resource
             </Button>
           </CardHeader>
@@ -194,12 +244,16 @@ export default function ProjectDetailPage() {
                     <div className="flex items-center gap-2">
                       <p className="font-medium mb-0">{resource.name}</p>
                       {resource.type && (
-                        <span className="text-xs text-muted-foreground">{resource.type}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {resource.type}
+                        </span>
                       )}
                     </div>
                   </div>
                   <Badge
-                    variant={resource.status === "Active" ? "default" : "secondary"}
+                    variant={
+                      resource.status === "Active" ? "default" : "secondary"
+                    }
                   >
                     {resource.status}
                   </Badge>

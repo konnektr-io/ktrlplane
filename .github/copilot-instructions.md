@@ -171,9 +171,13 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - RBAC: Requires `read` permission on project (inherits from project access)
 - Security: Secret values returned base64-encoded, decoded only in frontend
 - Use case: Auth0 M2M client credentials created by Auth0 operator
+  - Secret naming convention: `auth0-client-{projectId}`
+  - Contains `clientId` and `clientSecret` keys
 - **Frontend Components**:
   - `ProjectSecretViewer` - Generic secret display with show/hide and copy functionality
   - `Auth0ClientSecretViewer` - Specific component for Auth0 client credentials
+  - Integrated in `ProjectDetailPage` for easy credential access
+  - Enhanced `GraphResourceDetails` with authentication setup, code examples, and credential viewer
 - **No listing**: Secrets are accessed by exact namespace (projectId) + secret name
 - **Future Enhancement**: Implement `Konnektr.Secret` resource type for:
   - User-created secrets (API keys, service accounts, etc.)
@@ -181,6 +185,7 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
   - Metadata and versioning
   - Secret creation/update/delete operations
 - Uses Kubernetes client-go library for cluster integration
+- **Graph Documentation**: See `GRAPH_DOCUMENTATION_UPDATES.md` for required documentation updates
 
 ### 16. Deployment & Infrastructure
 

@@ -12,8 +12,8 @@ interface Auth0ClientSecretViewerProps {
 export function Auth0ClientSecretViewer({
   projectId,
 }: Auth0ClientSecretViewerProps) {
-  // The Auth0 operator creates a secret named "{projectId}-auth0-client"
-  const secretName = `${projectId}-auth0-client`;
+  // The Auth0 operator creates a secret named "auth0-client-{projectId}"
+  const secretName = `auth0-client-${projectId}`;
 
   return (
     <ProjectSecretViewer
