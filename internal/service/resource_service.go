@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"ktrlplane/internal/config"
 	"ktrlplane/internal/db"
@@ -45,20 +44,9 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 	}
 	
 	// Determine if resource is paid (not free)
-	isPaidResource := true
-	sku := "free"
-	// Try to extract SKU from settings_json if present, otherwise default to free
-	if len(req.SettingsJSON) > 0 {
-		var settings map[string]interface{}
-		if err := json.Unmarshal(req.SettingsJSON, &settings); err == nil {
-			if val, ok := settings["sku"].(string); ok {
-				sku = val
-			}
-		}
-	}
-	if sku == "free" {
-		isPaidResource = false
-	}
+	sku := req.SKU
+	isPaidResource := sku != "free"
+	var stripePriceID *string
 
 	if isPaidResource {
 		// Check billing account and subscription for project
@@ -68,12 +56,12 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 			return nil, fmt.Errorf("billing account with active subscription required for paid resources")
 		}
 
-		// Validate Stripe price ID for resource type and SKU
-		resourceType := req.Type
-		priceID, err := billingSvc.GetPriceIDForResourceType(resourceType, sku)
+		// Get Stripe price ID for resource type and SKU
+		priceID, err := billingSvc.GetPriceIDForResourceType(req.Type, sku)
 		if err != nil || priceID == "" {
-			return nil, fmt.Errorf("no Stripe price ID configured for resource type '%s' and SKU '%s': %v", resourceType, sku, err)
+			return nil, fmt.Errorf("no Stripe price ID configured for resource type '%s' and SKU '%s': %v", req.Type, sku, err)
 		}
+		stripePriceID = &priceID
 
 		// Update Stripe subscription: increment quantity if item exists, else add new item
 		subID := *billingAccount.StripeSubscriptionID
@@ -82,25 +70,21 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 			return nil, fmt.Errorf("failed to fetch Stripe subscription: %w", err)
 		}
 
+		// Find subscription item with this price ID
 		var itemID string
+		var currentQty int64
 		for _, item := range sub.Items.Data {
 			if item.Price != nil && item.Price.ID == priceID {
 				itemID = item.ID
+				currentQty = item.Quantity
 				break
 			}
 		}
 
 		if itemID != "" {
 			// Item exists, increment quantity
-			newQty := int64(1)
-			for _, item := range sub.Items.Data {
-				if item.ID == itemID {
-					newQty = item.Quantity + 1
-					break
-				}
-			}
 			params := &stripe.SubscriptionItemParams{
-				Quantity: stripe.Int64(newQty),
+				Quantity: stripe.Int64(currentQty + 1),
 			}
 			_, err := subscriptionitem.Update(itemID, params)
 			if err != nil {
@@ -120,7 +104,8 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 		}
 	}
 
-	err = db.ExecQuery(ctx, db.CreateResourceQuery, req.ID, projectID, req.Name, req.Type, req.SettingsJSON)
+	// Create resource in database with SKU and Stripe price ID
+	err = db.ExecQuery(ctx, db.CreateResourceQuery, req.ID, projectID, req.Name, req.Type, sku, stripePriceID, req.SettingsJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
@@ -149,7 +134,7 @@ func (s *ResourceService) GetResourceByID(ctx context.Context, projectID string,
 
 	if rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &resource.StripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		return &resource, nil
@@ -180,7 +165,7 @@ func (s *ResourceService) ListResources(ctx context.Context, projectID string, u
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &resource.StripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		resources = append(resources, resource)
@@ -200,7 +185,119 @@ func (s *ResourceService) UpdateResource(ctx context.Context, projectID string, 
 		return nil, fmt.Errorf("insufficient permissions to update resource")
 	}
 
-	err = db.ExecQuery(ctx, db.UpdateResourceQuery, projectID, resourceID, req.Name, req.SettingsJSON)
+	// Get current resource to check for SKU changes
+	currentResource, err := s.GetResourceByID(ctx, projectID, resourceID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch current resource: %w", err)
+	}
+
+	// Handle SKU change if requested
+	var newStripePriceID *string
+	if req.SKU != nil && *req.SKU != currentResource.SKU {
+		// Tier change requested
+		billingSvc := NewBillingService(s.config)
+		billingAccount, err := billingSvc.GetBillingAccount("project", projectID)
+		if err != nil || billingAccount == nil || billingAccount.StripeCustomerID == nil || billingAccount.StripeSubscriptionID == nil {
+			return nil, fmt.Errorf("billing account with active subscription required for tier changes")
+		}
+
+		// Get new price ID
+		newPriceID, err := billingSvc.GetPriceIDForResourceType(currentResource.Type, *req.SKU)
+		if err != nil || newPriceID == "" {
+			return nil, fmt.Errorf("no Stripe price ID configured for resource type '%s' and SKU '%s': %v", currentResource.Type, *req.SKU, err)
+		}
+		newStripePriceID = &newPriceID
+
+		// Manage Stripe subscription items
+		subID := *billingAccount.StripeSubscriptionID
+		sub, err := subscription.Get(subID, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch Stripe subscription: %w", err)
+		}
+
+		// Decrement old price ID (if not free tier)
+		if currentResource.SKU != "free" && currentResource.StripePriceID != nil {
+			oldPriceID := *currentResource.StripePriceID
+			for _, item := range sub.Items.Data {
+				if item.Price != nil && item.Price.ID == oldPriceID {
+					if item.Quantity > 1 {
+						// Decrement quantity
+						params := &stripe.SubscriptionItemParams{
+							Quantity: stripe.Int64(item.Quantity - 1),
+						}
+						_, err := subscriptionitem.Update(item.ID, params)
+						if err != nil {
+							return nil, fmt.Errorf("failed to decrement old tier subscription item: %w", err)
+						}
+					} else {
+						// Remove item entirely if quantity would be 0
+						_, err := subscriptionitem.Del(item.ID, nil)
+						if err != nil {
+							return nil, fmt.Errorf("failed to remove old tier subscription item: %w", err)
+						}
+					}
+					break
+				}
+			}
+		}
+
+		// Increment new price ID (if not free tier)
+		if *req.SKU != "free" {
+			// Find or create subscription item for new price
+			var newItemID string
+			var currentQty int64
+			for _, item := range sub.Items.Data {
+				if item.Price != nil && item.Price.ID == newPriceID {
+					newItemID = item.ID
+					currentQty = item.Quantity
+					break
+				}
+			}
+
+			if newItemID != "" {
+				// Item exists, increment quantity
+				params := &stripe.SubscriptionItemParams{
+					Quantity: stripe.Int64(currentQty + 1),
+				}
+				_, err := subscriptionitem.Update(newItemID, params)
+				if err != nil {
+					return nil, fmt.Errorf("failed to increment new tier subscription item: %w", err)
+				}
+			} else {
+				// Item does not exist, create it
+				params := &stripe.SubscriptionItemParams{
+					Subscription: stripe.String(subID),
+					Price:        stripe.String(newPriceID),
+					Quantity:     stripe.Int64(1),
+				}
+				_, err := subscriptionitem.New(params)
+				if err != nil {
+					return nil, fmt.Errorf("failed to add new tier subscription item: %w", err)
+				}
+			}
+		}
+	}
+
+	// Determine final SKU and price ID for database update
+	finalSKU := currentResource.SKU
+	finalPriceID := currentResource.StripePriceID
+	if req.SKU != nil {
+		finalSKU = *req.SKU
+		finalPriceID = newStripePriceID
+	}
+
+	// Determine final name and settings
+	finalName := currentResource.Name
+	if req.Name != nil {
+		finalName = *req.Name
+	}
+	finalSettings := currentResource.SettingsJSON
+	if req.SettingsJSON != nil {
+		finalSettings = req.SettingsJSON
+	}
+
+	// Update resource in database
+	err = db.ExecQuery(ctx, db.UpdateResourceQuery, projectID, resourceID, finalName, finalSKU, finalPriceID, finalSettings)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update resource: %w", err)
 	}
@@ -219,6 +316,48 @@ func (s *ResourceService) DeleteResource(ctx context.Context, projectID string, 
 		return fmt.Errorf("insufficient permissions to delete resource")
 	}
 
+	// Get resource to retrieve price ID before deletion
+	resource, err := s.GetResourceByID(ctx, projectID, resourceID, userID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch resource: %w", err)
+	}
+
+	// Decrement Stripe subscription item if not free tier
+	if resource.SKU != "free" && resource.StripePriceID != nil {
+		billingSvc := NewBillingService(s.config)
+		billingAccount, err := billingSvc.GetBillingAccount("project", projectID)
+		if err == nil && billingAccount != nil && billingAccount.StripeSubscriptionID != nil {
+			subID := *billingAccount.StripeSubscriptionID
+			sub, err := subscription.Get(subID, nil)
+			if err == nil {
+				priceID := *resource.StripePriceID
+				for _, item := range sub.Items.Data {
+					if item.Price != nil && item.Price.ID == priceID {
+						if item.Quantity > 1 {
+							// Decrement quantity
+							params := &stripe.SubscriptionItemParams{
+								Quantity: stripe.Int64(item.Quantity - 1),
+							}
+							_, err := subscriptionitem.Update(item.ID, params)
+							if err != nil {
+								return fmt.Errorf("failed to decrement subscription item quantity: %w", err)
+							}
+						} else {
+							// Remove item entirely if quantity would be 0
+							_, err := subscriptionitem.Del(item.ID, nil)
+							if err != nil {
+								return fmt.Errorf("failed to remove subscription item: %w", err)
+							}
+						}
+						break
+					}
+				}
+			}
+			// Note: We continue with deletion even if Stripe update fails
+			// to avoid orphaned database records
+		}
+	}
+
 	return db.ExecQuery(ctx, db.DeleteResourceQuery, projectID, resourceID)
 }
 
@@ -235,7 +374,7 @@ func (s *ResourceService) ListAllUserResources(ctx context.Context, userID strin
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
 		var resource models.Resource
-		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
+		if err := rows.Scan(&resource.ResourceID, &resource.ProjectID, &resource.Name, &resource.Type, &resource.SKU, &resource.StripePriceID, &resource.Status, &resource.SettingsJSON, &resource.ErrorMessage, &resource.CreatedAt, &resource.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan resource: %w", err)
 		}
 		resources = append(resources, resource)

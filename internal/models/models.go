@@ -21,15 +21,17 @@ type Project struct {
 
 // Resource represents a resource belonging to a project.
 type Resource struct {
-	ResourceID   string          `json:"resource_id" agtype:"resource_id"`
-	ProjectID    string          `json:"project_id"` // Added for context, not directly in node usually
-	Name         string          `json:"name" agtype:"name"`
-	Type         string          `json:"type" agtype:"type"` // e.g., "GraphDatabase", "Flow"
-	Status       string          `json:"status" agtype:"status"`
-	SettingsJSON json.RawMessage `json:"settings_json" agtype:"settings_json"` // Store as raw JSON
-	CreatedAt    time.Time       `json:"created_at" agtype:"created_at"`
-	UpdatedAt    time.Time       `json:"updated_at" agtype:"updated_at"`
-	ErrorMessage *string         `json:"error_message,omitempty" agtype:"error_message"`
+	ResourceID     string          `json:"resource_id" agtype:"resource_id"`
+	ProjectID      string          `json:"project_id"` // Added for context, not directly in node usually
+	Name           string          `json:"name" agtype:"name"`
+	Type           string          `json:"type" agtype:"type"` // e.g., "GraphDatabase", "Flow"
+	Status         string          `json:"status" agtype:"status"`
+	SKU            string          `json:"sku" agtype:"sku"` // Resource tier (e.g., "free", "basic", "pro")
+	StripePriceID  *string         `json:"stripe_price_id,omitempty" agtype:"stripe_price_id"` // Stripe price ID for paid tiers
+	SettingsJSON   json.RawMessage `json:"settings_json" agtype:"settings_json"` // Store as raw JSON
+	CreatedAt      time.Time       `json:"created_at" agtype:"created_at"`
+	UpdatedAt      time.Time       `json:"updated_at" agtype:"updated_at"`
+	ErrorMessage   *string         `json:"error_message,omitempty" agtype:"error_message"`
 }
 
 // MarshalJSON ensures settings_json is always a JSON object (never a string/null).
@@ -83,12 +85,14 @@ type CreateResourceRequest struct {
 	ID           string          `json:"id" binding:"required"`
 	Name         string          `json:"name" binding:"required"`
 	Type         string          `json:"type" binding:"required"` // e.g., "GraphDatabase"
+	SKU          string          `json:"sku" binding:"required"`  // Resource tier (e.g., "free", "basic", "pro")
 	SettingsJSON json.RawMessage `json:"settings_json"`           // Initial settings as JSON
 }
 
 // UpdateResourceRequest is the payload for updating a resource.
 type UpdateResourceRequest struct {
 	Name         *string         `json:"name"`
+	SKU          *string         `json:"sku"` // Allow SKU/tier changes
 	SettingsJSON json.RawMessage `json:"settings_json"` // Send full JSON structure to update
 }
 

@@ -3,19 +3,19 @@ package db
 // Resource-related SQL queries
 const (
 	CreateResourceQuery = `
-		INSERT INTO ktrlplane.resources (resource_id, project_id, name, type, status, settings_json, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, 'Creating', $5, NOW(), NOW())`
+		INSERT INTO ktrlplane.resources (resource_id, project_id, name, type, status, sku, stripe_price_id, settings_json, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, 'Creating', $5, $6, $7, NOW(), NOW())`
 
 	GetResourceByIDQuery = `
-		SELECT resource_id, project_id, name, type, status, settings_json, error_message, created_at, updated_at
+		SELECT resource_id, project_id, name, type, status, sku, stripe_price_id, settings_json, error_message, created_at, updated_at
 		FROM ktrlplane.resources WHERE project_id = $1 AND resource_id = $2`
 
 	ListResourcesQuery = `
-		SELECT resource_id, project_id, name, type, status, settings_json, error_message, created_at, updated_at
+		SELECT resource_id, project_id, name, type, status, sku, stripe_price_id, settings_json, error_message, created_at, updated_at
 		FROM ktrlplane.resources WHERE project_id = $1`
 
 	UpdateResourceQuery = `
-		UPDATE ktrlplane.resources SET name = $3, settings_json = $4, status = 'Updating', updated_at = NOW() WHERE project_id = $1 AND resource_id = $2`
+		UPDATE ktrlplane.resources SET name = $3, sku = $4, stripe_price_id = $5, settings_json = $6, status = 'Updating', updated_at = NOW() WHERE project_id = $1 AND resource_id = $2`
 
 	DeleteResourceQuery = `
 		DELETE FROM ktrlplane.resources WHERE project_id = $1 AND resource_id = $2`
@@ -23,8 +23,8 @@ const (
 	// ListAllUserResourcesQuery returns all resources the user has access to across all projects
 	// with permission inheritance (organization -> project -> resource)
 	ListAllUserResourcesQuery = `
-		SELECT DISTINCT r.resource_id, r.project_id, r.name, r.type, r.status, r.settings_json, r.error_message, r.created_at, r.updated_at
-		FROM ktrlplane.resources r
+			SELECT DISTINCT r.resource_id, r.project_id, r.name, r.type, r.status, r.sku, r.stripe_price_id, r.settings_json, r.error_message, r.created_at, r.updated_at
+			FROM ktrlplane.resources r
 		JOIN ktrlplane.projects p ON r.project_id = p.project_id
 		WHERE EXISTS (
 			-- User has direct permission on the resource

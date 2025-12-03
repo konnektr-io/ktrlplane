@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams } from "react-router-dom";
 import { useResource } from "../hooks/useResourceApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Database, Activity } from "lucide-react";
@@ -38,7 +38,6 @@ export default function ResourceDetailPage() {
             Resource details and configuration
           </p>
         </div>
-        {/* Resource-specific quick actions (e.g., Open Graph Explorer) will go here */}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -130,28 +129,6 @@ export default function ResourceDetailPage() {
 
       {/* Resource-type-specific details panel */}
       {currentResource && <ResourceDetailsPanel resource={currentResource} />}
-
-      {/*
-        Future resource-specific cards:
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Start</CardTitle>
-            <CardDescription>Get started with your resource</CardDescription>
-          </CardHeader>
-          <CardContent>
-            // Quick start instructions, onboarding links, etc.
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Documentation</CardTitle>
-            <CardDescription>Links to API docs, guides, etc.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            // Documentation links, API reference, etc.
-          </CardContent>
-        </Card>
-      */}
     </div>
   );
 }
