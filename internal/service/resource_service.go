@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"ktrlplane/internal/config"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
 	"ktrlplane/internal/utils"
-    "database/sql"
 
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/subscription"
@@ -43,7 +43,7 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 	if !hasPermission {
 		return nil, fmt.Errorf("insufficient permissions to create resource")
 	}
-	
+
 	// Determine if resource is paid (not free)
 	sku := req.SKU
 	isPaidResource := sku != "free"
@@ -404,5 +404,3 @@ func (s *ResourceService) ListAllUserResources(ctx context.Context, userID strin
 
 	return resources, nil
 }
-
-
