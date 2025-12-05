@@ -34,7 +34,11 @@ export interface ResourceCreationState {
 interface UseResourceCreationFlowParams {
   urlProjectId?: string;
   hasProjects: boolean;
-  billingStatus?: { hasPaymentMethod: boolean };
+  billingStatus?: {
+    hasPaymentMethod: boolean;
+    hasStripeCustomer?: boolean;
+    hasActiveSubscription?: boolean;
+  };
   billingLoading: boolean;
   isGlobalRoute: boolean;
 }
@@ -101,14 +105,18 @@ export function useResourceCreationFlow({
       visible: true,
     });
 
-    // Step 4: Billing setup (only if paid and no payment method)
+    // Step 4: Billing setup (only if paid and billing not fully set up)
     const isPaid = isPaidResource(state.resourceType, state.sku);
-    if (
+    const needsBillingSetup =
       isPaid &&
       billingStatus &&
-      !billingStatus.hasPaymentMethod &&
-      !billingLoading
-    ) {
+      !billingLoading &&
+      // Need billing setup if: no customer, no payment method, or no active subscription
+      (!billingStatus.hasStripeCustomer ||
+        !billingStatus.hasPaymentMethod ||
+        !billingStatus.hasActiveSubscription);
+
+    if (needsBillingSetup) {
       calculatedSteps.push({
         id: "billing",
         label: "Setup Billing",
@@ -211,7 +219,12 @@ export function useResourceCreationFlow({
           isSkuValidForType(state.resourceType, state.sku)
         );
       case "billing":
-        return billingStatus?.hasPaymentMethod || false;
+        // Can proceed from billing step when customer, payment method, and subscription are setup
+        return (
+          (billingStatus?.hasStripeCustomer ?? false) &&
+          (billingStatus?.hasPaymentMethod ?? false) &&
+          (billingStatus?.hasActiveSubscription ?? false)
+        );
       case "settings":
         return !currentStep.required || !!state.settings;
       case "access":

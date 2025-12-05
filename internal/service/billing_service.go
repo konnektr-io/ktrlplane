@@ -125,7 +125,7 @@ func (s *BillingService) CreateStripeCustomer(scopeType, scopeID string, req mod
 	query := db.UpdateBillingAccountStripeQuery
 
 	var account models.BillingAccount
-	row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, stripeCustomer.ID, subscriptionID, req.Email)
+	row := db.GetDB().QueryRow(context.Background(), query, scopeType, scopeID, stripeCustomer.ID, subscriptionID)
 
 	err = row.Scan(
 		&account.BillingAccountID,

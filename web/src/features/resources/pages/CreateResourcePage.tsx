@@ -42,16 +42,26 @@ export default function CreateResourcePage() {
     urlProjectId || (projects.length > 0 ? projects[0].project_id : null)
   );
 
-  const { data: billingStatus, isLoading: billingLoading } = useBillingStatus(
-    "project",
-    selectedProjectId || ""
-  );
+  const {
+    data: billingStatus,
+    isLoading: billingLoading,
+    refetch: refetchBillingStatus,
+  } = useBillingStatus("project", selectedProjectId || "");
 
-  // Initialize flow management
+  // Initialize flow management with transformed billing status
+  const transformedBillingStatus = billingStatus
+    ? {
+        hasPaymentMethod: billingStatus.has_payment_method ?? false,
+        hasStripeCustomer: !!billingStatus.stripe_customer?.id,
+        hasActiveSubscription:
+          billingStatus.subscription_details?.status === "active",
+      }
+    : undefined;
+
   const flow = useResourceCreationFlow({
     urlProjectId,
     hasProjects: projects.length > 0,
-    billingStatus,
+    billingStatus: transformedBillingStatus,
     billingLoading,
     isGlobalRoute: isGlobalCreateRoute,
   });
@@ -223,11 +233,11 @@ export default function CreateResourcePage() {
         onClose={() => setShowBillingSetupModal(false)}
         scopeType="project"
         scopeId={selectedProjectId || ""}
-        onBillingSetupComplete={() => {
+        onBillingSetupComplete={async () => {
           setShowBillingSetupModal(false);
-          if (billingStatus && typeof billingStatus.refetch === "function") {
-            billingStatus.refetch();
-          }
+          // Refetch billing status to get updated subscription info
+          await refetchBillingStatus();
+          // Flow will automatically proceed once billing status shows all requirements met
           flow.goNext();
         }}
       />
