@@ -9,10 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { loadStripe } from "@stripe/stripe-js";
-import { AddPaymentMethodModal } from "../components/AddPaymentMethodModal";
+import { UnifiedBillingSetupModal } from "../components/UnifiedBillingSetupModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,11 +32,9 @@ import {
 } from "lucide-react";
 import {
   useBilling,
-  useSetupStripeCustomer,
   useOpenCustomerPortal,
   useCreateSubscription,
   useCancelSubscription,
-  useCreateSetupIntent,
 } from "../hooks/useBillingApi";
 
 export default function BillingPage() {
@@ -47,53 +42,17 @@ export default function BillingPage() {
   const location = useLocation();
   const scopeType = orgId ? "organization" : "project";
   const scopeId = orgId || projectId || "";
-  const [showSetupDialog, setShowSetupDialog] = useState(false);
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
+  const [showSetupModal, setShowSetupModal] = useState(false);
   const {
     data: billingInfo,
     isLoading: loading,
     refetch,
   } = useBilling(scopeType, scopeId);
-  const setupStripeCustomerMutation = useSetupStripeCustomer(
-    scopeType,
-    scopeId
-  );
-  // Stripe publishable key from env/config (replace with actual value or import)
-  const STRIPE_PUBLISHABLE_KEY =
-    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
-  const stripePromise = STRIPE_PUBLISHABLE_KEY
-    ? loadStripe(STRIPE_PUBLISHABLE_KEY)
-    : null;
-  // SetupIntent mutation for payment method modal
-  const createSetupIntent = useCreateSetupIntent(scopeType, scopeId);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const openCustomerPortalMutation = useOpenCustomerPortal(scopeType, scopeId);
   const createSubscriptionMutation = useCreateSubscription(scopeType, scopeId);
   const cancelSubscriptionMutation = useCancelSubscription(scopeType, scopeId);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Removed billingEmail state and updateBillingEmail mutation; billing email is managed in Stripe portal
-
-  const setupStripeCustomer = async () => {
-    setUpdating(true);
-    try {
-      await setupStripeCustomerMutation.mutateAsync({
-        email: customerEmail,
-        name: customerName,
-        description: `${scopeType} ${scopeId}`,
-      });
-      await refetch();
-      setShowSetupDialog(false);
-      setCustomerName("");
-      setCustomerEmail("");
-    } catch {
-      setError("Failed to setup billing customer");
-    } finally {
-      setUpdating(false);
-    }
-  };
 
   const openCustomerPortal = async () => {
     setUpdating(true);
@@ -362,6 +321,18 @@ export default function BillingPage() {
           </Card>
         )}
 
+      {/* Unified Billing Setup Modal */}
+      <UnifiedBillingSetupModal
+        open={showSetupModal}
+        onClose={() => setShowSetupModal(false)}
+        scopeType={scopeType}
+        scopeId={scopeId}
+        onComplete={async () => {
+          setShowSetupModal(false);
+          await refetch();
+        }}
+      />
+
       {/* Stripe Integration */}
       {!hasStripeCustomer ? (
         <Card>
@@ -372,55 +343,9 @@ export default function BillingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <AlertDialog
-              open={showSetupDialog}
-              onOpenChange={setShowSetupDialog}
-            >
-              <AlertDialogTrigger asChild>
-                <Button>Setup Billing Account</Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Setup Billing Account</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Create a customer account in Stripe for billing management.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-name">Customer Name</Label>
-                    <Input
-                      id="customer-name"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Enter customer name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-email">Customer Email</Label>
-                    <Input
-                      id="customer-email"
-                      type="email"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      placeholder="customer@example.com"
-                    />
-                  </div>
-                </div>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={setupStripeCustomer}
-                    disabled={!customerName || !customerEmail || updating}
-                  >
-                    {updating && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Setup Customer
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button onClick={() => setShowSetupModal(true)}>
+              Setup Billing Account
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -445,25 +370,6 @@ export default function BillingPage() {
                 {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Open Payment Management Portal
               </Button>
-              {/* Add Payment Method Button if no payment method is present */}
-              {hasStripeCustomer &&
-                (!payment_methods || payment_methods.length === 0) &&
-                stripePromise && (
-                  <Button
-                    variant="default"
-                    onClick={() => setShowPaymentModal(true)}
-                    className="w-full mt-2"
-                  >
-                    Add Payment Method
-                  </Button>
-                )}
-              {showPaymentModal && stripePromise && (
-                <AddPaymentMethodModal
-                  stripePromise={stripePromise}
-                  createSetupIntent={createSetupIntent}
-                  onClose={() => setShowPaymentModal(false)}
-                />
-              )}
               <p className="text-sm text-muted-foreground">
                 The customer portal allows you to update payment methods,
                 download invoices, and manage your subscription settings.

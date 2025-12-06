@@ -2,16 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
 import { useCreateResource } from "../hooks/useResourceApi";
 import { isPaidResource } from "@/features/billing/utils/isPaidResource";
-import {
-  useBillingStatus,
-  useCreateSetupIntent,
-} from "@/features/billing/hooks/useBillingApi";
-import { AddPaymentMethodModal } from "@/features/billing/components/AddPaymentMethodModal";
-import { BillingSetupModal } from "@/features/billing/components/BillingSetupModal";
+import { useBillingStatus } from "@/features/billing/hooks/useBillingApi";
+import { UnifiedBillingSetupModal } from "@/features/billing/components/UnifiedBillingSetupModal";
 import type { CreateResourceData } from "../types/resource.types";
 import type { ResourceType } from "../schemas";
 import { defaultConfigurations } from "@/features/resources/schemas";
@@ -56,7 +51,6 @@ export default function CreateResourcePage() {
       setSelectedProjectId(firstProjectId);
     }
   }, [projects, urlProjectId, selectedProjectId]);
-
 
   // Initialize flow management with transformed billing status
   const transformedBillingStatus = billingStatus
@@ -110,7 +104,7 @@ export default function CreateResourcePage() {
   const handleNameChange = (name: string) => {
     const currentId = flow.state.resourceId;
     const currentName = flow.state.resourceName;
-    
+
     flow.setState({
       resourceName: name,
       resourceId:
@@ -121,17 +115,7 @@ export default function CreateResourcePage() {
     });
   };
 
-  // Stripe setup
-  const STRIPE_PUBLISHABLE_KEY =
-    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
-  const stripePromise = STRIPE_PUBLISHABLE_KEY
-    ? loadStripe(STRIPE_PUBLISHABLE_KEY)
-    : null;
-  const createSetupIntent = useCreateSetupIntent(
-    "project",
-    selectedProjectId || ""
-  );
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // Billing setup modal state
   const [showBillingSetupModal, setShowBillingSetupModal] = useState(false);
 
   // Resource creation
@@ -218,7 +202,7 @@ export default function CreateResourcePage() {
           selectedResourceType?.hasSettings &&
           selectedResourceType?.settingsReady &&
           !flow.state.skipSettings;
-        
+
         if (needsSettings) {
           flow.goNext();
         } else {
@@ -244,13 +228,13 @@ export default function CreateResourcePage() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      {/* Billing Setup Modal */}
-      <BillingSetupModal
+      {/* Unified Billing Setup Modal */}
+      <UnifiedBillingSetupModal
         open={showBillingSetupModal}
         onClose={() => setShowBillingSetupModal(false)}
         scopeType="project"
         scopeId={selectedProjectId || ""}
-        onBillingSetupComplete={async () => {
+        onComplete={async () => {
           setShowBillingSetupModal(false);
           // Refetch billing status to get updated subscription info
           await refetchBillingStatus();
@@ -258,15 +242,6 @@ export default function CreateResourcePage() {
           flow.goNext();
         }}
       />
-
-      {/* Stripe Payment Modal */}
-      {showPaymentModal && stripePromise && (
-        <AddPaymentMethodModal
-          stripePromise={stripePromise}
-          createSetupIntent={createSetupIntent}
-          onClose={() => setShowPaymentModal(false)}
-        />
-      )}
 
       {/* Header */}
       <div className="mb-6">
@@ -351,9 +326,13 @@ export default function CreateResourcePage() {
             tierName={selectedTier?.name}
             initialValues={
               flow.state.resourceType === "Konnektr.Graph"
-                ? (defaultConfigurations["Konnektr.Graph"] as import("@/features/resources/schemas/GraphSchema").GraphSettings)
+                ? (defaultConfigurations[
+                    "Konnektr.Graph"
+                  ] as import("@/features/resources/schemas/GraphSchema").GraphSettings)
                 : flow.state.resourceType === "Konnektr.Flow"
-                ? (defaultConfigurations["Konnektr.Flow"] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
+                ? (defaultConfigurations[
+                    "Konnektr.Flow"
+                  ] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
                 : undefined
             }
             onSubmit={handleCreateResource}
@@ -367,43 +346,48 @@ export default function CreateResourcePage() {
             onSkip={() => handleCreateResource()}
             onConfigure={() => {
               // TODO: Implement access configuration
-              toast.info("Access configuration will be available after resource creation");
+              toast.info(
+                "Access configuration will be available after resource creation"
+              );
               handleCreateResource();
             }}
           />
         )}
 
         {/* Navigation Buttons */}
-        {flow.currentStep?.id !== "settings" && flow.currentStep?.id !== "access" && (
-          <div className="flex justify-between gap-3">
-            {/* Hide Back button on first step of global route (no meaningful place to go back to) */}
-            {flow.canGoBack && (
-              <Button variant="outline" onClick={handleBack}>
-                Back
-              </Button>
-            )}
-            <div className="flex gap-3 ml-auto">
-              {!flow.currentStep?.required && flow.currentStep?.id !== "project" && (
-                <Button
-                  variant="ghost"
-                  onClick={flow.skipCurrentStep}
-                >
-                  Skip
+        {flow.currentStep?.id !== "settings" &&
+          flow.currentStep?.id !== "access" && (
+            <div className="flex justify-between gap-3">
+              {/* Hide Back button on first step of global route (no meaningful place to go back to) */}
+              {flow.canGoBack && (
+                <Button variant="outline" onClick={handleBack}>
+                  Back
                 </Button>
               )}
-              <Button
-                onClick={handleNext}
-                disabled={!flow.canGoNext || isCreating || (flow.currentStep?.id === "project" && projectsLoading)}
-              >
-                {isCreating
-                  ? "Creating..."
-                  : flow.isLastStep
-                  ? "Create Resource"
-                  : `Continue to ${flow.getNextStepLabel()}`}
-              </Button>
+              <div className="flex gap-3 ml-auto">
+                {!flow.currentStep?.required &&
+                  flow.currentStep?.id !== "project" && (
+                    <Button variant="ghost" onClick={flow.skipCurrentStep}>
+                      Skip
+                    </Button>
+                  )}
+                <Button
+                  onClick={handleNext}
+                  disabled={
+                    !flow.canGoNext ||
+                    isCreating ||
+                    (flow.currentStep?.id === "project" && projectsLoading)
+                  }
+                >
+                  {isCreating
+                    ? "Creating..."
+                    : flow.isLastStep
+                    ? "Create Resource"
+                    : `Continue to ${flow.getNextStepLabel()}`}
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Cancel Button */}
         {flow.currentStep?.id !== "settings" && (

@@ -35,7 +35,7 @@ export function useBilling(
   });
 }
 
-// Setup Stripe customer
+// Setup Stripe customer (no longer requires email/name in request body - uses Auth0 user info)
 export function useSetupStripeCustomer(
   scopeType: "organization" | "project",
   scopeId: string
@@ -46,14 +46,10 @@ export function useSetupStripeCustomer(
       ? `/organizations/${scopeId}`
       : `/projects/${scopeId}`;
   return useMutation({
-    mutationFn: async (data: {
-      email: string;
-      name: string;
-      description?: string;
-    }) => {
+    mutationFn: async (data?: { description?: string }) => {
       try {
         const token = await getAccessTokenSilently();
-        await apiClient.post(`${baseURL}/billing/customer`, data, {
+        await apiClient.post(`${baseURL}/billing/customer`, data || {}, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err: unknown) {

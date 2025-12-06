@@ -193,8 +193,6 @@ type BillingAccount struct {
 
 // CreateStripeCustomerRequest is the payload for creating a Stripe customer.
 type CreateStripeCustomerRequest struct {
-	Email       string `json:"email" binding:"required"`
-	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 }
 

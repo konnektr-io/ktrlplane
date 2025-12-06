@@ -14,25 +14,23 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import {
   useSetupStripeCustomer,
   useCreateSubscription,
   useCreateSetupIntent,
 } from "../hooks/useBillingApi";
 
-interface BillingSetupModalProps {
+interface UnifiedBillingSetupModalProps {
   open: boolean;
   onClose: () => void;
   scopeType: "organization" | "project";
   scopeId: string;
-  onBillingSetupComplete?: () => void;
+  onComplete?: () => void;
 }
 
-type SetupStep = "info" | "creating" | "payment" | "done";
+type SetupStep = "creating" | "payment" | "done" | "error";
 
 // Stripe publishable key from env
 const STRIPE_PUBLISHABLE_KEY =
@@ -41,16 +39,14 @@ const stripePromise = STRIPE_PUBLISHABLE_KEY
   ? loadStripe(STRIPE_PUBLISHABLE_KEY)
   : null;
 
-export function BillingSetupModal({
+export function UnifiedBillingSetupModal({
   open,
   onClose,
   scopeType,
   scopeId,
-  onBillingSetupComplete,
-}: BillingSetupModalProps) {
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [step, setStep] = useState<SetupStep>("info");
+  onComplete,
+}: UnifiedBillingSetupModalProps) {
+  const [step, setStep] = useState<SetupStep>("creating");
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
@@ -61,160 +57,164 @@ export function BillingSetupModal({
   // Reset state when modal opens
   useEffect(() => {
     if (open) {
-      setStep("info");
+      setStep("creating");
       setError(null);
       setClientSecret(null);
+      // Start the setup process immediately
+      handleSetup();
     }
   }, [open]);
 
-  const handleCreateCustomer = async () => {
+  const handleSetup = async () => {
     setError(null);
     setStep("creating");
+
     try {
-      // Create Stripe customer
+      // Step 1: Create Stripe customer (uses Auth0 user info from token)
       await setupStripeCustomer.mutateAsync({
-        email: customerEmail,
-        name: customerName,
         description: `${scopeType} ${scopeId}`,
       });
 
-      // Create subscription
+      // Step 2: Create subscription
       await createSubscription.mutateAsync();
 
-      // Get SetupIntent for payment method
+      // Step 3: Get SetupIntent for payment method
       const secret = await createSetupIntent.mutateAsync();
       setClientSecret(secret);
       setStep("payment");
     } catch (err) {
       console.error("Failed to setup billing:", err);
       setError("Failed to setup billing. Please try again.");
-      setStep("info");
+      setStep("error");
     }
   };
 
   const handlePaymentSuccess = () => {
     setStep("done");
-    if (onBillingSetupComplete) {
-      onBillingSetupComplete();
+    if (onComplete) {
+      onComplete();
     }
   };
 
   const handleSkipPayment = () => {
     // Allow user to skip payment for now and add later
     setStep("done");
-    if (onBillingSetupComplete) {
-      onBillingSetupComplete();
+    if (onComplete) {
+      onComplete();
     }
   };
 
+  const handleRetry = () => {
+    handleSetup();
+  };
+
+  const handleCloseModal = () => {
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleCloseModal}>
       <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            {step === "info" && "Setup Billing Account"}
-            {step === "creating" && "Setting Up..."}
+            {step === "creating" && "Setting Up Billing..."}
             {step === "payment" && "Add Payment Method"}
             {step === "done" && "Setup Complete"}
+            {step === "error" && "Setup Failed"}
           </DialogTitle>
           <DialogDescription>
-            {step === "info" &&
-              `Enter your billing information to create a billing account for this ${scopeType}.`}
-            {step === "creating" && "Please wait while we set up your account."}
+            {step === "creating" &&
+              "Please wait while we set up your billing account and subscription."}
             {step === "payment" &&
               "Add a payment method to enable paid resources."}
             {step === "done" && "Your billing account is ready to use."}
+            {step === "error" &&
+              "There was an error setting up your billing account."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-1">
-          {/* Step 1: Customer Info */}
-          {step === "info" && (
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="customer-name">Customer Name *</Label>
-                <Input
-                  id="customer-name"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Enter customer name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="customer-email">Billing Email *</Label>
-                <Input
-                  id="customer-email"
-                  type="email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="billing@example.com"
-                />
-              </div>
-              {error && <div className="text-red-500 text-sm">{error}</div>}
-            </div>
-          )}
-
-          {/* Step 2: Creating */}
+          {/* Step: Creating */}
           {step === "creating" && (
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Creating your billing account...</p>
+              <p className="text-muted-foreground text-center">
+                Creating billing account and subscription...
+              </p>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                This will only take a moment
+              </p>
             </div>
           )}
 
-          {/* Step 3: Payment Method */}
-          {step === "payment" && (
-            !stripePromise ? (
-               <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-                  <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-4 rounded-md max-w-sm">
-                    <p className="font-medium">Stripe Configuration Missing</p>
-                    <p className="text-sm mt-1">Unable to load payment form. verification key is missing.</p>
-                  </div>
-                  <Button onClick={handleSkipPayment} variant="outline">Skip for Now</Button>
-               </div>
-            ) : clientSecret && (
-            <div className="space-y-4 py-2">
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <PaymentForm
-                  onSuccess={handlePaymentSuccess}
-                  onSkip={handleSkipPayment}
-                />
-              </Elements>
-            </div>
-            )
-          )}
+          {/* Step: Payment Method */}
+          {step === "payment" &&
+            (!stripePromise ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
+                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-4 rounded-md max-w-sm">
+                  <p className="font-medium">Stripe Configuration Missing</p>
+                  <p className="text-sm mt-1">
+                    Unable to load payment form. Verification key is missing.
+                  </p>
+                </div>
+                <Button onClick={handleSkipPayment} variant="outline">
+                  Skip for Now
+                </Button>
+              </div>
+            ) : clientSecret ? (
+              <div className="space-y-4 py-2">
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <PaymentForm
+                    onSuccess={handlePaymentSuccess}
+                    onSkip={handleSkipPayment}
+                  />
+                </Elements>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">
+                  Preparing payment form...
+                </p>
+              </div>
+            ))}
 
-          {/* Step 4: Done */}
+          {/* Step: Done */}
           {step === "done" && (
             <div className="flex flex-col items-center justify-center py-8">
               <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
-              <p className="text-green-600 font-medium">
+              <p className="text-green-600 dark:text-green-400 font-medium">
                 Billing setup complete!
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                You can now create paid resources
+              </p>
+            </div>
+          )}
+
+          {/* Step: Error */}
+          {step === "error" && (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <AlertTriangle className="h-12 w-12 text-red-500 mb-2" />
+              <p className="text-red-600 dark:text-red-400 font-medium text-center">
+                {error || "Failed to setup billing"}
+              </p>
+              <p className="text-sm text-muted-foreground text-center">
+                Please try again or contact support if the problem persists
               </p>
             </div>
           )}
         </div>
 
         <DialogFooter className="mt-2">
-          {step === "info" && (
+          {step === "done" && <Button onClick={handleCloseModal}>Close</Button>}
+          {step === "error" && (
             <>
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={handleCloseModal}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleCreateCustomer}
-                disabled={
-                  !customerName ||
-                  !customerEmail ||
-                  setupStripeCustomer.isPending
-                }
-              >
-                Continue
-              </Button>
+              <Button onClick={handleRetry}>Try Again</Button>
             </>
-          )}
-          {step === "done" && (
-            <Button onClick={onClose}>Close</Button>
           )}
         </DialogFooter>
       </DialogContent>
@@ -294,4 +294,3 @@ function PaymentForm({
     </form>
   );
 }
-

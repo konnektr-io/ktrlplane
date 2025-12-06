@@ -983,7 +983,8 @@ func (h *Handler) CreateStripeCustomer(c *gin.Context) {
 		return
 	}
 
-	account, err := h.BillingService.CreateStripeCustomer(scopeType, scopeID, req)
+	// Use user email and name from Auth0 token
+	account, err := h.BillingService.CreateStripeCustomer(scopeType, scopeID, user.Email, user.Name, req.Description)
 	if err != nil {
 		_ = c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Stripe customer", "details": err.Error()})

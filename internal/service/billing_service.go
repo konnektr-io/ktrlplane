@@ -86,15 +86,15 @@ func (s *BillingService) createBillingAccount(scopeType, scopeID string) (*model
 }
 
 // CreateStripeCustomer creates a Stripe customer and updates the billing account
-func (s *BillingService) CreateStripeCustomer(scopeType, scopeID string, req models.CreateStripeCustomerRequest) (*models.BillingAccount, error) {
+func (s *BillingService) CreateStripeCustomer(scopeType, scopeID, email, name, description string) (*models.BillingAccount, error) {
 	// Create Stripe customer
 	params := &stripe.CustomerParams{
-		Email: stripe.String(req.Email),
-		Name:  stripe.String(req.Name),
+		Email: stripe.String(email),
+		Name:  stripe.String(name),
 	}
 
-	if req.Description != "" {
-		params.Description = stripe.String(req.Description)
+	if description != "" {
+		params.Description = stripe.String(description)
 	}
 
 	stripeCustomer, err := customer.New(params)
