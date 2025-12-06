@@ -21,6 +21,7 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
+import konnektrLogo from "../assets/konnektr.svg";
 
 export default function AppHeader() {
   const navigate = useNavigate();
@@ -51,12 +52,21 @@ export default function AppHeader() {
   // If we're not in a project layout, show a simpler header
   if (!projectId) {
     return (
-      <header className="border-b bg-background px-6 py-4">
-        <div className="flex items-center justify-between h-10">
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-6">
+        <div className="flex items-center justify-between flex-1">
           <div className="flex items-center gap-4">
+             <div className="flex items-center gap-2 mr-4">
+              <img
+                src={konnektrLogo}
+                alt="Konnektr logo"
+                className="h-6 w-6"
+              />
+              <span className="font-semibold hidden md:inline">Konnektr Portal</span>
+            </div>
             <Breadcrumbs />
           </div>
           <div className="flex items-center gap-4">
+            <ModeToggle />
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -81,7 +91,6 @@ export default function AppHeader() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <ModeToggle />
           </div>
         </div>
       </header>
@@ -89,10 +98,18 @@ export default function AppHeader() {
   }
 
   return (
-    <header className="border-b bg-background px-6 py-4">
-      <div className="flex items-center justify-between h-10">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+      <div className="flex items-center gap-4 mr-8">
+        <SidebarTrigger className="-ml-1" />
+        <img
+          src={konnektrLogo}
+          alt="Konnektr logo"
+          className="h-6 w-6"
+        />
+        <span className="font-semibold hidden md:inline">Konnektr Portal</span>
+      </div>
+      <div className="flex flex-1 items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger />
           <Breadcrumbs />
         </div>
         <div className="flex items-center gap-4">
