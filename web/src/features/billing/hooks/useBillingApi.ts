@@ -144,6 +144,8 @@ export function useCancelSubscription(
   });
 }
 // Get billing status for org or project (for onboarding/payment enforcement)
+import type { BillingStatus } from "../types/billing.types";
+
 export function useBillingStatus(
   scopeType: "organization" | "project",
   scopeId: string
@@ -153,7 +155,7 @@ export function useBillingStatus(
     scopeType === "organization"
       ? `/organizations/${scopeId}`
       : `/projects/${scopeId}`;
-  return useQuery({
+  return useQuery<BillingStatus | null>({
     queryKey: ["billing-status", scopeType, scopeId],
     queryFn: async () => {
       if (!scopeId) return null;
@@ -162,9 +164,20 @@ export function useBillingStatus(
         const response = await apiClient.get(`${baseURL}/billing/status`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        return response.data;
+        const raw = response.data;
+        // Transform raw API response to BillingStatus
+        const status: BillingStatus = {
+          hasStripeCustomer: !!raw.stripe_customer?.id,
+          hasPaymentMethod: !!raw.has_payment_method,
+          hasActiveSubscription: raw.subscription_details?.status === "active",
+          stripe_customer: raw.stripe_customer,
+          payment_methods: raw.payment_methods,
+          subscription_details: raw.subscription_details ?? null,
+        };
+        return status;
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);
+        return null;
       }
     },
     enabled: !!scopeId,

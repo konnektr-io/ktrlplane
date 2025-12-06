@@ -52,20 +52,18 @@ export default function CreateResourcePage() {
     }
   }, [projects, urlProjectId, selectedProjectId]);
 
-  // Initialize flow management with transformed billing status
-  const transformedBillingStatus = billingStatus
-    ? {
-        hasPaymentMethod: billingStatus.has_payment_method ?? false,
-        hasStripeCustomer: !!billingStatus.stripe_customer?.id,
-        hasActiveSubscription:
-          billingStatus.subscription_details?.status === "active",
-      }
-    : undefined;
-
+  // Pass typed billingStatus directly to flow
   const flow = useResourceCreationFlow({
     urlProjectId,
     hasProjects: projects.length > 0,
-    billingStatus: transformedBillingStatus,
+    billingStatus: billingStatus ?? {
+      hasStripeCustomer: false,
+      hasPaymentMethod: false,
+      hasActiveSubscription: false,
+      stripe_customer: undefined,
+      payment_methods: [],
+      subscription_details: null,
+    },
     billingLoading,
     isGlobalRoute: isGlobalCreateRoute,
   });
@@ -309,6 +307,10 @@ export default function CreateResourcePage() {
 
         {flow.currentStep?.id === "billing" && (
           <BillingSetupStep
+            key={
+              String(billingStatus?.hasStripeCustomer) +
+              String(billingStatus?.hasPaymentMethod)
+            }
             projectId={selectedProjectId || ""}
             resourceType={flow.state.resourceType}
             sku={flow.state.sku}
@@ -316,6 +318,8 @@ export default function CreateResourcePage() {
             tierPrice={selectedTier?.price}
             onSetupBilling={() => setShowBillingSetupModal(true)}
             isLoading={billingLoading}
+            hasStripeCustomer={billingStatus?.hasStripeCustomer}
+            hasPaymentMethod={billingStatus?.hasPaymentMethod}
           />
         )}
 

@@ -50,11 +50,11 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 	var stripePriceID *string
 
 	if isPaidResource {
-		// Check billing account and subscription for project
+		// Check billing account for project
 		billingSvc := NewBillingService(s.config)
 		billingAccount, err := billingSvc.GetBillingAccount("project", projectID)
-		if err != nil || billingAccount == nil || billingAccount.StripeCustomerID == nil || billingAccount.StripeSubscriptionID == nil {
-			return nil, fmt.Errorf("billing account with active subscription required for paid resources")
+		if err != nil || billingAccount == nil || billingAccount.StripeCustomerID == nil {
+			return nil, fmt.Errorf("billing account with Stripe customer required for paid resources")
 		}
 
 		// Get Stripe price ID for resource type and SKU
@@ -64,43 +64,78 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 		}
 		stripePriceID = &priceID
 
-		// Update Stripe subscription: increment quantity if item exists, else add new item
-		subID := *billingAccount.StripeSubscriptionID
-		sub, err := subscription.Get(subID, nil)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch Stripe subscription: %w", err)
-		}
-
-		// Find subscription item with this price ID
-		var itemID string
-		var currentQty int64
-		for _, item := range sub.Items.Data {
-			if item.Price != nil && item.Price.ID == priceID {
-				itemID = item.ID
-				currentQty = item.Quantity
-				break
+		// If no subscription exists, create one with this resource as the first item
+		if billingAccount.StripeSubscriptionID == nil {
+			// Create subscription with this resource as the first item
+			subParams := &stripe.SubscriptionParams{
+				Customer: stripe.String(*billingAccount.StripeCustomerID),
+				Items: []*stripe.SubscriptionItemsParams{
+					{
+						Price:    stripe.String(priceID),
+						Quantity: stripe.Int64(1),
+					},
+				},
+				BillingMode: &stripe.SubscriptionBillingModeParams{
+					Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
+				},
+				PaymentBehavior: stripe.String("default_incomplete"),
 			}
-		}
-
-		if itemID != "" {
-			// Item exists, increment quantity
-			params := &stripe.SubscriptionItemParams{
-				Quantity: stripe.Int64(currentQty + 1),
-			}
-			_, err := subscriptionitem.Update(itemID, params)
+			sub, err := subscription.New(subParams)
 			if err != nil {
-				return nil, fmt.Errorf("failed to update Stripe subscription item quantity: %w", err)
+				return nil, fmt.Errorf("failed to create Stripe subscription: %w", err)
+			}
+			// Update billing account with new subscription ID
+			query := db.UpdateBillingAccountSubscriptionQuery
+			row := db.GetDB().QueryRow(context.Background(), query, "project", projectID, sub.ID)
+			err = row.Scan(
+				&billingAccount.BillingAccountID,
+				&billingAccount.ScopeType,
+				&billingAccount.ScopeID,
+				&billingAccount.StripeCustomerID,
+				&billingAccount.StripeSubscriptionID,
+				&billingAccount.CreatedAt,
+				&billingAccount.UpdatedAt,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("failed to update billing account with new subscription: %w", err)
 			}
 		} else {
-			// Item does not exist, add new item
-			params := &stripe.SubscriptionItemParams{
-				Subscription: stripe.String(subID),
-				Price:        stripe.String(priceID),
-				Quantity:     stripe.Int64(1),
-			}
-			_, err := subscriptionitem.New(params)
+			// Subscription exists, add or increment item
+			subID := *billingAccount.StripeSubscriptionID
+			sub, err := subscription.Get(subID, nil)
 			if err != nil {
-				return nil, fmt.Errorf("failed to add new Stripe subscription item: %w", err)
+				return nil, fmt.Errorf("failed to fetch Stripe subscription: %w", err)
+			}
+			// Find subscription item with this price ID
+			var itemID string
+			var currentQty int64
+			for _, item := range sub.Items.Data {
+				if item.Price != nil && item.Price.ID == priceID {
+					itemID = item.ID
+					currentQty = item.Quantity
+					break
+				}
+			}
+			if itemID != "" {
+				// Item exists, increment quantity
+				params := &stripe.SubscriptionItemParams{
+					Quantity: stripe.Int64(currentQty + 1),
+				}
+				_, err := subscriptionitem.Update(itemID, params)
+				if err != nil {
+					return nil, fmt.Errorf("failed to update Stripe subscription item quantity: %w", err)
+				}
+			} else {
+				// Item does not exist, add new item
+				params := &stripe.SubscriptionItemParams{
+					Subscription: stripe.String(subID),
+					Price:        stripe.String(priceID),
+					Quantity:     stripe.Int64(1),
+				}
+				_, err := subscriptionitem.New(params)
+				if err != nil {
+					return nil, fmt.Errorf("failed to add new Stripe subscription item: %w", err)
+				}
 			}
 		}
 	}

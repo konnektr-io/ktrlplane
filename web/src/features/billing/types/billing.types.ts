@@ -1,3 +1,17 @@
+// BillingStatus: normalized/typed status for onboarding/payment enforcement
+export interface BillingStatus {
+  hasStripeCustomer: boolean;
+  hasPaymentMethod: boolean;
+  hasActiveSubscription: boolean;
+  stripe_customer?: {
+    id: string;
+    email: string;
+    name?: string;
+    description?: string;
+  };
+  payment_methods?: StripePaymentMethod[];
+  subscription_details?: StripeSubscriptionDetails | null;
+}
 export interface BillingAccount {
   billing_account_id: string;
   scope_type: "organization" | "project";

@@ -170,6 +170,35 @@ export function useResourceCreationFlow({
   // Get current step
   const currentStep = steps[currentStepIndex];
 
+  // Effect: If steps change and currentStepIndex points to a step that no longer exists, reset to last valid step
+  useEffect(() => {
+    if (currentStepIndex >= steps.length) {
+      setCurrentStepIndex(steps.length - 1);
+    } else if (steps.length > 0 && !steps[currentStepIndex]) {
+      setCurrentStepIndex(0);
+    }
+    // If the current step is 'billing' but billing is now set up, advance to next step
+    if (
+      steps.length > 0 &&
+      steps[currentStepIndex]?.id === "billing" &&
+      !(
+        billingStatus &&
+        !billingLoading &&
+        (!billingStatus.hasStripeCustomer ||
+          !billingStatus.hasPaymentMethod ||
+          !billingStatus.hasActiveSubscription)
+      )
+    ) {
+      // Find the next step after billing
+      const billingIdx = steps.findIndex((s) => s.id === "billing");
+      if (billingIdx !== -1 && billingIdx < steps.length - 1) {
+        setCurrentStepIndex(billingIdx + 1);
+      } else if (billingIdx !== -1 && billingIdx === steps.length - 1) {
+        setCurrentStepIndex(steps.length - 1);
+      }
+    }
+  }, [steps, currentStepIndex, billingStatus, billingLoading]);
+
   // Helper: validate whether a sku belongs to a resource type
   const isSkuValidForType = (type: ResourceType | "", sku: string) => {
     if (!type || !sku) return false;
@@ -222,8 +251,7 @@ export function useResourceCreationFlow({
         // Can proceed from billing step when customer, payment method, and subscription are setup
         return (
           (billingStatus?.hasStripeCustomer ?? false) &&
-          (billingStatus?.hasPaymentMethod ?? false) &&
-          (billingStatus?.hasActiveSubscription ?? false)
+          (billingStatus?.hasPaymentMethod ?? false)
         );
       case "settings":
         return !currentStep.required || !!state.settings;

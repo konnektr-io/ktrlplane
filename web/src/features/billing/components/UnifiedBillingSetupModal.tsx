@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import {
   useSetupStripeCustomer,
-  useCreateSubscription,
   useCreateSetupIntent,
 } from "../hooks/useBillingApi";
 
@@ -51,7 +50,6 @@ export function UnifiedBillingSetupModal({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   const setupStripeCustomer = useSetupStripeCustomer(scopeType, scopeId);
-  const createSubscription = useCreateSubscription(scopeType, scopeId);
   const createSetupIntent = useCreateSetupIntent(scopeType, scopeId);
 
   // Reset state when modal opens
@@ -75,10 +73,7 @@ export function UnifiedBillingSetupModal({
         description: `${scopeType} ${scopeId}`,
       });
 
-      // Step 2: Create subscription
-      await createSubscription.mutateAsync();
-
-      // Step 3: Get SetupIntent for payment method
+      // Step 2: Get SetupIntent for payment method
       const secret = await createSetupIntent.mutateAsync();
       setClientSecret(secret);
       setStep("payment");
@@ -162,7 +157,7 @@ export function UnifiedBillingSetupModal({
                 </Button>
               </div>
             ) : clientSecret ? (
-              <div className="space-y-4 py-2">
+              <div className="space-y-4 py-2 px-0 overflow-x-hidden">
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
                   <PaymentForm
                     onSuccess={handlePaymentSuccess}
@@ -288,9 +283,6 @@ function PaymentForm({
           )}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground text-center">
-        You can add a payment method later from the billing page.
-      </p>
     </form>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import {
   Card,
@@ -48,6 +48,10 @@ export default function BillingPage() {
     isLoading: loading,
     refetch,
   } = useBilling(scopeType, scopeId);
+
+  // Track if we should trigger subscription creation after billing setup
+  const [pendingSubscriptionCheck, setPendingSubscriptionCheck] =
+    useState(false);
   const openCustomerPortalMutation = useOpenCustomerPortal(scopeType, scopeId);
   const createSubscriptionMutation = useCreateSubscription(scopeType, scopeId);
   const cancelSubscriptionMutation = useCancelSubscription(scopeType, scopeId);
@@ -66,6 +70,31 @@ export default function BillingPage() {
       setUpdating(false);
     }
   };
+
+  // After billing setup, check if we need to create a subscription
+  const handleBillingSetupComplete = async () => {
+    setShowSetupModal(false);
+    await refetch();
+    setPendingSubscriptionCheck(true);
+  };
+
+  // Effect: if billingInfo changes and we just completed billing setup, check for resources and subscription
+  React.useEffect(() => {
+    if (pendingSubscriptionCheck && billingInfo) {
+      const hasStripeCustomer = !!billingInfo.stripe_customer?.id;
+      const hasActiveSubscription =
+        !!billingInfo.subscription_details?.id &&
+        billingInfo.subscription_details.status === "active";
+      const hasResources =
+        Array.isArray(billingInfo.subscription_items) &&
+        billingInfo.subscription_items.length > 0;
+      if (hasStripeCustomer && !hasActiveSubscription && hasResources) {
+        // Automatically create subscription
+        createSubscription();
+      }
+      setPendingSubscriptionCheck(false);
+    }
+  }, [billingInfo, pendingSubscriptionCheck]);
 
   const createSubscription = async () => {
     setUpdating(true);
@@ -327,10 +356,7 @@ export default function BillingPage() {
         onClose={() => setShowSetupModal(false)}
         scopeType={scopeType}
         scopeId={scopeId}
-        onComplete={async () => {
-          setShowSetupModal(false);
-          await refetch();
-        }}
+        onComplete={handleBillingSetupComplete}
       />
 
       {/* Stripe Integration */}
