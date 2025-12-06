@@ -33,6 +33,7 @@ interface ProjectSelectionStepProps {
   selectedProjectId: string | null;
   onProjectSelect: (projectId: string) => void;
   onProjectCreated: (projectId: string) => void;
+  isLoading?: boolean;
 }
 
 export function ProjectSelectionStep({
@@ -40,8 +41,10 @@ export function ProjectSelectionStep({
   selectedProjectId,
   onProjectSelect,
   onProjectCreated,
+  isLoading = false,
 }: ProjectSelectionStepProps) {
-  const [showCreateForm, setShowCreateForm] = useState(projects.length === 0);
+  // Only show create form by default if projects are loaded and empty
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const { mutateAsync: createProject } = useCreateProject();
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -102,18 +105,26 @@ export function ProjectSelectionStep({
       <Card>
         <CardHeader>
           <CardTitle>
-            {projects.length === 0
+            {isLoading
+              ? "Loading Projects..."
+              : projects.length === 0
               ? "Create Your First Project"
               : "Select Project"}
           </CardTitle>
           <CardDescription>
-            {projects.length === 0
+            {isLoading
+              ? "Please wait while we load your projects"
+              : projects.length === 0
               ? "Start by creating a project to organize your resources"
               : "Choose an existing project or create a new one"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!showCreateForm && projects.length > 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : !showCreateForm && projects.length > 0 ? (
             <>
               <div className="space-y-2">
                 <Label htmlFor="project-select">Project *</Label>

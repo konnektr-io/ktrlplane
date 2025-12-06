@@ -141,6 +141,8 @@ export default function AppHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <ModeToggle />
+          
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -165,7 +167,6 @@ export default function AppHeader() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <ModeToggle />
         </div>
       </div>
     </header>

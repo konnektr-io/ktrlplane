@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ import {
 
 export default function CreateResourcePage() {
   const { projectId: urlProjectId } = useParams<{ projectId: string }>();
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [], isLoading: projectsLoading } = useProjects();
   const navigate = useNavigate();
 
   // Determine if we're on the global create route
@@ -47,6 +47,16 @@ export default function CreateResourcePage() {
     isLoading: billingLoading,
     refetch: refetchBillingStatus,
   } = useBillingStatus("project", selectedProjectId || "");
+
+  // Sync selectedProjectId when projects are loaded (async data)
+  // Also sync the flow state's projectId
+  useEffect(() => {
+    if (!urlProjectId && !selectedProjectId && projects.length > 0) {
+      const firstProjectId = projects[0].project_id;
+      setSelectedProjectId(firstProjectId);
+    }
+  }, [projects, urlProjectId, selectedProjectId]);
+
 
   // Initialize flow management with transformed billing status
   const transformedBillingStatus = billingStatus
@@ -65,6 +75,13 @@ export default function CreateResourcePage() {
     billingLoading,
     isGlobalRoute: isGlobalCreateRoute,
   });
+
+  // Keep flow state in sync with selectedProjectId
+  useEffect(() => {
+    if (selectedProjectId && flow.state.projectId !== selectedProjectId) {
+      flow.setState({ projectId: selectedProjectId });
+    }
+  }, [selectedProjectId, flow]);
 
   // Update project ID when flow state changes
   const handleProjectSelect = (projectId: string) => {
@@ -290,6 +307,7 @@ export default function CreateResourcePage() {
             selectedProjectId={selectedProjectId}
             onProjectSelect={handleProjectSelect}
             onProjectCreated={handleProjectCreated}
+            isLoading={projectsLoading}
           />
         )}
 
@@ -358,6 +376,7 @@ export default function CreateResourcePage() {
         {/* Navigation Buttons */}
         {flow.currentStep?.id !== "settings" && flow.currentStep?.id !== "access" && (
           <div className="flex justify-between gap-3">
+            {/* Hide Back button on first step of global route (no meaningful place to go back to) */}
             {flow.canGoBack && (
               <Button variant="outline" onClick={handleBack}>
                 Back
@@ -374,7 +393,7 @@ export default function CreateResourcePage() {
               )}
               <Button
                 onClick={handleNext}
-                disabled={!flow.canGoNext || isCreating}
+                disabled={!flow.canGoNext || isCreating || (flow.currentStep?.id === "project" && projectsLoading)}
               >
                 {isCreating
                   ? "Creating..."

@@ -77,8 +77,8 @@ func (h *Handler) GetBillingStatus(c *gin.Context) {
 		return
 	}
 
-	// Check view_billing permission (or manage_billing)
-	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "view_billing", scopeType, scopeID)
+	// Check read permission (billing info is readable by anyone with read access to the scope)
+	hasPermission, err := h.RBACService.CheckPermission(c, user.ID, "read", scopeType, scopeID)
 	if err != nil {
 		_ = c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check permissions", "details": err.Error()})
