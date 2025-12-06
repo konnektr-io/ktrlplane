@@ -66,8 +66,8 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 		return nil, fmt.Errorf("failed to create project: %w", err)
 	}
 
-	// Assign project owner role to the user
-	err = s.rbacService.AssignRoleInTx(ctx, tx, userID, "Owner", "project", req.ID, userID)
+	// Assign project owner role (10000000-0001-0000-0000-000000000001) to the user
+	err = s.rbacService.AssignRoleInTx(ctx, tx, userID, "10000000-0001-0000-0000-000000000001", "project", req.ID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assign project owner role: %w", err)
 	}
