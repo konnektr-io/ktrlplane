@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCreateResource } from "../hooks/useResourceApi";
 import { isPaidResource } from "@/features/billing/utils/isPaidResource";
 import { useBillingStatus } from "@/features/billing/hooks/useBillingApi";
-import { UnifiedBillingSetupModal } from "@/features/billing/components/UnifiedBillingSetupModal";
+import { UnifiedBillingSetupModal } from "@/features/billing/components/BillingSetupModal";
 import type { CreateResourceData } from "../types/resource.types";
 import type { ResourceType } from "../schemas";
 import { defaultConfigurations } from "@/features/resources/schemas";

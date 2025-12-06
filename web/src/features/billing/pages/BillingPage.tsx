@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UnifiedBillingSetupModal } from "../components/UnifiedBillingSetupModal";
+import { UnifiedBillingSetupModal } from "../components/BillingSetupModal";
 import {
   AlertDialog,
   AlertDialogAction,
