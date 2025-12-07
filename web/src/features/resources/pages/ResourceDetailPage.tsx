@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useResource, useUpdateResource } from "../hooks/useResourceApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,40 @@ export default function ResourceDetailPage() {
     data: currentResource,
     isLoading,
     error,
+    refetch,
   } = useResource(projectId!, resourceId!);
+
+  // --- Polling for transient statuses ---
+  const transientStatuses = [
+    "Creating",
+    "Unknown",
+    "Progressing",
+    "Degraded",
+    "Terminating",
+  ];
+  // If status is not in the above, treat as stable
+  const isTransient =
+    currentResource &&
+    transientStatuses.includes((currentResource.status || "").trim());
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isTransient) {
+      // Start polling every 5s
+      pollingRef.current = setInterval(() => {
+        refetch();
+      }, 5000);
+    }
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+    // Only rerun when status changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTransient]);
+
   const updateResourceMutation = useUpdateResource(projectId!, resourceId!);
 
   // Permissions
