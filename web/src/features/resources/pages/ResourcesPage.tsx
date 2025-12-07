@@ -1,7 +1,15 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-// import { useResourceStore } from "../store/resourceStore";
+import {
+  PlusCircle,
+  Database,
+  Server,
+  Globe,
+  FileText,
+  Filter,
+  Trash2,
+} from "lucide-react";
 import { useResources, useDeleteResource } from "../hooks/useResourceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,17 +29,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ResourceStatusBadge } from "../components/ResourceStatusBadge";
-import {
-  PlusCircle,
-  Database,
-  Server,
-  Globe,
-  FileText,
-  Filter,
-  Trash2,
-} from "lucide-react";
 import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { useMultipleResourcePermissions } from "@/features/access/hooks/useMultipleResourcePermissions";
+import { DeleteResourceDialog } from "../components/DeleteResourceDialog";
 
 const resourceTypeIcons = {
   Database: Database,
@@ -245,37 +245,18 @@ export default function ResourcesPage() {
                         </TableCell>
                         {/* Delete confirmation dialog */}
                         {showConfirm && resourceToDelete && (
-                          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                            <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg p-6 w-full max-w-sm">
-                              <h2 className="text-lg font-semibold mb-2">
-                                Delete Resource
-                              </h2>
-                              <p className="mb-4">
-                                Are you sure you want to delete{" "}
-                                <span className="font-bold">
-                                  {resourceToDelete.name}
-                                </span>
-                                ? This action cannot be undone.
-                              </p>
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="outline"
-                                  onClick={() => {
-                                    setShowConfirm(false);
-                                    setDeletingId(null);
-                                  }}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  onClick={handleDelete}
-                                >
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
+                          <DeleteResourceDialog
+                            resourceName={resourceToDelete.name}
+                            open={showConfirm}
+                            onOpenChange={(open) => {
+                              setShowConfirm(open);
+                              if (!open) setDeletingId(null);
+                            }}
+                            onConfirm={handleDelete}
+                            isDeleting={
+                              deleteResourceMutation.status === "pending"
+                            }
+                          />
                         )}
                       </TableRow>
                     );

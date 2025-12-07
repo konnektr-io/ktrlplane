@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { useResource, useUpdateResource } from "../hooks/useResourceApi";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  useResource,
+  useUpdateResource,
+  useDeleteResource,
+} from "../hooks/useResourceApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +23,7 @@ import {
 import { ResourceStatusBadge } from "../components/ResourceStatusBadge";
 import { ResourceDetailsPanel } from "../components/ResourceDetailsPanel";
 import { ResourceTierChangeDialog } from "../components/ResourceTierChangeDialog";
+import { DeleteResourceDialog } from "../components/DeleteResourceDialog";
 import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { resourceTypes } from "../catalog/resourceTypes";
 
@@ -141,6 +146,32 @@ export default function ResourceDetailPage() {
     );
   }
 
+  // --- Dialog state for resource deletion ---
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+  const deleteResourceMutation = useDeleteResource(projectId!, resourceId!);
+
+  // --- Handle resource deletion ---
+  const handleDeleteResource = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteResourceMutation.mutateAsync();
+      setIsDeleteDialogOpen(false);
+      setIsDeleting(false);
+      // Navigate to resources list after deletion
+      navigate(`/projects/${projectId}/resources`);
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : "Failed to delete resource"
+      );
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <>
       <div className="space-y-6">
@@ -194,14 +225,24 @@ export default function ResourceDetailPage() {
                   {currentResource?.name || "Resource Overview"}
                 </h1>
                 {canEdit && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={handleNameEdit}
-                    className="h-8 w-8"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
+                  <>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleNameEdit}
+                      className="h-8 w-8"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="ml-2"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                    >
+                      Delete Resource
+                    </Button>
+                  </>
                 )}
               </div>
             )}
@@ -332,6 +373,23 @@ export default function ResourceDetailPage() {
         {currentResource && <ResourceDetailsPanel resource={currentResource} />}
       </div>
 
+      {/* Delete Resource Dialog */}
+      {currentResource && (
+        <DeleteResourceDialog
+          resourceName={currentResource.name}
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleDeleteResource}
+          isDeleting={isDeleting}
+        />
+      )}
+      {/* Error alert for deletion */}
+      {deleteError && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{deleteError}</AlertDescription>
+        </Alert>
+      )}
       {/* Tier Change Dialog */}
       {currentResource && (
         <ResourceTierChangeDialog
