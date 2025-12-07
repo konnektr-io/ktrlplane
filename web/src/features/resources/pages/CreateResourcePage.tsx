@@ -286,14 +286,12 @@ export default function CreateResourcePage() {
             onNameChange={handleNameChange}
             onSkuSelect={(sku) => flow.setState({ sku })}
             preselectedSku={flow.preselectedSku}
-            projects={
-              isGlobalCreateRoute && projects.length > 0 ? projects : undefined
-            }
+            projects={isGlobalCreateRoute ? projects : undefined}
             selectedProjectId={selectedProjectId}
             onProjectSelect={
               isGlobalCreateRoute ? handleProjectSelect : undefined
             }
-            showProjectSelection={isGlobalCreateRoute && projects.length > 0}
+            showProjectSelection={isGlobalCreateRoute}
           />
         )}
 

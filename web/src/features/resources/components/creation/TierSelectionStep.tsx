@@ -44,33 +44,44 @@ export function TierSelectionStep({
   return (
     <div className="space-y-6">
       {/* Optional Project Selection - shown inline when needed */}
-      {showProjectSelection && projects && onProjectSelect && (
+      {showProjectSelection && onProjectSelect && (
         <Card>
           <CardHeader>
             <CardTitle>Project</CardTitle>
             <CardDescription>
-              Select the project where this resource will be created
+              {projects && projects.length > 0
+                ? "Select the project where this resource will be created"
+                : "You need to create a project first before creating resources"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="project-select">Project *</Label>
-              <select
-                id="project-select"
-                value={selectedProjectId || ""}
-                onChange={(e) => onProjectSelect(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="" disabled>
-                  Select a project...
-                </option>
-                {projects.map((project) => (
-                  <option key={project.project_id} value={project.project_id}>
-                    {project.name}
+            {projects && projects.length > 0 ? (
+              <div className="space-y-2">
+                <Label htmlFor="project-select">Project *</Label>
+                <select
+                  id="project-select"
+                  value={selectedProjectId || ""}
+                  onChange={(e) => onProjectSelect(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="" disabled>
+                    Select a project...
                   </option>
-                ))}
-              </select>
-            </div>
+                  {projects.map((project) => (
+                    <option key={project.project_id} value={project.project_id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground mb-4">
+                  No projects available. Please go back and create a project
+                  first.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
