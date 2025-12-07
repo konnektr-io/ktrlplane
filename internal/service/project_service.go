@@ -3,22 +3,27 @@ package service
 import (
 	"context"
 	"fmt"
+	"ktrlplane/internal/config"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
 	"ktrlplane/internal/utils"
+
+	"github.com/stripe/stripe-go/v82/subscription"
 )
 
 // ProjectService handles project-related operations.
 type ProjectService struct {
 	rbacService *RBACService
 	orgService  *OrganizationService
+	config      *config.Config
 }
 
 // NewProjectService creates a new ProjectService.
-func NewProjectService() *ProjectService {
+func NewProjectService(cfg *config.Config) *ProjectService {
 	return &ProjectService{
 		rbacService: NewRBACService(),
 		orgService:  NewOrganizationService(),
+		config:      cfg,
 	}
 }
 
@@ -151,6 +156,7 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, re
 }
 
 // DeleteProject deletes a project if user has delete access
+// This also cancels any associated Stripe subscription and removes the billing account
 func (s *ProjectService) DeleteProject(ctx context.Context, projectID, userID string) error {
 	// Check delete permission
 	hasPermission, err := s.rbacService.CheckPermission(ctx, userID, "delete", "project", projectID)
@@ -161,5 +167,28 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectID, userID st
 		return fmt.Errorf("insufficient permissions to delete project")
 	}
 
+	// Cancel Stripe subscription and clean up billing account before deleting project
+	billingSvc := NewBillingService(s.config)
+	billingAccount, err := billingSvc.GetBillingAccount("project", projectID)
+	if err == nil && billingAccount != nil {
+		// Cancel Stripe subscription immediately (not at period end)
+		if billingAccount.StripeSubscriptionID != nil && *billingAccount.StripeSubscriptionID != "" {
+			_, err := subscription.Cancel(*billingAccount.StripeSubscriptionID, nil)
+			if err != nil {
+				// Log error but continue with deletion to avoid orphaned database records
+				fmt.Printf("[ProjectService] Failed to cancel Stripe subscription %s: %v\n", *billingAccount.StripeSubscriptionID, err)
+			}
+		}
+
+		// Delete billing account record
+		deleteQuery := `DELETE FROM ktrlplane.billing_accounts WHERE scope_type = 'project' AND scope_id = $1`
+		err = db.ExecQuery(ctx, deleteQuery, projectID)
+		if err != nil {
+			// Log error but continue with project deletion
+			fmt.Printf("[ProjectService] Failed to delete billing account for project %s: %v\n", projectID, err)
+		}
+	}
+
+	// Delete the project (this will cascade delete resources, role assignments, etc.)
 	return db.ExecQuery(ctx, db.DeleteProjectQuery, projectID)
 }

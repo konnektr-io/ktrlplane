@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// --- Service Initialization ---
-	projectService := service.NewProjectService()
+	projectService := service.NewProjectService(&cfg)
 	resourceService := service.NewResourceService(&cfg)
 	organizationService := service.NewOrganizationService()
 	rbacService := service.NewRBACService()

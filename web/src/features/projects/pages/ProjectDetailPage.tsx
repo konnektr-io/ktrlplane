@@ -1,16 +1,22 @@
-import { useParams } from "react-router-dom";
-import { useProject } from "../hooks/useProjectApi";
+import { useParams, useNavigate } from "react-router-dom";
+import { useProject, useUpdateProject, useDeleteProject } from "../hooks/useProjectApi";
 import { useResources } from "../../resources/hooks/useResourceApi";
 import { useBilling } from "../../billing/hooks/useBillingApi";
 import { useRoleAssignments } from "../../access/hooks/useAccessApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Building2, Activity, Key } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CalendarDays, Building2, Activity, Key, Edit2, Check, X, AlertCircle, Trash2 } from "lucide-react";
 import { Auth0ClientSecretViewer } from "../components/Auth0ClientSecretViewer";
+import { DeleteProjectDialog } from "../components/DeleteProjectDialog";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const { data: currentProject } = useProject(projectId ?? "");
   const { data: resources = [] } = useResources(projectId ?? "");
   const { data: billingInfo } = useBilling("project", projectId ?? "");
@@ -25,16 +31,126 @@ export default function ProjectDetailPage() {
     new Set(roleAssignments.map((a) => a.user?.id ?? a.user_id).filter(Boolean))
   ).length;
 
+  // State for inline name editing
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  // State for delete dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Mutations
+  const updateProjectMutation = useUpdateProject(projectId ?? "");
+  const deleteProjectMutation = useDeleteProject(projectId ?? "");
+
+  // Name editing handlers
+  const handleNameEdit = () => {
+    setEditedName(currentProject?.name || "");
+    setIsEditingName(true);
+    setNameError(null);
+  };
+
+  const handleNameSave = async () => {
+    if (!editedName.trim()) {
+      setNameError("Project name cannot be empty");
+      return;
+    }
+    if (editedName === currentProject?.name) {
+      setIsEditingName(false);
+      return;
+    }
+    updateProjectMutation.mutate(
+      { name: editedName },
+      {
+        onSuccess: () => {
+          setIsEditingName(false);
+          setNameError(null);
+          toast.success("Project name updated successfully");
+        },
+        onError: (error: any) => {
+          setNameError(error?.response?.data?.error || "Failed to update project name");
+        },
+      }
+    );
+  };
+
+  const handleNameCancel = () => {
+    setIsEditingName(false);
+    setEditedName("");
+    setNameError(null);
+  };
+
+  // Delete handlers
+  const handleDeleteProject = () => {
+    deleteProjectMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success("Project and all its resources have been deleted");
+        navigate("/projects");
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.error || "Failed to delete project");
+        setIsDeleteDialogOpen(false);
+      },
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">
-          {currentProject?.name || "Project Overview"}
-        </h1>
-        <p className="text-muted-foreground">
-          {currentProject?.description || "Project details and overview"}
-        </p>
-      </div>
+    <>
+      <div className="space-y-6">
+        {/* Header with editable name */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            {isEditingName ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 max-w-xl">
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="text-2xl font-bold h-auto py-2"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleNameSave();
+                      if (e.key === "Escape") handleNameCancel();
+                    }}
+                  />
+                  <Button size="icon" variant="ghost" onClick={handleNameSave}>
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleNameCancel}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {nameError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{nameError}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">
+                  {currentProject?.name || "Project Overview"}
+                </h1>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleNameEdit}
+                  className="h-8 w-8"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            <p className="text-muted-foreground mt-1">
+              {currentProject?.description || "Project details and overview"}
+            </p>
+          </div>
+        </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Project Info Card */}
@@ -264,6 +380,51 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Dangerous Actions */}
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle className="text-destructive flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            Danger Zone
+          </CardTitle>
+          <CardDescription>
+            Irreversible and destructive actions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 border border-destructive/50 rounded-lg">
+            <div>
+              <p className="font-medium">Delete this project</p>
+              <p className="text-sm text-muted-foreground">
+                Once you delete a project, there is no going back. All resources and data will be permanently deleted.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="ml-4"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Project
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
+
+    {/* Delete Confirmation Dialog */}
+    {currentProject && (
+      <DeleteProjectDialog
+        projectName={currentProject.name}
+        projectId={currentProject.project_id}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDeleteProject}
+        isDeleting={deleteProjectMutation.status === "pending"}
+      />
+    )}
+    </>
   );
 }

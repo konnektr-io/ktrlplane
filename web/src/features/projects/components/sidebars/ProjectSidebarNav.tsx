@@ -23,13 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Database,
-  Settings,
-  Shield,
-  FolderOpen,
-  CreditCard,
-} from "lucide-react";
+import { Database, Shield, FolderOpen, CreditCard } from "lucide-react";
 
 const projectMenuItems = [
   {
@@ -51,11 +45,6 @@ const projectMenuItems = [
     title: "Billing",
     icon: CreditCard,
     path: "billing",
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    path: "settings",
   },
 ];
 

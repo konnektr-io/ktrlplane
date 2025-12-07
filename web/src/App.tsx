@@ -10,7 +10,6 @@ import ResourcesPage from "@/features/resources/pages/ResourcesPage";
 import CreateResourcePage from "@/features/resources/pages/CreateResourcePage";
 import ResourceDetailPage from "@/features/resources/pages/ResourceDetailPage";
 import ResourceAccessPage from "@/features/resources/pages/ResourceAccessPage";
-import ProjectSettingsPage from "@/features/projects/pages/ProjectSettingsPage";
 import ProjectDetailPage from "@/features/projects/pages/ProjectDetailPage";
 import ProjectAccessPage from "@/features/projects/pages/ProjectAccessPage";
 import OrganizationAccessPage from "@/features/organizations/pages/OrganizationAccessPage";
@@ -117,7 +116,6 @@ function App() {
             <Route path="access" element={<ProjectAccessPage />} />
             <Route path="access/grant" element={<CreateRoleAssignmentPage />} />
             <Route path="billing" element={<BillingPage />} />
-            <Route path="settings" element={<ProjectSettingsPage />} />
           </Route>
 
           {/* Global resource creation route for homepage integration */}
