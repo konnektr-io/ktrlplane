@@ -37,16 +37,6 @@ export function BillingSetupStep({
       <Card>
         <CardHeader>
           <CardTitle>
-            <div>
-              {hasStripeCustomer
-                ? "hasStripeCustomer true"
-                : "hasStripeCustomer false"}
-            </div>
-            <div>
-              {hasPaymentMethod
-                ? "hasPaymentMethod true"
-                : "hasPaymentMethod false"}
-            </div>
             {billingIsSetUp
               ? "Billing Setup Complete"
               : "Billing Setup Required"}

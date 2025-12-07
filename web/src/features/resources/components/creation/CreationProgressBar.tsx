@@ -1,3 +1,4 @@
+import React from "react";
 import { Check } from "lucide-react";
 import type { StepConfig } from "../../hooks/useResourceCreationFlow";
 
@@ -17,10 +18,9 @@ export function CreationProgressBar({
         const isCurrent = index === currentStepIndex;
 
         return (
-          <>
+          <React.Fragment key={step.id}>
             {/* Step Circle and Label */}
             <div
-              key={step.id}
               className={`flex items-center ${
                 isCurrent
                   ? "text-primary"
@@ -62,7 +62,7 @@ export function CreationProgressBar({
                 }`}
               />
             )}
-          </>
+          </React.Fragment>
         );
       })}
     </div>

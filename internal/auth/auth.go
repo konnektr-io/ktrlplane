@@ -37,6 +37,9 @@ var (
 	// Cache for processed users to avoid repeated DB checks
 	processedUsers = make(map[string]bool)
 	userCacheMutex sync.RWMutex
+
+	// Per-user locks to prevent race conditions in ensureUserExists
+ 	userLocks sync.Map // map[string]*sync.Mutex
 )
 
 // SetupAuth configures JWT validation for Auth0.
@@ -175,6 +178,12 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 		return nil // User already processed, skip
 	}
 	userCacheMutex.RUnlock()
+	
+	// Acquire per-user lock
+	lockIface, _ := userLocks.LoadOrStore(userID, &sync.Mutex{})
+	lock := lockIface.(*sync.Mutex)
+	lock.Lock()
+	defer lock.Unlock()
 
 	// Check if user exists and get their current email in one query
 	var existingUserID, existingEmail, existingName string
@@ -199,9 +208,15 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 		// User doesn't exist, create them
 		err = db.ExecQuery(ctx, db.CreateUserQuery, userID, email, name, userID)
 		if err != nil {
-			return fmt.Errorf("failed to create user: %w", err)
+			// If error is duplicate key, treat as benign race and proceed
+			if strings.Contains(err.Error(), "duplicate key value") || strings.Contains(err.Error(), "SQLSTATE 23505") {
+				log.Printf("User already created in parallel: %s (%s)", email, userID)
+			} else {
+				return fmt.Errorf("failed to create user: %w", err)
+			}
+		} else {
+			log.Printf("Created new user: %s (%s)", email, userID)
 		}
-		log.Printf("Created new user: %s (%s)", email, userID)
 	} else {
 		// User exists, check if we need to update email or name
 		needsUpdate := false
@@ -237,3 +252,4 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 
 	return nil
 }
+
