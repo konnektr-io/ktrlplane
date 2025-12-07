@@ -10,7 +10,7 @@ import { UnifiedBillingSetupModal } from "@/features/billing/components/BillingS
 import type { CreateResourceData } from "../types/resource.types";
 import type { ResourceType } from "../schemas";
 import { defaultConfigurations } from "@/features/resources/schemas";
-import { generateDNSId, slugify } from "@/lib/dnsUtils";
+import { generateDNSId } from "@/lib/dnsUtils";
 import { useProjects } from "@/features/projects/hooks/useProjectApi";
 import { resourceTypes as catalogResourceTypes } from "@/features/resources/catalog/resourceTypes";
 import { useResourceCreationFlow } from "../hooks/useResourceCreationFlow";
@@ -100,16 +100,9 @@ export default function CreateResourcePage() {
 
   // Name change handler with auto-ID generation
   const handleNameChange = (name: string) => {
-    const currentId = flow.state.resourceId;
-    const currentName = flow.state.resourceName;
-
     flow.setState({
       resourceName: name,
-      resourceId:
-        currentId === "" ||
-        currentId === slugify(currentName) + "-" + currentId.slice(-4)
-          ? generateDNSId(name)
-          : currentId,
+      resourceId: generateDNSId(name),
     });
   };
 
@@ -249,21 +242,14 @@ export default function CreateResourcePage() {
             {flow.canGoBack ? `Back to ${flow.getPreviousStepLabel()}` : "Back"}
           </Button>
         </div>
-        <h1 className="text-2xl font-bold">Create New Resource</h1>
+        <h1 className="text-2xl font-bold">
+          {flow.preselectedResourceType && selectedResourceType
+            ? `Create New ${selectedResourceType.name} Resource`
+            : "Create New Resource"}
+        </h1>
         <p className="text-muted-foreground">
           {flow.currentStep?.label || "Set up your new resource"}
         </p>
-
-        {/* Pre-selected info banner */}
-        {flow.preselectedResourceType && selectedResourceType && (
-          <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <span className="font-medium">Pre-selected:</span>{" "}
-              {selectedResourceType.name}
-              {flow.preselectedSku && ` - ${flow.preselectedSku}`}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Progress Indicator */}
@@ -296,12 +282,18 @@ export default function CreateResourcePage() {
           <TierSelectionStep
             resourceType={selectedResourceType}
             resourceName={flow.state.resourceName}
-            resourceId={flow.state.resourceId}
             selectedSku={flow.state.sku}
             onNameChange={handleNameChange}
-            onIdChange={(id) => flow.setState({ resourceId: id })}
             onSkuSelect={(sku) => flow.setState({ sku })}
             preselectedSku={flow.preselectedSku}
+            projects={
+              isGlobalCreateRoute && projects.length > 0 ? projects : undefined
+            }
+            selectedProjectId={selectedProjectId}
+            onProjectSelect={
+              isGlobalCreateRoute ? handleProjectSelect : undefined
+            }
+            showProjectSelection={isGlobalCreateRoute && projects.length > 0}
           />
         )}
 

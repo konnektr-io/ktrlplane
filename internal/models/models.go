@@ -10,7 +10,6 @@ type Project struct {
 	ProjectID   string  `json:"project_id" agtype:"project_id"`
 	OrgID       *string `json:"org_id" agtype:"org_id" db:"org_id"`
 	Name        string  `json:"name" agtype:"name"`
-	Description string  `json:"description,omitempty" agtype:"description"`
 	Status      string  `json:"status" agtype:"status"`
 	// StripeCustomerID and StripeSubscriptionID removed; use BillingAccount
 	BillingEmail           *string   `json:"billing_email,omitempty" db:"billing_email"`
@@ -68,16 +67,14 @@ type UpdateOrganizationRequest struct {
 
 // CreateProjectRequest is the payload for creating a project.
 type CreateProjectRequest struct {
-	ID          string  `json:"id" binding:"required"`
-	Name        string  `json:"name" binding:"required"`
-	Description string  `json:"description"`
-	OrgID       *string `json:"org_id,omitempty"`
+	ID    string  `json:"id" binding:"required"`
+	Name  string  `json:"name" binding:"required"`
+	OrgID *string `json:"org_id,omitempty"`
 }
 
 // UpdateProjectRequest is the payload for updating a project.
 type UpdateProjectRequest struct {
-	Name        *string `json:"name"` // Use pointers to distinguish between empty and not provided
-	Description *string `json:"description"`
+	Name *string `json:"name"` // Use pointers to distinguish between empty and not provided
 }
 
 // CreateResourceRequest is the payload for creating a resource.

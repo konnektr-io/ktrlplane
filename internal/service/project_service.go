@@ -61,12 +61,11 @@ func (s *ProjectService) CreateProject(ctx context.Context, req models.CreatePro
 		ProjectID:   req.ID,
 		OrgID:       orgID,
 		Name:        req.Name,
-		Description: req.Description,
 		Status:      "Active",
 	}
 
 	err = tx.QueryRow(ctx, db.CreateProjectWithTimestampsQuery,
-		project.ProjectID, project.OrgID, project.Name, project.Description, project.Status).Scan(&project.CreatedAt, &project.UpdatedAt)
+		project.ProjectID, project.OrgID, project.Name, project.Status).Scan(&project.CreatedAt, &project.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create project: %w", err)
 	}
@@ -105,7 +104,7 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, projectID, userID s
 
 	if rows.Next() {
 		var project models.Project
-		if err := rows.Scan(&project.ProjectID, &project.OrgID, &project.Name, &project.Description, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
+		if err := rows.Scan(&project.ProjectID, &project.OrgID, &project.Name, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
 		}
 		return &project, nil
@@ -127,7 +126,7 @@ func (s *ProjectService) ListProjects(ctx context.Context, userID string) ([]mod
 	projects := make([]models.Project, 0)
 	for rows.Next() {
 		var project models.Project
-		if err := rows.Scan(&project.ProjectID, &project.OrgID, &project.Name, &project.Description, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
+		if err := rows.Scan(&project.ProjectID, &project.OrgID, &project.Name, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
 		}
 		projects = append(projects, project)
@@ -147,7 +146,7 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, re
 		return nil, fmt.Errorf("insufficient permissions to update project")
 	}
 
-	err = db.ExecQuery(ctx, db.UpdateProjectQuery, projectID, req.Name, req.Description)
+	err = db.ExecQuery(ctx, db.UpdateProjectQuery, projectID, req.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update project: %w", err)
 	}

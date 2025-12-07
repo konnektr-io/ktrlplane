@@ -9,32 +9,73 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ResourceTierCard } from "../ResourceTierCard";
-import { validateDNSId } from "@/lib/dnsUtils";
 import type { ResourceType } from "../../catalog/resourceTypes";
+
+interface Project {
+  project_id: string;
+  name: string;
+}
 
 interface TierSelectionStepProps {
   resourceType: ResourceType | undefined;
   resourceName: string;
-  resourceId: string;
   selectedSku: string;
   onNameChange: (name: string) => void;
-  onIdChange: (id: string) => void;
   onSkuSelect: (sku: string) => void;
   preselectedSku?: string | null;
+  // Optional project selection/creation props
+  projects?: Project[];
+  selectedProjectId?: string | null;
+  onProjectSelect?: (projectId: string) => void;
+  showProjectSelection?: boolean;
 }
 
 export function TierSelectionStep({
   resourceType,
   resourceName,
-  resourceId,
   selectedSku,
   onNameChange,
-  onIdChange,
   onSkuSelect,
   preselectedSku,
+  projects,
+  selectedProjectId,
+  onProjectSelect,
+  showProjectSelection = false,
 }: TierSelectionStepProps) {
   return (
     <div className="space-y-6">
+      {/* Optional Project Selection - shown inline when needed */}
+      {showProjectSelection && projects && onProjectSelect && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Project</CardTitle>
+            <CardDescription>
+              Select the project where this resource will be created
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="project-select">Project *</Label>
+              <select
+                id="project-select"
+                value={selectedProjectId || ""}
+                onChange={(e) => onProjectSelect(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="" disabled>
+                  Select a project...
+                </option>
+                {projects.map((project) => (
+                  <option key={project.project_id} value={project.project_id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Resource Information */}
       <Card>
         <CardHeader>
@@ -47,37 +88,18 @@ export function TierSelectionStep({
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">Resource Name *</Label>
               <Input
                 id="name"
                 type="text"
                 value={resourceName}
                 onChange={(e) => onNameChange(e.target.value)}
-                placeholder="e.g., production-digital-twins"
+                placeholder="Enter resource name"
                 className="w-full"
               />
               <p className="text-sm text-muted-foreground">
-                Display name for your resource
+                A unique ID will be auto-generated.
               </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="id">ID *</Label>
-              <Input
-                id="id"
-                type="text"
-                value={resourceId}
-                onChange={(e) => onIdChange(e.target.value)}
-                placeholder="e.g., production-digital-twins-4f2a"
-                className="w-full"
-              />
-              <p className="text-sm text-muted-foreground">
-                Leave empty to auto-generate.
-              </p>
-              {resourceId && validateDNSId(resourceId) && (
-                <p className="text-sm text-red-500">
-                  {validateDNSId(resourceId)}
-                </p>
-              )}
             </div>
           </div>
         </CardContent>
@@ -89,11 +111,6 @@ export function TierSelectionStep({
           <CardTitle>Select Tier</CardTitle>
           <CardDescription>
             Choose the plan that fits your needs
-            {preselectedSku && (
-              <span className="block mt-2 text-blue-800 dark:text-blue-400">
-                Pre-selected: {preselectedSku}
-              </span>
-            )}
           </CardDescription>
         </CardHeader>
         <CardContent>

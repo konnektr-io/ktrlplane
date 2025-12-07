@@ -11,7 +11,6 @@ export interface Project {
 export interface CreateProjectData {
   id: string;
   name: string;
-  description?: string;
 }
 
 export interface UpdateProjectData {

@@ -52,7 +52,7 @@ export function DeleteResourceDialog({
             <AlertCircle className="h-5 w-5" />
             Delete Resource
           </DialogTitle>
-          <DialogDescription className="space-y-2 pt-2">
+          <div className="text-sm text-muted-foreground space-y-2 pt-2">
             <div>
               This action <strong>cannot be undone</strong>. This will
               permanently delete the resource:
@@ -60,7 +60,7 @@ export function DeleteResourceDialog({
             <div className="font-mono font-semibold text-foreground">
               {resourceName}
             </div>
-          </DialogDescription>
+          </div>
         </DialogHeader>
 
         <Alert variant="destructive">

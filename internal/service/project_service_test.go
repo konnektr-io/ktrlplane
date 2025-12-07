@@ -31,11 +31,9 @@ func TestCreateProjectRequest_Validation(t *testing.T) {
 	// Test that we can create valid project requests
 	req := models.CreateProjectRequest{
 		Name:        "Test Project",
-		Description: "A project for testing purposes",
 	}
 
 	assert.Equal(t, "Test Project", req.Name, "Project name should match")
-	assert.Equal(t, "A project for testing purposes", req.Description, "Project description should match")
 }
 
 func TestProjectService_CreateProject_ParameterValidation(t *testing.T) {
@@ -49,7 +47,6 @@ func TestProjectService_CreateProject_ParameterValidation(t *testing.T) {
 			name: "valid project creation parameters",
 			projectRequest: models.CreateProjectRequest{
 				Name:        "Test Project",
-				Description: "Test Description",
 			},
 			userID:     "user123",
 			validInput: true,
@@ -58,7 +55,6 @@ func TestProjectService_CreateProject_ParameterValidation(t *testing.T) {
 			name: "empty project name",
 			projectRequest: models.CreateProjectRequest{
 				Name:        "",
-				Description: "Test Description",
 			},
 			userID:     "user123",
 			validInput: false,
@@ -67,7 +63,6 @@ func TestProjectService_CreateProject_ParameterValidation(t *testing.T) {
 			name: "empty user ID",
 			projectRequest: models.CreateProjectRequest{
 				Name:        "Test Project",
-				Description: "Test Description",
 			},
 			userID:     "",
 			validInput: false,
