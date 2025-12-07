@@ -25,9 +25,16 @@ export function useProjects() {
         await handleApiError(err, loginWithRedirect);
       }
     },
-    retry: (failureCount, error: any) => {
-      // Don't retry specifically on 401s
-      if (error?.response?.status === 401) return false;
+    retry: (failureCount, error: unknown) => {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { status?: number } }).response?.status === "number" &&
+        (error as { response?: { status?: number } }).response?.status === 401
+      ) {
+        return false;
+      }
       return failureCount < 3;
     },
   });
@@ -54,8 +61,16 @@ export function useProject(projectId: string) {
       }
     },
     enabled: !!projectId,
-    retry: (failureCount, error: any) => {
-      if (error?.response?.status === 401) return false;
+    retry: (failureCount, error: unknown) => {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { status?: number } }).response?.status === "number" &&
+        (error as { response?: { status?: number } }).response?.status === 401
+      ) {
+        return false;
+      }
       return failureCount < 3;
     },
   });

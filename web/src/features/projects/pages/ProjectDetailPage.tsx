@@ -68,7 +68,11 @@ export default function ProjectDetailPage() {
           toast.success("Project name updated successfully");
         },
         onError: (error: any) => {
-          setNameError(error?.response?.data?.error || "Failed to update project name");
+          if (typeof error === "object" && error !== null && "response" in error && typeof (error as { response?: { data?: { error?: string } } }).response?.data?.error === "string") {
+            setNameError((error as { response?: { data?: { error?: string } } }).response?.data?.error);
+          } else {
+            setNameError("Failed to update project name");
+          }
         },
       }
     );
@@ -88,7 +92,11 @@ export default function ProjectDetailPage() {
         navigate("/projects");
       },
       onError: (error: any) => {
-        toast.error(error?.response?.data?.error || "Failed to delete project");
+        if (typeof error === "object" && error !== null && "response" in error && typeof (error as { response?: { data?: { error?: string } } }).response?.data?.error === "string") {
+          toast.error((error as { response?: { data?: { error?: string } } }).response?.data?.error);
+        } else {
+          toast.error("Failed to delete project");
+        }
         setIsDeleteDialogOpen(false);
       },
     });

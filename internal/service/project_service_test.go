@@ -13,7 +13,7 @@ func getTestConfig() *config.Config {
 	return &config.Config{
 		Stripe: config.StripeConfig{
 			SecretKey: "sk_test_mock",
-			Products:  []config.ProductConfig{},
+			Products:  []config.StripeProduct{},
 		},
 	}
 }

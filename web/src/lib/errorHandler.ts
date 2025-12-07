@@ -10,7 +10,7 @@ export async function handleApiError(
         (err as { error?: string }).error || ""
       )) ||
     // Check for Axios 401
-    (err as any)?.response?.status === 401
+    (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { status?: number } }).response?.status === "number" && (err as { response?: { status?: number } }).response?.status === 401)
   ) {
     if (loginWithRedirect) await loginWithRedirect();
   }
