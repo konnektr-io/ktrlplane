@@ -69,6 +69,7 @@ export default function ResourceDetailPage() {
   const transientStatuses = [
     "Creating",
     "Unknown",
+    "Missing",
     "Progressing",
     "Degraded",
     "Terminating",
