@@ -68,8 +68,14 @@ export default function ProjectDetailPage() {
           toast.success("Project name updated successfully");
         },
         onError: (error: any) => {
-          if (typeof error === "object" && error !== null && "response" in error && typeof (error as { response?: { data?: { error?: string } } }).response?.data?.error === "string") {
-            setNameError((error as { response?: { data?: { error?: string } } }).response?.data?.error);
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "response" in error &&
+            typeof (error as { response?: { data?: { error?: unknown } } }).response?.data?.error !== "undefined"
+          ) {
+            const errVal = (error as { response?: { data?: { error?: unknown } } }).response?.data?.error;
+            setNameError(typeof errVal === "string" ? errVal : String(errVal));
           } else {
             setNameError("Failed to update project name");
           }

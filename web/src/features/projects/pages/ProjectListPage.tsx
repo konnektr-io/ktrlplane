@@ -24,7 +24,11 @@ export default function ProjectListPage(props: ProjectListPageProps = {}) {
     return <div>Loading projects...</div>;
   }
   if (isError) {
-    return <div className="text-red-500">Error loading projects: {error?.message || "Unknown error"}</div>;
+    return (
+      <div className="text-red-500">
+        Error loading projects: {typeof error === "object" && error !== null && "message" in error ? (error as { message: string }).message : String(error) || "Unknown error"}
+      </div>
+    );
   }
 
   return (

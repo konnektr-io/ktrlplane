@@ -12,7 +12,7 @@ export default function ProjectAccessPage() {
   if (error) {
     return (
       <div className="text-red-500">
-        Error: {error.message || String(error)}
+        Error: {typeof error === "object" && error !== null && "message" in error ? (error as { message: string }).message : String(error)}
       </div>
     );
   }
