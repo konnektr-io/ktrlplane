@@ -3,7 +3,7 @@ import { Database, Workflow } from "lucide-react";
 export interface ResourceTier {
   sku: string;
   name: string;
-  price: string;
+  // price: string;
   features: string[];
   limits: Record<string, string>;
 }
@@ -41,16 +41,20 @@ export const resourceTypes: ResourceType[] = [
       {
         sku: "standard",
         name: "Standard",
-        price: "$99/mo",
-        features: ["Up to 10,000 twins", "Email support"],
-        limits: { Twins: "10,000", Storage: "10GB" },
+        features: ["Events", "M2M Authentication", "Email support"],
+        limits: { Twins: "1M" },
       },
       {
         sku: "free",
         name: "Free",
-        price: "$0/mo",
-        features: ["Up to 1,000 twins", "Community support"],
-        limits: { Twins: "1,000", Storage: "1GB" },
+        // price: "$0/mo",
+        features: [
+          "Development Only",
+          "User Authentication",
+          "Up to 500 twins",
+          "Rate Limits",
+        ],
+        limits: { Twins: "500", "Rate Limit": "1,000 QU/min" },
       },
     ],
     documentationUrl: "https://docs.konnektr.io/graph",
@@ -73,14 +77,14 @@ export const resourceTypes: ResourceType[] = [
       {
         sku: "standard",
         name: "Standard",
-        price: "$29/mo",
+        // price: "$29/mo",
         features: ["Up to 50 flows", "Email support"],
         limits: { Flows: "50", Executions: "10,000/mo" },
       },
       {
         sku: "free",
         name: "Free",
-        price: "$0/mo",
+        // price: "$0/mo",
         features: ["Up to 5 flows", "Community support"],
         limits: { Flows: "5", Executions: "1,000/mo" },
       },
@@ -106,14 +110,14 @@ export const resourceTypes: ResourceType[] = [
       {
         sku: "standard",
         name: "Standard",
-        price: "$49/mo",
+        // price: "$49/mo",
         features: ["Up to 20 models", "Email support"],
         limits: { Models: "20", DataSources: "5" },
       },
       {
         sku: "free",
         name: "Free",
-        price: "$0/mo",
+        // price: "$0/mo",
         features: ["Up to 3 models", "Community support"],
         limits: { Models: "3", DataSources: "1" },
       },
@@ -139,14 +143,14 @@ export const resourceTypes: ResourceType[] = [
       {
         sku: "free",
         name: "Free",
-        price: "$0/mo",
+        // price: "$0/mo",
         features: ["Basic analytics", "Community support"],
         limits: { Dashboards: "1", Simulations: "1" },
       },
       {
         sku: "standard",
         name: "Standard",
-        price: "$99/mo",
+        // price: "$99/mo",
         features: ["Advanced analytics", "Simulation engine", "Email support"],
         limits: { Dashboards: "10", Simulations: "10" },
       },

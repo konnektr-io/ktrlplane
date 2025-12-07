@@ -291,6 +291,9 @@ export default function CreateResourcePage() {
             onProjectSelect={
               isGlobalCreateRoute ? handleProjectSelect : undefined
             }
+            onProjectCreated={
+              isGlobalCreateRoute ? handleProjectCreated : undefined
+            }
             showProjectSelection={isGlobalCreateRoute}
           />
         )}

@@ -65,7 +65,7 @@ export function useResourceCreationFlow({
     resourceType: preselectedResourceType || "",
     resourceName: "",
     resourceId: "",
-    sku: preselectedSku || "free",
+    sku: preselectedSku || "",
     skipSettings: false,
     skipAccess: true, // Default to skipping access step
   });
@@ -211,10 +211,7 @@ export function useResourceCreationFlow({
           setState((prev) => ({ ...prev, sku: preselectedSku }));
         } else {
           // Fallback to free or first available
-          const fallbackSku =
-            catalogType.skus.find((s) => s.sku === "free")?.sku ||
-            catalogType.skus[0]?.sku ||
-            "free";
+          const fallbackSku = catalogType.skus[0]?.sku;
           setState((prev) => ({ ...prev, sku: fallbackSku }));
         }
       }
@@ -305,8 +302,7 @@ export function useResourceCreationFlow({
     if (!isSkuValidForType(state.resourceType, state.sku)) {
       const t = catalogResourceTypes.find((rt) => rt.id === state.resourceType);
       if (t) {
-        const fallbackSku =
-          t.skus.find((s) => s.sku === "free")?.sku || t.skus[0]?.sku || "free";
+        const fallbackSku = t.skus[0]?.sku;
         setState((prev) => ({ ...prev, sku: fallbackSku }));
       }
     }
