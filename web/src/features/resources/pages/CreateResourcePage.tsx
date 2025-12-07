@@ -308,7 +308,6 @@ export default function CreateResourcePage() {
             resourceType={flow.state.resourceType}
             sku={flow.state.sku}
             tierName={selectedTier?.name}
-            tierPrice={selectedTier?.price}
             onSetupBilling={() => setShowBillingSetupModal(true)}
             isLoading={billingLoading}
             hasStripeCustomer={billingStatus?.hasStripeCustomer}

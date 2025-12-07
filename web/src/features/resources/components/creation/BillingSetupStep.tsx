@@ -7,12 +7,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+
+import { useResourcePricing } from "../../hooks/useResourcePricing";
+
 interface BillingSetupStepProps {
   projectId: string;
   resourceType: string;
   sku: string;
   tierName?: string;
-  tierPrice?: string;
   onSetupBilling: () => void;
   isLoading?: boolean;
   hasStripeCustomer?: boolean;
@@ -23,12 +25,15 @@ export function BillingSetupStep({
   resourceType,
   sku,
   tierName,
-  tierPrice,
   onSetupBilling,
   isLoading,
   hasStripeCustomer,
   hasPaymentMethod,
 }: BillingSetupStepProps) {
+  const { data: priceData, isLoading: priceLoading } = useResourcePricing(
+    resourceType,
+    sku
+  );
   const billingIsSetUp = hasStripeCustomer && hasPaymentMethod;
   return (
     <div className="space-y-6">
@@ -58,11 +63,28 @@ export function BillingSetupStep({
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <span className="font-medium">Tier:</span> {tierName || sku}
             </p>
-            {tierPrice && (
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                <span className="font-medium">Price:</span> {tierPrice}
-              </p>
-            )}
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <span className="font-medium">Price:</span>{" "}
+              {priceLoading ? (
+                <span>Loading...</span>
+              ) : priceData ? (
+                <>
+                  {priceData.amount === 0
+                    ? "Free"
+                    : `${(priceData.amount / 100).toLocaleString(undefined, {
+                        style: "currency",
+                        currency: priceData.currency.toUpperCase(),
+                      })}`}
+                  {priceData.amount > 0 && (
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      per {priceData.interval}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span>N/A</span>
+              )}
+            </p>
           </div>
 
           {billingIsSetUp ? (
