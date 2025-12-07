@@ -36,7 +36,6 @@ export function TierSelectionStep({
   selectedSku,
   onNameChange,
   onSkuSelect,
-  preselectedSku,
   projects,
   selectedProjectId,
   onProjectSelect,
