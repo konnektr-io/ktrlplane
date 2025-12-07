@@ -6,6 +6,7 @@ import {
   useDeleteResource,
 } from "../hooks/useResourceApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -32,12 +33,37 @@ export default function ResourceDetailPage() {
     projectId: string;
     resourceId: string;
   }>();
+  // --- All hooks must be called before any return ---
+  const navigate = useNavigate();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [isTierDialogOpen, setIsTierDialogOpen] = useState(false);
+  const [tierSuccess, setTierSuccess] = useState(false);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
   const {
     data: currentResource,
     isLoading,
     error,
     refetch,
   } = useResource(projectId!, resourceId!);
+  const updateResourceMutation = useUpdateResource(projectId!, resourceId!);
+  const deleteResourceMutation = useDeleteResource(projectId!, resourceId!);
+  const { data: resourcePermissions = [] } = useUserPermissions(
+    "resource",
+    resourceId ?? ""
+  );
+  const { data: projectPermissions = [] } = useUserPermissions(
+    "project",
+    projectId ?? ""
+  );
+  const canEdit =
+    resourcePermissions?.includes("write") ||
+    projectPermissions?.includes("write");
 
   // --- Polling for transient statuses ---
   const transientStatuses = [
@@ -47,15 +73,12 @@ export default function ResourceDetailPage() {
     "Degraded",
     "Terminating",
   ];
-  // If status is not in the above, treat as stable
   const isTransient =
     currentResource &&
     transientStatuses.includes((currentResource.status || "").trim());
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isTransient) {
-      // Start polling every 5s
       pollingRef.current = setInterval(() => {
         refetch();
       }, 5000);
@@ -69,30 +92,6 @@ export default function ResourceDetailPage() {
     // Only rerun when status changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTransient]);
-
-  const updateResourceMutation = useUpdateResource(projectId!, resourceId!);
-
-  // Permissions
-  const { data: resourcePermissions = [] } = useUserPermissions(
-    "resource",
-    resourceId ?? ""
-  );
-  const { data: projectPermissions = [] } = useUserPermissions(
-    "project",
-    projectId ?? ""
-  );
-  const canEdit =
-    resourcePermissions?.includes("write") ||
-    projectPermissions?.includes("write");
-
-  // Name editing state
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState("");
-  const [nameError, setNameError] = useState<string | null>(null);
-
-  // Tier change dialog state
-  const [isTierDialogOpen, setIsTierDialogOpen] = useState(false);
-  const [tierSuccess, setTierSuccess] = useState(false);
 
   const handleNameEdit = () => {
     setEditedName(currentResource?.name || "");
@@ -135,6 +134,22 @@ export default function ResourceDetailPage() {
     (t) => t.sku === currentResource?.sku
   );
 
+  const handleDeleteResource = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteResourceMutation.mutateAsync();
+      setIsDeleteDialogOpen(false);
+      setIsDeleting(false);
+      navigate(`/projects/${projectId}/resources`);
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : "Failed to delete resource"
+      );
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return <div>Loading resource...</div>;
   }
@@ -145,32 +160,6 @@ export default function ResourceDetailPage() {
       </div>
     );
   }
-
-  // --- Dialog state for resource deletion ---
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  const navigate = useNavigate();
-  const deleteResourceMutation = useDeleteResource(projectId!, resourceId!);
-
-  // --- Handle resource deletion ---
-  const handleDeleteResource = async () => {
-    setIsDeleting(true);
-    setDeleteError(null);
-    try {
-      await deleteResourceMutation.mutateAsync();
-      setIsDeleteDialogOpen(false);
-      setIsDeleting(false);
-      // Navigate to resources list after deletion
-      navigate(`/projects/${projectId}/resources`);
-    } catch (err) {
-      setDeleteError(
-        err instanceof Error ? err.message : "Failed to delete resource"
-      );
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <>
@@ -225,29 +214,19 @@ export default function ResourceDetailPage() {
                   {currentResource?.name || "Resource Overview"}
                 </h1>
                 {canEdit && (
-                  <>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={handleNameEdit}
-                      className="h-8 w-8"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="ml-2"
-                      onClick={() => setIsDeleteDialogOpen(true)}
-                    >
-                      Delete Resource
-                    </Button>
-                  </>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleNameEdit}
+                    className="h-8 w-8"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
             )}
             <p className="text-muted-foreground mt-1">
-              {resourceType?.name || currentResource?.type || "Resource"} •{" "}
+              {resourceType?.name || currentResource?.type || "Resource"} &bull;{" "}
               {currentResource?.resource_id}
             </p>
           </div>
@@ -371,6 +350,38 @@ export default function ResourceDetailPage() {
 
         {/* Resource-type-specific details panel */}
         {currentResource && <ResourceDetailsPanel resource={currentResource} />}
+
+        {/* Danger Zone for resource deletion */}
+        <Card className="border-destructive mt-8">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Danger Zone
+            </CardTitle>
+            <CardDescription>
+              Irreversible and destructive actions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 border border-destructive/50 rounded-lg">
+              <div>
+                <p className="font-medium">Delete this resource</p>
+                <p className="text-sm text-muted-foreground">
+                  Once you delete a resource, there is no going back. All data
+                  will be permanently deleted.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                className="ml-4"
+              >
+                Delete Resource
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Delete Resource Dialog */}
