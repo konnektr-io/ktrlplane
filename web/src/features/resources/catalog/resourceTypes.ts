@@ -39,18 +39,18 @@ export const resourceTypes: ResourceType[] = [
     features: ["Graph storage", "Event processing", "Scalable", "API access"],
     skus: [
       {
-        sku: "free",
-        name: "Free",
-        price: "$0/mo",
-        features: ["Up to 1,000 twins", "Community support"],
-        limits: { Twins: "1,000", Storage: "1GB" },
-      },
-      {
         sku: "standard",
         name: "Standard",
         price: "$99/mo",
         features: ["Up to 10,000 twins", "Email support"],
         limits: { Twins: "10,000", Storage: "10GB" },
+      },
+      {
+        sku: "free",
+        name: "Free",
+        price: "$0/mo",
+        features: ["Up to 1,000 twins", "Community support"],
+        limits: { Twins: "1,000", Storage: "1GB" },
       },
     ],
     documentationUrl: "https://docs.konnektr.io/graph",
@@ -71,18 +71,18 @@ export const resourceTypes: ResourceType[] = [
     features: ["Workflow orchestration", "Scaling", "Environment variables"],
     skus: [
       {
-        sku: "free",
-        name: "Free",
-        price: "$0/mo",
-        features: ["Up to 5 flows", "Community support"],
-        limits: { Flows: "5", Executions: "1,000/mo" },
-      },
-      {
         sku: "standard",
         name: "Standard",
         price: "$29/mo",
         features: ["Up to 50 flows", "Email support"],
         limits: { Flows: "50", Executions: "10,000/mo" },
+      },
+      {
+        sku: "free",
+        name: "Free",
+        price: "$0/mo",
+        features: ["Up to 5 flows", "Community support"],
+        limits: { Flows: "5", Executions: "1,000/mo" },
       },
     ],
     documentationUrl: "https://docs.konnektr.io/flow",
@@ -104,18 +104,18 @@ export const resourceTypes: ResourceType[] = [
     features: ["AI model generation", "Low-code interface", "DTDL support"],
     skus: [
       {
-        sku: "free",
-        name: "Free",
-        price: "$0/mo",
-        features: ["Up to 3 models", "Community support"],
-        limits: { Models: "3", DataSources: "1" },
-      },
-      {
         sku: "standard",
         name: "Standard",
         price: "$49/mo",
         features: ["Up to 20 models", "Email support"],
         limits: { Models: "20", DataSources: "5" },
+      },
+      {
+        sku: "free",
+        name: "Free",
+        price: "$0/mo",
+        features: ["Up to 3 models", "Community support"],
+        limits: { Models: "3", DataSources: "1" },
       },
     ],
     documentationUrl: "https://docs.konnektr.io/assembler",
