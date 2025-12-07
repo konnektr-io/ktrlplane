@@ -106,6 +106,45 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 			if err != nil {
 				return nil, fmt.Errorf("failed to fetch Stripe subscription: %w", err)
 			}
+			
+			// Check if subscription is in an unusable state (cancelled, incomplete_expired, etc.)
+			if sub.Status == stripe.SubscriptionStatusCanceled || 
+			   sub.Status == stripe.SubscriptionStatusIncompleteExpired ||
+			   sub.Status == stripe.SubscriptionStatusUnpaid {
+				// Create a new subscription instead
+				subParams := &stripe.SubscriptionParams{
+					Customer: stripe.String(*billingAccount.StripeCustomerID),
+					Items: []*stripe.SubscriptionItemsParams{
+						{
+							Price:    stripe.String(priceID),
+							Quantity: stripe.Int64(1),
+						},
+					},
+					BillingMode: &stripe.SubscriptionBillingModeParams{
+						Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
+					},
+					PaymentBehavior: stripe.String("default_incomplete"),
+				}
+				newSub, err := subscription.New(subParams)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create new Stripe subscription: %w", err)
+				}
+				// Update billing account with new subscription ID
+				query := db.UpdateBillingAccountSubscriptionQuery
+				row := db.GetDB().QueryRow(context.Background(), query, "project", projectID, newSub.ID)
+				err = row.Scan(
+					&billingAccount.BillingAccountID,
+					&billingAccount.ScopeType,
+					&billingAccount.ScopeID,
+					&billingAccount.StripeCustomerID,
+					&billingAccount.StripeSubscriptionID,
+					&billingAccount.CreatedAt,
+					&billingAccount.UpdatedAt,
+				)
+				if err != nil {
+					return nil, fmt.Errorf("failed to update billing account with new subscription: %w", err)
+				}
+			} else {
 			// Find subscription item with this price ID
 			var itemID string
 			var currentQty int64
@@ -132,15 +171,14 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 					Price:        stripe.String(priceID),
 					Quantity:     stripe.Int64(1),
 				}
-				_, err := subscriptionitem.New(params)
-				if err != nil {
-					return nil, fmt.Errorf("failed to add new Stripe subscription item: %w", err)
+					_, err := subscriptionitem.New(params)
+					if err != nil {
+						return nil, fmt.Errorf("failed to add new Stripe subscription item: %w", err)
+					}
 				}
 			}
-		}
-	}
-
-	// Create resource in database with SKU and Stripe price ID
+			}
+		}	// Create resource in database with SKU and Stripe price ID
 	err = db.ExecQuery(ctx, db.CreateResourceQuery, req.ID, projectID, req.Name, req.Type, sku, stripePriceID, req.SettingsJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
@@ -381,25 +419,46 @@ func (s *ResourceService) DeleteResource(ctx context.Context, projectID string, 
 			sub, err := subscription.Get(subID, nil)
 			if err == nil {
 				priceID := *resource.StripePriceID
-				for _, item := range sub.Items.Data {
-					if item.Price != nil && item.Price.ID == priceID {
-						if item.Quantity > 1 {
-							// Decrement quantity
-							params := &stripe.SubscriptionItemParams{
-								Quantity: stripe.Int64(item.Quantity - 1),
+				
+				// Check if this is the last item in the subscription
+				if len(sub.Items.Data) == 1 {
+					// Cancel the entire subscription if it's the last item
+					_, err := subscription.Cancel(subID, nil)
+					if err != nil {
+						// Log error but continue with deletion
+						fmt.Printf("[ResourceService] Failed to cancel subscription %s: %v\n", subID, err)
+					}
+					// Clear subscription ID from billing account since it's cancelled
+					query := db.UpdateBillingAccountSubscriptionQuery
+					var nullSubID *string = nil
+					_, clearErr := db.GetDB().Exec(context.Background(), query, "project", projectID, nullSubID)
+					if clearErr != nil {
+						fmt.Printf("[ResourceService] Failed to clear subscription ID from billing account: %v\n", clearErr)
+					}
+				} else {
+					// Otherwise, handle the specific item
+					for _, item := range sub.Items.Data {
+						if item.Price != nil && item.Price.ID == priceID {
+							if item.Quantity > 1 {
+								// Decrement quantity
+								params := &stripe.SubscriptionItemParams{
+									Quantity: stripe.Int64(item.Quantity - 1),
+								}
+								_, err := subscriptionitem.Update(item.ID, params)
+								if err != nil {
+									// Log error but continue with deletion
+									fmt.Printf("[ResourceService] Failed to decrement subscription item quantity: %v\n", err)
+								}
+							} else {
+								// Remove item if quantity would be 0
+								_, err := subscriptionitem.Del(item.ID, nil)
+								if err != nil {
+									// Log error but continue with deletion
+									fmt.Printf("[ResourceService] Failed to remove subscription item: %v\n", err)
+								}
 							}
-							_, err := subscriptionitem.Update(item.ID, params)
-							if err != nil {
-								return fmt.Errorf("failed to decrement subscription item quantity: %w", err)
-							}
-						} else {
-							// Remove item entirely if quantity would be 0
-							_, err := subscriptionitem.Del(item.ID, nil)
-							if err != nil {
-								return fmt.Errorf("failed to remove subscription item: %w", err)
-							}
+							break
 						}
-						break
 					}
 				}
 			}

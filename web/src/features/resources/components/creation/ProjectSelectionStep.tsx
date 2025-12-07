@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -18,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { generateDNSId, validateDNSId, slugify } from "@/lib/dnsUtils";
+import { generateDNSId } from "@/lib/dnsUtils";
 import { useCreateProject } from "@/features/projects/hooks/useProjectApi";
 import { toast } from "sonner";
 
@@ -48,20 +47,13 @@ export function ProjectSelectionStep({
   const { mutateAsync: createProject } = useCreateProject();
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
-    id: "",
     name: "",
-    description: "",
   });
 
   const handleNameChange = (name: string) => {
     setFormData((prev) => ({
       ...prev,
       name,
-      id:
-        prev.id === "" ||
-        prev.id === slugify(prev.name) + "-" + prev.id.slice(-4)
-          ? generateDNSId(name)
-          : prev.id,
     }));
   };
 
@@ -71,25 +63,16 @@ export function ProjectSelectionStep({
       toast.error("Project name is required");
       return;
     }
-    if (!formData.id.trim()) {
-      toast.error("Project ID is required");
-      return;
-    }
-    const idValidationError = validateDNSId(formData.id);
-    if (idValidationError) {
-      toast.error(idValidationError);
-      return;
-    }
     setIsCreating(true);
     try {
+      const generatedId = generateDNSId(formData.name);
       const newProject = await createProject({
-        id: formData.id.trim(),
+        id: generatedId,
         name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
       });
       if (newProject) {
         toast.success("Project created successfully!");
-        setFormData({ id: "", name: "", description: "" });
+        setFormData({ name: "" });
         setShowCreateForm(false);
         onProjectCreated(newProject.project_id);
       }
@@ -170,42 +153,9 @@ export function ProjectSelectionStep({
                   placeholder="Enter project name"
                   required
                 />
-              </div>
-              <div>
-                <Label htmlFor="id">Project ID *</Label>
-                <Input
-                  id="id"
-                  type="text"
-                  value={formData.id}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, id: e.target.value }))
-                  }
-                  placeholder="project-id-4f2a"
-                  required
-                />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Leave empty to auto-generate.
+                  A unique ID will be auto-generated.
                 </p>
-                {formData.id && validateDNSId(formData.id) && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {validateDNSId(formData.id)}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter project description (optional)"
-                  rows={3}
-                />
               </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={isCreating}>
@@ -217,7 +167,7 @@ export function ProjectSelectionStep({
                     variant="outline"
                     onClick={() => {
                       setShowCreateForm(false);
-                      setFormData({ id: "", name: "", description: "" });
+                      setFormData({ name: "" });
                     }}
                   >
                     Cancel

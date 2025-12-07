@@ -53,9 +53,9 @@ export function useResourceCreationFlow({
   const [searchParams] = useSearchParams();
 
   // Parse URL parameters
-  const preselectedResourceType = searchParams.get(
-    "resourceType"
-  ) as ResourceType | null;
+  const urlResourceType =
+    searchParams.get("resourceType") || searchParams.get("resource_type");
+  const preselectedResourceType = urlResourceType as ResourceType | null;
   const preselectedSku = searchParams.get("tier") || searchParams.get("sku");
   const preselectedProjectId = searchParams.get("projectId");
 
@@ -77,17 +77,7 @@ export function useResourceCreationFlow({
   const steps = useMemo<StepConfig[]>(() => {
     const calculatedSteps: StepConfig[] = [];
 
-    // Step 1: Project selection/creation (only on global route without project context)
-    if (isGlobalRoute && !urlProjectId) {
-      calculatedSteps.push({
-        id: "project",
-        label: hasProjects ? "Select Project" : "Create Project",
-        required: true,
-        visible: true,
-      });
-    }
-
-    // Step 2: Resource type selection (skip if preselected)
+    // Step 1: Resource type selection (skip only if explicitly preselected via URL)
     if (!preselectedResourceType) {
       calculatedSteps.push({
         id: "resourceType",

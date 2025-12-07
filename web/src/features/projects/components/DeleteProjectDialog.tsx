@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -54,19 +53,20 @@ export function DeleteProjectDialog({
             <AlertCircle className="h-5 w-5" />
             Delete Project
           </DialogTitle>
-          <DialogDescription className="space-y-2 pt-2">
-            <div>
-              This action <strong>cannot be undone</strong>. This will
-              permanently delete the project:
-            </div>
-            <div className="font-mono font-semibold text-foreground">
-              {projectName}
-            </div>
-            <div className="text-sm">
-              Project ID: <span className="font-mono text-xs">{projectId}</span>
-            </div>
-          </DialogDescription>
         </DialogHeader>
+
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <div>
+            This action <strong>cannot be undone</strong>. This will permanently
+            delete the project:
+          </div>
+          <div className="font-mono font-semibold text-foreground">
+            {projectName}
+          </div>
+          <div className="text-sm">
+            Project ID: <span className="font-mono text-xs">{projectId}</span>
+          </div>
+        </div>
 
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
