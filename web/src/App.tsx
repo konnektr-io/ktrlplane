@@ -25,9 +25,18 @@ import { ResourceMonitoringPage } from "@/features/resources/pages/ResourceMonit
 import BillingPage from "@/features/billing/pages/BillingPage";
 import ProjectAutoRedirect from "@/features/projects/components/ProjectAutoRedirect";
 import { CookieConsent } from "@/components/cookie-consent";
+import { trackAuthentication } from "./utils/analytics";
 
 function App() {
+  // Track authentication event after redirect
   const onRedirectCallback = (appState?: { returnTo?: string }) => {
+    // Determine if this is sign up or sign in (simple heuristic: check referrer or URL)
+    const url = window.location.href;
+    const isSignUp =
+      url.includes("signup") || document.referrer.includes("signup");
+    const method = isSignUp ? "sign_up" : "sign_in";
+    // Fire analytics event
+    trackAuthentication(method);
     window.location.replace(appState?.returnTo || "/projects");
   };
 
