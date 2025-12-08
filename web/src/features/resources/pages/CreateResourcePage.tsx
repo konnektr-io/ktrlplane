@@ -372,7 +372,8 @@ export default function CreateResourcePage() {
                   disabled={
                     !flow.canGoNext ||
                     isCreating ||
-                    (flow.currentStep?.id === "project" && projectsLoading)
+                    (flow.currentStep?.id === "project" && projectsLoading) ||
+                    (flow.currentStep?.id === "tier" && !selectedProjectId)
                   }
                 >
                   {isCreating
