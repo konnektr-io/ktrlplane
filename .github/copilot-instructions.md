@@ -86,7 +86,6 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - Authentication/authorization on all endpoints
 - API documentation in `docs/api-reference.md`
 
-
 ### 5. Billing & Payment Integration
 
 - Use Stripe for payment processing
@@ -99,8 +98,6 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - **The `billing_accounts` table is the canonical source for Stripe IDs (customer, subscription, etc.). Projects and organizations reference billing_accounts only.**
 - **UI must show the last invoice (not upcoming) and remove the "Current Period" field.**
 - **If a subscription is pending cancellation (`cancel_at_period_end` is true), show a clear warning and disable the cancel button, guiding users to the Payment Management Portal to continue their subscription.**
-
-
 
 ### 6. UI/UX Guidelines
 
@@ -151,13 +148,12 @@ KtrlPlane is the **Control Plane** only. Always refer to `.github/PLATFORM_SCOPE
 - Support authentication flow: homepage → login → project selection → resource creation
 - URL pattern: `/projects/{projectId}/resources/create?resourceType={type}&tier={tier}`
 
-
 ### 14. Logging & Metrics Backend (Loki/Mimir Proxy)
 
 - All logs and metrics endpoints proxy to Loki and Mimir using Go's reverse proxy with custom Director logic.
 - Endpoints:
-	- Logs: `GET /api/v1/resources/{resourceId}/logs?query={logQL}&start={ts}&end={ts}&limit=1000`
-	- Metrics: `GET /api/v1/resources/{resourceId}/metrics/query_range?query={promQL}&start={ts}&end={ts}&step=15s`
+  - Logs: `GET /api/v1/resources/{resourceId}/logs?query={logQL}&start={ts}&end={ts}&limit=1000`
+  - Metrics: `GET /api/v1/resources/{resourceId}/metrics/query_range?query={promQL}&start={ts}&end={ts}&step=15s`
 - All requests require Auth0 JWT authentication and RBAC check using `PermissionService.CanUserAccessResource(userID, resourceID)`.
 - Inject `X-Scope-OrgID` header using project ID for multi-tenancy.
 - LogQL/PromQL queries are rewritten to inject resource-specific label filters for security and pre-filtering.
@@ -202,7 +198,6 @@ When the user requests instructions for another project:
 - Do NOT create these instructions in a file.
 - Provide the instructions as text only.
 - ALWAYS add these instructions to this copilot-instructions file for future reference.
-
 
 ## 🚫 What NOT to Do
 
