@@ -374,25 +374,6 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
 
-        {/* API Authentication Section (hide if no M2M credentials) */}
-        {hasM2MCredentials && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                API Authentication
-              </CardTitle>
-              <CardDescription>
-                Machine-to-machine credentials for programmatic access to your
-                project resources
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Auth0ClientSecretViewer projectId={projectId!} />
-            </CardContent>
-          </Card>
-        )}
-
         {/* Recent Resources List */}
         {resources.length > 0 && (
           <Card>
@@ -442,6 +423,25 @@ export default function ProjectDetailPage() {
                 ))}
               </div>
               {/* Add Resource button moved to header */}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* API Authentication Section (hide if no M2M credentials) */}
+        {hasM2MCredentials && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                API Authentication
+              </CardTitle>
+              <CardDescription>
+                Machine-to-machine credentials for programmatic access to your
+                project resources
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Auth0ClientSecretViewer projectId={projectId!} />
             </CardContent>
           </Card>
         )}
