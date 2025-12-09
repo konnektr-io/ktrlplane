@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/models"
+	"ktrlplane/internal/utils"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -99,8 +101,25 @@ func (s *RBACService) AssignRole(ctx context.Context, userID, roleID, scopeType,
 
 // AssignRoleInTx assigns a role within a transaction (exported for use by other services)
 func (s *RBACService) AssignRoleInTx(ctx context.Context, tx pgx.Tx, userID, roleID, scopeType, scopeID, assignedBy string) error {
+	// Check if user exists, if not and userID looks like an email, create a placeholder user
+	var existingUserID string
+	err := tx.QueryRow(ctx, db.GetUserByIDQuery, userID).Scan(&existingUserID, new(string), new(string))
+	if err != nil {
+		// User doesn't exist - check if userID is a valid email for invitation flow
+		if utils.IsValidEmail(userID) {
+			// Create placeholder user with email as user_id
+			_, err = tx.Exec(ctx, db.CreatePlaceholderUserQuery, userID, "Invited User")
+			if err != nil && !strings.Contains(err.Error(), "duplicate key value") {
+				return fmt.Errorf("failed to create placeholder user for invitation: %w", err)
+			}
+			fmt.Printf("[RBACService] Created placeholder user for invitation: %s\n", userID)
+		} else {
+			return fmt.Errorf("user %s does not exist and is not a valid email for invitation", userID)
+		}
+	}
+
 	// Insert role assignment (ON CONFLICT DO NOTHING to avoid duplicates)
-	_, err := tx.Exec(ctx, db.AssignRoleWithTransactionQuery,
+	_, err = tx.Exec(ctx, db.AssignRoleWithTransactionQuery,
 		uuid.New().String(), userID, roleID, scopeType, scopeID, assignedBy)
 	if err != nil {
 		return fmt.Errorf("failed to assign role: %w", err)

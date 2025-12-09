@@ -185,9 +185,74 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
+	pool := db.GetDB()
+
+	// First, check if there's a placeholder user with this email (user_id = email)
+	// This handles the invitation scenario where a user was invited before signing up
+	if email != "" {
+		var placeholderUserID, placeholderEmail, placeholderName string
+		placeholderRows, err := pool.Query(ctx, db.FindPlaceholderUserByEmailQuery, email)
+		if err != nil {
+			return fmt.Errorf("failed to check for placeholder user: %w", err)
+		}
+		defer placeholderRows.Close()
+
+		if placeholderRows.Next() {
+			err = placeholderRows.Scan(&placeholderUserID, &placeholderEmail, &placeholderName)
+			if err != nil {
+				return fmt.Errorf("failed to scan placeholder user: %w", err)
+			}
+			placeholderRows.Close()
+
+			// Placeholder user exists! Transfer their role assignments to the real user
+			log.Printf("Found placeholder user %s, transferring role assignments to real user %s", placeholderUserID, userID)
+
+			// Start a transaction for the transfer
+			tx, err := pool.Begin(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to begin transaction for placeholder transfer: %w", err)
+			}
+			defer tx.Rollback(ctx)
+
+			// Create the real user first
+			_, err = tx.Exec(ctx, db.CreateUserQuery, userID, email, name, userID)
+			if err != nil && !strings.Contains(err.Error(), "duplicate key value") {
+				return fmt.Errorf("failed to create real user during transfer: %w", err)
+			}
+
+			// Transfer all role assignments from placeholder to real user
+			_, err = tx.Exec(ctx, db.TransferRoleAssignmentsQuery, placeholderUserID, userID)
+			if err != nil {
+				return fmt.Errorf("failed to transfer role assignments: %w", err)
+			}
+
+			// Delete the placeholder user
+			_, err = tx.Exec(ctx, db.DeletePlaceholderUserQuery, placeholderUserID)
+			if err != nil {
+				return fmt.Errorf("failed to delete placeholder user: %w", err)
+			}
+
+			// Commit the transaction
+			err = tx.Commit(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to commit placeholder transfer: %w", err)
+			}
+
+			log.Printf("Successfully transferred role assignments from placeholder %s to real user %s", placeholderUserID, userID)
+
+			// Add to cache and return
+			userCacheMutex.Lock()
+			processedUsers[userID] = true
+			userCacheMutex.Unlock()
+
+			return nil
+		}
+		placeholderRows.Close()
+	}
+
+	// No placeholder found, proceed with normal user creation/update flow
 	// Check if user exists and get their current email in one query
 	var existingUserID, existingEmail, existingName string
-	pool := db.GetDB()
 	rows, err := pool.Query(ctx, db.GetUserByIDQuery, userID)
 	if err != nil {
 		return fmt.Errorf("failed to check user existence: %w", err)

@@ -6,6 +6,16 @@ import (
 	"strings"
 )
 
+// IsValidEmail validates if a string is a valid email address
+func IsValidEmail(email string) bool {
+	if email == "" {
+		return false
+	}
+	// RFC 5322 compliant regex (simplified)
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	return emailRegex.MatchString(email)
+}
+
 // ValidateDNSID validates that an ID meets DNS requirements:
 // - 1-63 characters long
 // - Starts with a letter

@@ -34,4 +34,27 @@ const (
 			OR LOWER(user_id) LIKE LOWER($1)
 		ORDER BY email
 		LIMIT 10`
+
+	// FindPlaceholderUserByEmailQuery finds a placeholder user (user_id = email)
+	FindPlaceholderUserByEmailQuery = `
+		SELECT user_id, email, name
+		FROM ktrlplane.users
+		WHERE user_id = $1 AND email = $1`
+
+	// TransferRoleAssignmentsQuery transfers all role assignments from one user to another
+	TransferRoleAssignmentsQuery = `
+		UPDATE ktrlplane.role_assignments
+		SET user_id = $2, updated_at = NOW()
+		WHERE user_id = $1`
+
+	// DeletePlaceholderUserQuery deletes a placeholder user
+	DeletePlaceholderUserQuery = `
+		DELETE FROM ktrlplane.users
+		WHERE user_id = $1`
+
+	// CreatePlaceholderUserQuery creates a placeholder user with email as user_id
+	CreatePlaceholderUserQuery = `
+		INSERT INTO ktrlplane.users (user_id, email, name, external_auth_id, created_at)
+		VALUES ($1, $1, $2, NULL, NOW())
+		ON CONFLICT (user_id) DO NOTHING`
 )
