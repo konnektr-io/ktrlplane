@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   useProject,
   useUpdateProject,
@@ -31,8 +33,7 @@ import {
 } from "lucide-react";
 import { Auth0ClientSecretViewer } from "../components/Auth0ClientSecretViewer";
 import { DeleteProjectDialog } from "../components/DeleteProjectDialog";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useProjectSecret } from "../hooks/useProjectSecret";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
@@ -40,6 +41,15 @@ export default function ProjectDetailPage() {
   const { data: currentProject } = useProject(projectId ?? "");
   const { data: resources = [] } = useResources(projectId ?? "");
   const { data: billingInfo } = useBilling("project", projectId ?? "");
+  const secretName = `auth0-client-${projectId}`;
+  const { data: m2mSecret, isLoading: isLoadingSecret } = useProjectSecret(
+    projectId ?? "",
+    secretName
+  );
+  const hasM2MCredentials =
+    !isLoadingSecret &&
+    m2mSecret &&
+    Object.keys(m2mSecret.data || {}).length > 0;
   // Fetch all role assignments for this project (including inherited)
   const { data: roleAssignments = [] } = useRoleAssignments({
     scopeType: "project",
@@ -364,22 +374,24 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
 
-        {/* API Authentication Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5" />
-              API Authentication
-            </CardTitle>
-            <CardDescription>
-              Machine-to-machine credentials for programmatic access to your
-              project resources
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Auth0ClientSecretViewer projectId={projectId!} />
-          </CardContent>
-        </Card>
+        {/* API Authentication Section (hide if no M2M credentials) */}
+        {hasM2MCredentials && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                API Authentication
+              </CardTitle>
+              <CardDescription>
+                Machine-to-machine credentials for programmatic access to your
+                project resources
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Auth0ClientSecretViewer projectId={projectId!} />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Resources List */}
         {resources.length > 0 && (
