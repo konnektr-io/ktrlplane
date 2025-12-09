@@ -19,8 +19,8 @@ export default function GraphResourceDetails({
 }: {
   resource: Resource;
 }) {
-  const apiUrl = `${resource.resource_id}.api.graph.konnektr.io`;
-  const explorerUrl = `https://explorer.graph.konnektr.io?x-adt-url=${apiUrl}`;
+  const apiHost = `${resource.resource_id}.api.graph.konnektr.io`;
+  const explorerUrl = `https://explorer.graph.konnektr.io?x-adt-host=${apiHost}`;
   const [copied, setCopied] = useState<string | null>(null);
 
   // Check if M2M credentials exist
@@ -71,7 +71,7 @@ curl -s -X POST \\
       ]
     }
   ]' \\
-  https://${apiUrl}/models
+  https://${apiHost}/models
 
 # 3) Create a simple twin
 curl -s -X PUT \\
@@ -83,14 +83,14 @@ curl -s -X PUT \\
     "name": "Sample Room",
     "temperature": 21.5
   }' \\
-  https://${apiUrl}/digitaltwins/room-1
+  https://${apiHost}/digitaltwins/room-1
 
 # 4) Query twins
 curl -s -X POST \\
   -H "authorization: Bearer $ACCESS_TOKEN" \\
   -H "content-type: application/json" \\
   --data '{ "query": "SELECT * FROM digitaltwins" }' \\
-  https://${apiUrl}/query`,
+  https://${apiHost}/query`,
 
         python: `# Install: pip install requests
 import requests
@@ -108,7 +108,7 @@ access_token = token_response.json().get("access_token")
 headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
 
 # 2) Upload DTDL model
-models_url = "https://${apiUrl}/models"
+models_url = "https://${apiHost}/models"
 model_payload = [
   {
     "@id": "dtmi:com:sample:Room;1",
@@ -124,7 +124,7 @@ model_payload = [
 requests.post(models_url, json=model_payload, headers=headers)
 
 # 3) Create twin
-put_twin_url = "https://${apiUrl}/digitaltwins/room-1"
+put_twin_url = "https://${apiHost}/digitaltwins/room-1"
 twin_payload = {
   "$dtId": "room-1",
   "$metadata": {"$model": "dtmi:com:sample:Room;1"},
@@ -134,7 +134,7 @@ twin_payload = {
 requests.put(put_twin_url, json=twin_payload, headers=headers)
 
 # 4) Query twins
-query_url = "https://${apiUrl}/query"
+query_url = "https://${apiHost}/query"
 query_payload = {"query": "SELECT * FROM digitaltwins"}
 query_response = requests.post(query_url, json=query_payload, headers=headers)
 print(query_response.json())`,
@@ -155,7 +155,7 @@ const accessToken = token.access_token;
 const headers = { Authorization: \`Bearer \${accessToken}\`, 'Content-Type': 'application/json' };
 
 // 2) Upload DTDL model
-await axios.post('https://${apiUrl}/models', [
+await axios.post('https://${apiHost}/models', [
   {
     '@id': 'dtmi:com:sample:Room;1',
     '@type': 'Interface',
@@ -169,7 +169,7 @@ await axios.post('https://${apiUrl}/models', [
 ], { headers });
 
 // 3) Create twin
-await axios.put('https://${apiUrl}/digitaltwins/room-1', {
+await axios.put('https://${apiHost}/digitaltwins/room-1', {
   '$dtId': 'room-1',
   '$metadata': { '$model': 'dtmi:com:sample:Room;1' },
   name: 'Sample Room',
@@ -177,7 +177,7 @@ await axios.put('https://${apiUrl}/digitaltwins/room-1', {
 }, { headers });
 
 // 4) Query twins
-const { data } = await axios.post('https://${apiUrl}/query', { query: 'SELECT * FROM digitaltwins' }, { headers });
+const { data } = await axios.post('https://${apiHost}/query', { query: 'SELECT * FROM digitaltwins' }, { headers });
 console.log(data);`,
 
         csharp: `// Install: dotnet add package System.Net.Http.Json
@@ -211,7 +211,7 @@ var modelPayload = new [] {
         }
     }
 };
-await http.PostAsJsonAsync("https://${apiUrl}/models", modelPayload);
+await http.PostAsJsonAsync("https://${apiHost}/models", modelPayload);
 
 // 3) Create twin
 var twinPayload = new {
@@ -220,11 +220,11 @@ var twinPayload = new {
     name = "Sample Room",
     temperature = 21.5
 };
-await http.PutAsJsonAsync("https://${apiUrl}/digitaltwins/room-1", twinPayload);
+await http.PutAsJsonAsync("https://${apiHost}/digitaltwins/room-1", twinPayload);
 
 // 4) Query twins
 var queryPayload = new { query = "SELECT * FROM digitaltwins" };
-var queryResp = await http.PostAsJsonAsync("https://${apiUrl}/query", queryPayload);
+var queryResp = await http.PostAsJsonAsync("https://${apiHost}/query", queryPayload);
 Console.WriteLine(await queryResp.Content.ReadAsStringAsync());`,
       }
     : {
@@ -280,7 +280,7 @@ curl -s -X POST \\
   -H "authorization: Bearer $ACCESS_TOKEN" \\
   -H "content-type: application/json" \\
   --data '{ "query": "SELECT * FROM digitaltwins" }' \\
-  https://${apiUrl}/query`,
+  https://${apiHost}/query`,
 
         python: `# Install: pip install requests
 import requests
@@ -329,7 +329,7 @@ while True:
 headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
 
 # 3) Use the token
-query_url = "https://${apiUrl}/query"
+query_url = "https://${apiHost}/query"
 query_payload = {"query": "SELECT * FROM digitaltwins"}
 query_response = requests.post(query_url, json=query_payload, headers=headers)
 print(query_response.json())`,
@@ -381,7 +381,7 @@ while (true) {
 const headers = { Authorization: \`Bearer \${accessToken}\`, 'Content-Type': 'application/json' };
 
 // 3) Use the token
-const { data } = await axios.post('https://${apiUrl}/query', 
+const { data } = await axios.post('https://${apiHost}/query', 
   { query: 'SELECT * FROM digitaltwins' }, 
   { headers }
 );
@@ -444,7 +444,7 @@ http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer
 
 // 3) Use the token
 var queryPayload = new { query = "SELECT * FROM digitaltwins" };
-var queryResp = await http.PostAsJsonAsync("https://${apiUrl}/query", queryPayload);
+var queryResp = await http.PostAsJsonAsync("https://${apiHost}/query", queryPayload);
 Console.WriteLine(await queryResp.Content.ReadAsStringAsync());`,
       };
 
@@ -464,12 +464,12 @@ Console.WriteLine(await queryResp.Content.ReadAsStringAsync());`,
           <div className="flex items-center gap-2">
             <span className="font-medium min-w-[100px]">API URL:</span>
             <code className="flex-1 text-sm bg-muted rounded px-2 py-1">
-              https://{apiUrl}
+              https://{apiHost}
             </code>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleCopy(`https://${apiUrl}`, "apiUrl")}
+              onClick={() => handleCopy(`https://${apiHost}`, "apiUrl")}
               title="Copy API URL"
             >
               <Copy
