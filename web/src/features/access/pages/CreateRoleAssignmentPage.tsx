@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import RolePermissionsTooltip from "../components/RolePermissionsTooltip";
 import { useAccessStore } from "../store/accessStore";
 import { AccessControlContextType } from "../types/access.types";
 import { useRoles, useInviteUser } from "../hooks/useAccessApi";
+import { sortRoles, getRoleCategory } from "../utils/roleHelpers";
 
 const CreateRoleAssignmentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +24,22 @@ const CreateRoleAssignmentPage: React.FC = () => {
   const { context, setContext } = useAccessStore();
   const { data: roles = [], isLoading: rolesLoading } = useRoles();
   const inviteUserMutation = useInviteUser(context);
+
+  // Sort and group roles for better display
+  const sortedRoles = useMemo(() => sortRoles(roles), [roles]);
+  
+  // Group roles by category
+  const rolesByCategory = useMemo(() => {
+    const groups = new Map<string, typeof sortedRoles>();
+    sortedRoles.forEach(role => {
+      const category = getRoleCategory(role);
+      if (!groups.has(category)) {
+        groups.set(category, []);
+      }
+      groups.get(category)!.push(role);
+    });
+    return groups;
+  }, [sortedRoles]);
 
   // Determine context from route
   const getContextFromRoute =
@@ -151,50 +168,59 @@ const CreateRoleAssignmentPage: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3">
-              {rolesLoading ? (
-                <div className="text-center py-4">Loading roles...</div>
-              ) : (
-                roles.map((role) => (
-                  <Card
-                    key={role.role_id}
-                    className={`cursor-pointer transition-colors hover:bg-accent ${
-                      selectedRoleId === role.role_id
-                        ? "ring-2 ring-primary"
-                        : ""
-                    }`}
-                    onClick={() => setSelectedRoleId(role.role_id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
+            {rolesLoading ? (
+              <div className="text-center py-4">Loading roles...</div>
+            ) : (
+              <div className="space-y-4">
+                {Array.from(rolesByCategory.entries()).map(([category, categoryRoles]) => (
+                  <div key={category} className="space-y-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">
+                      {category}
+                    </h3>
+                    <div className="grid gap-2">
+                      {categoryRoles.map((role) => (
+                        <div
+                          key={role.role_id}
+                          className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors hover:bg-accent ${
+                            selectedRoleId === role.role_id
+                              ? "ring-2 ring-primary bg-accent"
+                              : ""
+                          }`}
+                          onClick={() => setSelectedRoleId(role.role_id)}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
                             <input
                               type="radio"
                               name="role"
                               value={role.role_id}
                               checked={selectedRoleId === role.role_id}
                               onChange={() => setSelectedRoleId(role.role_id)}
-                              className="h-4 w-4"
+                              className="h-4 w-4 flex-shrink-0"
                             />
-                            <h4 className="font-medium">{role.display_name}</h4>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm">
+                                {role.display_name}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {role.description}
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {role.description}
-                          </p>
+                          {currentContext && (
+                            <div className="flex-shrink-0 ml-2">
+                              <RolePermissionsTooltip
+                                role={role}
+                                scopeType={currentContext.scopeType}
+                              />
+                            </div>
+                          )}
                         </div>
-                        {currentContext && (
-                          <RolePermissionsTooltip
-                            role={role}
-                            scopeType={currentContext.scopeType}
-                          />
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

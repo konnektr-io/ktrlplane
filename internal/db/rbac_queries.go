@@ -2,11 +2,11 @@ package db
 
 // Role-related SQL queries
 const (
-	// GetAllRolesQuery returns all roles in the system
+	// GetAllRolesQuery returns all roles in the system ordered by display_order
 	GetAllRolesQuery = `
 		SELECT role_id, name, display_name, description, is_system, created_at, updated_at
 		FROM ktrlplane.roles
-		ORDER BY display_name ASC;`
+		ORDER BY display_order ASC, display_name ASC;`
 
 	// GetPermissionsForRoleQuery returns all permissions associated with a specific role
 	GetPermissionsForRoleQuery = `
