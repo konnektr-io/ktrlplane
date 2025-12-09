@@ -19,8 +19,27 @@ Returns all system-defined roles.
 ## Permissions Check
 ```http
 GET /api/v1/permissions/check?scopeType=project&scopeId=proj-abc123
+GET /api/v1/permissions/check?scopeType=project&scopeId=proj-abc123&userId=auth0|123
 ```
-Returns actions the current user can perform within the specified scope.
+
+Returns actions the current user (or specified user) can perform within the specified scope.
+
+**Query Parameters:**
+- `scopeType` (required): `"organization"`, `"project"`, or `"resource"`
+- `scopeId` (required): The ID of the specific scope
+- `userId` (optional): Check permissions for a specific user (requires service account with `check_permissions_on_behalf_of` permission)
+
+**Response:**
+```json
+{
+  "user_id": "auth0|123456789",
+  "scope_type": "project",
+  "scope_id": "my-project-id",
+  "permissions": ["read", "write", "manage_access"]
+}
+```
+
+**Note:** Regular users can only check their own permissions. Service accounts (M2M) with the special permission can check any user's permissions. See [Service Accounts Guide](/guides/service-accounts) for details.
 
 ## Role Assignments
 

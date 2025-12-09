@@ -1154,7 +1154,10 @@ func (h *Handler) CancelSubscription(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
-// ListPermissionsHandler returns all permissions (actions) the current user has for a given scope.
+// ListPermissionsHandler returns all permissions (actions) for a given scope.
+// Regular users can only check their own permissions.
+// Service accounts (M2M) with the "check_permissions_on_behalf_of" permission
+// can check permissions for any user by providing a userId query parameter.
 func (h *Handler) ListPermissionsHandler(c *gin.Context) {
 	scopeType := c.Query("scopeType")
 	scopeID := c.Query("scopeId")
@@ -1163,21 +1166,66 @@ func (h *Handler) ListPermissionsHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := h.getUserFromContext(c)
+	caller, err := h.getUserFromContext(c)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
- 		return
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
 	}
 
-	permissions, err := h.RBACService.ListPermissions(c.Request.Context(), user.ID, scopeType, scopeID)
+	// Determine whose permissions to check
+	targetUserID := caller.ID // Default to caller's own permissions
+	requestedUserID := c.Query("userId")
+
+	// If userId parameter is provided, verify authorization
+	if requestedUserID != "" {
+		// Check if requesting permissions for a different user
+		if requestedUserID != caller.ID {
+			// Only service accounts can check permissions on behalf of others
+			if !caller.IsServiceAccount {
+				c.JSON(http.StatusForbidden, gin.H{
+					"error": "Only service accounts can check permissions on behalf of other users",
+				})
+				return
+			}
+
+			// Verify the service account has the special permission
+			canCheck, err := h.RBACService.CanServiceAccountCheckPermissions(c.Request.Context(), caller.ID)
+			if err != nil {
+				_ = c.Error(err)
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error":   "Failed to verify service account permissions",
+					"details": err.Error(),
+				})
+				return
+			}
+
+			if !canCheck {
+				c.JSON(http.StatusForbidden, gin.H{
+					"error": "Service account does not have permission to check permissions on behalf of users",
+					"hint":  "The service account needs a role with 'check_permissions_on_behalf_of' permission at global scope",
+				})
+				return
+			}
+
+			// Authorization passed, check permissions for the requested user
+			targetUserID = requestedUserID
+		}
+	}
+
+	permissions, err := h.RBACService.ListPermissions(c.Request.Context(), targetUserID, scopeType, scopeID)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list permissions", "details": err.Error()})
- 		return
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list permissions", "details": err.Error()})
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"permissions": permissions})
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":     targetUserID,
+		"scope_type":  scopeType,
+		"scope_id":    scopeID,
+		"permissions": permissions,
+	})
 }
 
 // --- Logging & Metrics Proxy Handlers ---

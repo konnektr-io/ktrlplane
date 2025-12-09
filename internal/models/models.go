@@ -7,10 +7,10 @@ import (
 
 // Project represents a project in the system.
 type Project struct {
-	ProjectID   string  `json:"project_id" agtype:"project_id"`
-	OrgID       *string `json:"org_id" agtype:"org_id" db:"org_id"`
-	Name        string  `json:"name" agtype:"name"`
-	Status      string  `json:"status" agtype:"status"`
+	ProjectID string  `json:"project_id" agtype:"project_id"`
+	OrgID     *string `json:"org_id" agtype:"org_id" db:"org_id"`
+	Name      string  `json:"name" agtype:"name"`
+	Status    string  `json:"status" agtype:"status"`
 	// StripeCustomerID and StripeSubscriptionID removed; use BillingAccount
 	BillingEmail           *string   `json:"billing_email,omitempty" db:"billing_email"`
 	InheritsBillingFromOrg bool      `json:"inherits_billing_from_org" db:"inherits_billing_from_org"`
@@ -20,17 +20,17 @@ type Project struct {
 
 // Resource represents a resource belonging to a project.
 type Resource struct {
-	ResourceID     string          `json:"resource_id" agtype:"resource_id"`
-	ProjectID      string          `json:"project_id"` // Added for context, not directly in node usually
-	Name           string          `json:"name" agtype:"name"`
-	Type           string          `json:"type" agtype:"type"` // e.g., "GraphDatabase", "Flow"
-	Status         string          `json:"status" agtype:"status"`
-	SKU            string          `json:"sku" agtype:"sku"` // Resource tier (e.g., "free", "basic", "pro")
-	StripePriceID  *string         `json:"stripe_price_id,omitempty" agtype:"stripe_price_id"` // Stripe price ID for paid tiers
-	SettingsJSON   json.RawMessage `json:"settings_json" agtype:"settings_json"` // Store as raw JSON
-	CreatedAt      time.Time       `json:"created_at" agtype:"created_at"`
-	UpdatedAt      time.Time       `json:"updated_at" agtype:"updated_at"`
-	ErrorMessage   *string         `json:"error_message,omitempty" agtype:"error_message"`
+	ResourceID    string          `json:"resource_id" agtype:"resource_id"`
+	ProjectID     string          `json:"project_id"` // Added for context, not directly in node usually
+	Name          string          `json:"name" agtype:"name"`
+	Type          string          `json:"type" agtype:"type"` // e.g., "GraphDatabase", "Flow"
+	Status        string          `json:"status" agtype:"status"`
+	SKU           string          `json:"sku" agtype:"sku"`                                   // Resource tier (e.g., "free", "basic", "pro")
+	StripePriceID *string         `json:"stripe_price_id,omitempty" agtype:"stripe_price_id"` // Stripe price ID for paid tiers
+	SettingsJSON  json.RawMessage `json:"settings_json" agtype:"settings_json"`               // Store as raw JSON
+	CreatedAt     time.Time       `json:"created_at" agtype:"created_at"`
+	UpdatedAt     time.Time       `json:"updated_at" agtype:"updated_at"`
+	ErrorMessage  *string         `json:"error_message,omitempty" agtype:"error_message"`
 }
 
 // MarshalJSON ensures settings_json is always a JSON object (never a string/null).
@@ -89,16 +89,17 @@ type CreateResourceRequest struct {
 // UpdateResourceRequest is the payload for updating a resource.
 type UpdateResourceRequest struct {
 	Name         *string         `json:"name"`
-	SKU          *string         `json:"sku"` // Allow SKU/tier changes
+	SKU          *string         `json:"sku"`           // Allow SKU/tier changes
 	SettingsJSON json.RawMessage `json:"settings_json"` // Send full JSON structure to update
 }
 
 // User represents a user in the system (simplified for identifying user from token).
 type User struct {
-	ID    string   `json:"id"`              // Subject from JWT
-	Email string   `json:"email"`           // Email from JWT
-	Name  string   `json:"name"`            // Name from JWT
-	Roles []string `json:"roles,omitempty"` // Roles derived from JWT or DB lookup (placeholder)
+	ID               string   `json:"id"`                 // Subject from JWT
+	Email            string   `json:"email"`              // Email from JWT
+	Name             string   `json:"name"`               // Name from JWT
+	IsServiceAccount bool     `json:"is_service_account"` // True if this is an M2M service account (client credentials)
+	Roles            []string `json:"roles,omitempty"`    // Roles derived from JWT or DB lookup (placeholder)
 }
 
 // RBAC Models
@@ -114,35 +115,50 @@ type Organization struct {
 }
 
 // Role represents a role in the RBAC system.
+// Role represents a role in the RBAC system.
+// Database table: ktrlplane.roles
+// Schema: role_id, name, display_name, description, is_system, created_at, updated_at, display_order, is_hidden
 type Role struct {
-	RoleID      string    `json:"role_id" db:"role_id"`
-	Name        string    `json:"name" db:"name"`
-	DisplayName string    `json:"display_name" db:"display_name"`
-	Description string    `json:"description" db:"description"`
-	IsSystem    bool      `json:"is_system" db:"is_system"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	RoleID       string    `json:"role_id" db:"role_id"`
+	Name         string    `json:"name" db:"name"`
+	DisplayName  string    `json:"display_name" db:"display_name"`
+	Description  string    `json:"description" db:"description"`
+	IsSystem     bool      `json:"is_system" db:"is_system"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
+	DisplayOrder int       `json:"display_order" db:"display_order"` // UI ordering
+	IsHidden     bool      `json:"is_hidden" db:"is_hidden"`         // Hidden from user-facing role listings (for service/internal roles)
 }
 
 // Permission represents a permission in the RBAC system.
+// Database table: ktrlplane.permissions
+// Schema: permission_id, resource_type, action, description, created_at
 type Permission struct {
 	PermissionID string    `json:"permission_id" db:"permission_id"`
-	ResourceType string    `json:"resource_type" db:"resource_type"`
-	Action       string    `json:"action" db:"action"`
+	ResourceType string    `json:"resource_type" db:"resource_type"` // e.g., "Konnektr.KtrlPlane", "Konnektr.Graph"
+	Action       string    `json:"action" db:"action"`               // e.g., "read", "write", "digitaltwins/read"
 	Description  string    `json:"description" db:"description"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }
 
+// RolePermission represents the mapping between roles and permissions.
+// Database table: ktrlplane.role_permissions
+// Schema: role_id, permission_id
+// Note: This is a join table, no Go struct needed as it's used in queries
+
 // RoleAssignment represents a role assignment in the RBAC system.
+// Database table: ktrlplane.role_assignments
+// Schema: assignment_id, user_id, role_id, scope_type, scope_id, assigned_by, created_at, expires_at, updated_at
 type RoleAssignment struct {
 	AssignmentID string     `json:"assignment_id" db:"assignment_id"`
-	UserID       string     `json:"user_id" db:"user_id"`
+	UserID       string     `json:"user_id" db:"user_id"` // User ID or M2M client ID (from Auth0 'sub' claim)
 	RoleID       string     `json:"role_id" db:"role_id"`
-	ScopeType    string     `json:"scope_type" db:"scope_type"` // "organization", "project", "resource"
+	ScopeType    string     `json:"scope_type" db:"scope_type"` // "organization", "project", "resource", "global"
 	ScopeID      string     `json:"scope_id" db:"scope_id"`
 	AssignedBy   string     `json:"assigned_by" db:"assigned_by"`
 	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
-	ExpiresAt    *time.Time `json:"expires_at" db:"expires_at"`
+	ExpiresAt    *time.Time `json:"expires_at,omitempty" db:"expires_at"`
+	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 // RoleAssignmentWithDetails includes populated user and role information.

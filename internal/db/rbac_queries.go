@@ -3,9 +3,11 @@ package db
 // Role-related SQL queries
 const (
 	// GetAllRolesQuery returns all roles in the system ordered by display_order
+	// Excludes hidden roles (is_hidden = true) which are for internal/service use only
 	GetAllRolesQuery = `
-		SELECT role_id, name, display_name, description, is_system, created_at, updated_at
+		SELECT role_id, name, display_name, description, is_system, is_hidden, created_at, updated_at
 		FROM ktrlplane.roles
+		WHERE is_hidden = false
 		ORDER BY display_order ASC, display_name ASC;`
 
 	// GetPermissionsForRoleQuery returns all permissions associated with a specific role

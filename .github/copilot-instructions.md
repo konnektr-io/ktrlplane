@@ -216,6 +216,24 @@ When the user requests instructions for another project:
 - Do not deploy infrastructure directly (use declarative requests to Control Plane)
 - **Do not store SubscriptionStatus, SubscriptionPlan, or BillingEmail in the database or models. Stripe is the only source of truth for billing info.**
 
+### 17. Service Accounts (M2M Authentication)
+
+- **Purpose**: Allow backend services to check user permissions on behalf of users without forwarding user tokens
+- **Implementation**: Machine-to-machine (M2M) authentication using Auth0 client credentials flow
+- **Key Features**:
+  - M2M tokens detected by `gty` (grant type) claim = `"client-credentials"`
+  - `IsServiceAccount` flag added to User model to distinguish from regular users
+  - Service accounts skip user database creation in auth middleware
+  - Special permission: `check_permissions_on_behalf_of` at global scope
+- **API Endpoint**: `/api/v1/permissions/check` accepts optional `userId` query parameter
+- **Authorization Rules**:
+  - Regular users can only check their own permissions
+  - Service accounts with special permission can check any user's permissions
+  - Service accounts CANNOT modify permissions or impersonate users
+- **Setup**: Requires SQL role assignment linking M2M client ID to global permission
+- **Documentation**: See `docs/guides/service-accounts.mdx` for complete setup guide
+- **Use Case**: Konnektr.Graph verifying user access to graph resources using KtrlPlane RBAC
+
 ## 📝 Change Log
 
 When updating these instructions, add entries here:
@@ -224,6 +242,7 @@ When updating these instructions, add entries here:
 - **2025-09-25**: Updated product names (DigitalTwins → Graph, added Assembler/Flow/Compass), added catalog strategy and dynamic forms guidance
 - **2025-10-11**: Refactored documentation to MDX format with fumadocs structure, separated usage vs self-hosting docs, added comprehensive API documentation
 - **2025-10-19**: Added missing API documentation pages (authentication, organizations, projects, rbac, billing, observability) and concept pages (organizations, projects, access-control); updated `docs/api/meta.json` and ensured standardized frontmatter.
+- **2025-12-09**: Added service account (M2M) authentication for checking permissions on behalf of users; implemented in auth middleware, RBAC service, and API handlers with comprehensive documentation
 
 ---
 

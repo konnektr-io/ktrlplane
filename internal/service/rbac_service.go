@@ -165,6 +165,26 @@ func (s *RBACService) CheckPermission(ctx context.Context, userID, action, scope
 	return hasPermission, nil
 }
 
+// CanServiceAccountCheckPermissions checks if a service account (M2M client) has permission
+// to check permissions on behalf of other users. This is used for service-to-service
+// authorization where the calling service needs to verify user permissions.
+//
+// Service accounts need a role assignment with the "check_permissions_on_behalf_of" permission
+// at the global scope (scope_type = "global", scope_id = "global").
+func (s *RBACService) CanServiceAccountCheckPermissions(ctx context.Context, serviceAccountID string) (bool, error) {
+	pool := db.GetDB()
+
+	// Check if the service account has the special permission at global scope
+	var hasPermission bool
+	err := pool.QueryRow(ctx, db.CheckPermissionWithInheritanceQuery, 
+		serviceAccountID, "global", "global", "check_permissions_on_behalf_of").Scan(&hasPermission)
+	if err != nil {
+		return false, fmt.Errorf("failed to check service account permission: %w", err)
+	}
+
+	return hasPermission, nil
+}
+
 // GetUserRoles returns all roles assigned to a user across all scopes
 func (s *RBACService) GetUserRoles(ctx context.Context, userID string) ([]models.RoleAssignment, error) {
 	pool := db.GetDB()

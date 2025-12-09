@@ -21,6 +21,7 @@ import (
 type CustomClaims struct {
 	Email string `json:"email"`
 	Name  string `json:"name"`
+	Gty   string `json:"gty"` // Grant type - "client-credentials" for M2M tokens
 }
 
 // Validate does nothing for this example, but we need
@@ -106,25 +107,47 @@ func Middleware() gin.HandlerFunc {
 		email := extractEmailFromClaims(claims)
 		name := extractNameFromClaims(claims)
 
-		// Ensure user exists in database (create or update)
-		err = ensureUserExists(c.Request.Context(), userID, email, name)
-		if err != nil {
-			log.Printf("Failed to ensure user exists: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user authentication"})
-			c.Abort()
-			return
+		// Detect if this is a service account (M2M client credentials flow)
+		// M2M tokens have gty (grant type) = "client-credentials"
+		isServiceAccount := isM2MToken(token)
+
+		// Only ensure user exists for regular users, not service accounts
+		if !isServiceAccount {
+			err = ensureUserExists(c.Request.Context(), userID, email, name)
+			if err != nil {
+				log.Printf("Failed to ensure user exists: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user authentication"})
+				c.Abort()
+				return
+			}
 		}
 
 		// Create user object for context
 		user := models.User{
-			ID:    userID,
-			Email: email,
+			ID:              userID,
+			Email:           email,
+			Name:            name,
+			IsServiceAccount: isServiceAccount,
 		}
 
 		// Store user in context
 		c.Set("user", user)
 		c.Next()
 	}
+}
+
+// isM2MToken checks if a token is from a machine-to-machine (M2M) client credentials flow.
+// M2M tokens from Auth0 contain a "gty" (grant type) claim set to "client-credentials".
+func isM2MToken(token interface{}) bool {
+	if claims, ok := token.(*validator.ValidatedClaims); ok {
+		// Check for gty claim in custom claims
+		if claims.CustomClaims != nil {
+			if customClaims, ok := claims.CustomClaims.(*CustomClaims); ok {
+				return customClaims.Gty == "client-credentials"
+			}
+		}
+	}
+	return false
 }
 
 // extractEmailFromClaims extracts email from JWT claims.
