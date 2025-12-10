@@ -18,10 +18,15 @@ export default function AuthCallbackPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600">Authentication Error</h2>
+          <h2 className="text-xl font-semibold text-red-600">
+            Authentication Error
+          </h2>
           <p className="mt-2 text-muted-foreground">{error.message}</p>
-          <a href="/catalog" className="mt-4 inline-block text-primary hover:underline">
-            Back to Catalog
+          <a
+            href="https://konnektr.io"
+            className="mt-4 inline-block text-primary hover:underline"
+          >
+            Back to Konnektr.io
           </a>
         </div>
       </div>

@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ResourceStatusBadge } from "@/features/resources/components/ResourceStatusBadge";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -412,13 +413,7 @@ export default function ProjectDetailPage() {
                         )}
                       </div>
                     </div>
-                    <Badge
-                      variant={
-                        resource.status === "Active" ? "default" : "secondary"
-                      }
-                    >
-                      {resource.status}
-                    </Badge>
+                    <ResourceStatusBadge status={resource.status} />
                   </a>
                 ))}
               </div>
