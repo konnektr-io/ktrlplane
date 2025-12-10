@@ -566,7 +566,7 @@ func (h *Handler) ListRolePermissions(c *gin.Context) {
 // SearchUsers searches for users by query string.
 func (h *Handler) SearchUsers(c *gin.Context) {
 	query := c.Query("q")
-	if query == "" || len(query) < 2 {
+	if query == "" || len(query) < 5 {
 		c.JSON(http.StatusOK, []models.User{})
 		return
 	}

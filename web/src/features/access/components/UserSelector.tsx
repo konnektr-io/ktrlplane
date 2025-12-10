@@ -34,8 +34,6 @@ export default function UserSelector({
   const [searchTerm, setSearchTerm] = useState("");
   const { data: users = [], isLoading } = useSearchUsers(searchTerm);
 
-  // Remove legacy effect, use React Query result
-
   // Match selected user strictly by id
   const selectedUser = users.find((user) => user.id === value);
 
@@ -79,11 +77,13 @@ export default function UserSelector({
             ) : (
               <>
                 {users.length > 0 && (
-                  <CommandGroup>
-                    {users.map((user, uIdx) => (
+                  <CommandGroup heading="Users">
+                    {users.map((user) => (
                       <CommandItem
                         key={user.id}
-                        value={`${user.email}${uIdx}`}
+                        value={`${user.name || ""} ${user.email || ""} ${
+                          user.id
+                        }`.toLowerCase()}
                         onSelect={() => {
                           onValueChange(user.id);
                           setOpen(false);
@@ -92,17 +92,17 @@ export default function UserSelector({
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            value === `${user.email}${uIdx}`
-                              ? "opacity-100"
-                              : "opacity-0"
+                            value === user.id ? "opacity-100" : "opacity-0"
                           )}
                         />
                         <div className="flex items-center gap-2">
                           <div>
                             <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {user.email}
-                            </div>
+                            {user.email && (
+                              <div className="text-sm text-muted-foreground">
+                                {user.email}
+                              </div>
+                            )}
                             <div className="text-xs text-muted-foreground">
                               {user.id}
                             </div>
@@ -112,7 +112,7 @@ export default function UserSelector({
                     ))}
                   </CommandGroup>
                 )}
-                {searchTerm.length >= 2 && users.length === 0 && (
+                {searchTerm.length >= 4 && users.length === 0 && (
                   <CommandGroup>
                     <CommandItem
                       value={searchTerm}
@@ -131,9 +131,11 @@ export default function UserSelector({
                     </CommandItem>
                   </CommandGroup>
                 )}
-                {searchTerm.length < 2 && users.length === 0 && (
-                  <CommandEmpty>
-                    Type at least 2 characters to search...
+                {searchTerm.length < 4 && users.length === 0 && (
+                  <CommandEmpty className="py-4">
+                    <div className="px-2 text-sm text-muted-foreground">
+                      Type at least 4 characters to search...
+                    </div>
                   </CommandEmpty>
                 )}
               </>

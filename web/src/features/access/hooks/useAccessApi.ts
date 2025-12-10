@@ -92,7 +92,7 @@ export function useSearchUsers(query: string) {
   return useQuery({
     queryKey: ["searchUsers", query],
     queryFn: async () => {
-      if (!query || query.length < 2) return [];
+      if (!query || query.length < 5) return [];
       try {
         const token = await getAccessTokenSilently();
         const response = await apiClient.get<User[]>(
@@ -104,7 +104,7 @@ export function useSearchUsers(query: string) {
         await handleApiError(err);
       }
     },
-    enabled: !!query && query.length >= 2,
+    enabled: !!query && query.length >= 4,
   });
 }
 
