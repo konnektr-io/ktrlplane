@@ -508,7 +508,7 @@ Console.WriteLine(await queryResp.Content.ReadAsStringAsync());`,
       {!hasM2MCredentials && (
         <Alert className="mb-4">
           <Info className="h-4 w-4" />
-          <AlertTitle>Personal Authentication Required</AlertTitle>
+          <AlertTitle>Device Code Authentication Required</AlertTitle>
           <AlertDescription>
             Machine-to-machine credentials are only available for projects with:
             <ul className="list-disc list-inside mt-2 space-y-1">
