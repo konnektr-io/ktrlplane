@@ -101,7 +101,8 @@ export default function AccessControl({ context }: AccessControlProps) {
       case "resource": {
         // Need to extract project ID for resource routes
         const currentPath = window.location.pathname;
-        const projectMatch = currentPath.match(/\/project\/([^/]+)/);
+        // Match /projects/{projectId}/resources/{resourceId}/access
+        const projectMatch = currentPath.match(/\/projects\/([^/]+)/);
         const projectId = projectMatch ? projectMatch[1] : "";
         return `/projects/${projectId}/resources/${context.scopeId}/access/grant`;
       }
