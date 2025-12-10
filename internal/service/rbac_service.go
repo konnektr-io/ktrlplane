@@ -39,6 +39,7 @@ func (s *RBACService) ListRoles(ctx context.Context) ([]models.Role, error) {
 			&role.DisplayName,
 			&role.Description,
 			&role.IsSystem,
+			&role.IsHidden,
 			&role.CreatedAt,
 			&role.UpdatedAt,
 		)
@@ -176,7 +177,7 @@ func (s *RBACService) CanServiceAccountCheckPermissions(ctx context.Context, ser
 
 	// Check if the service account has the special permission at global scope
 	var hasPermission bool
-	err := pool.QueryRow(ctx, db.CheckPermissionWithInheritanceQuery, 
+	err := pool.QueryRow(ctx, db.CheckPermissionWithInheritanceQuery,
 		serviceAccountID, "global", "global", "check_permissions_on_behalf_of").Scan(&hasPermission)
 	if err != nil {
 		return false, fmt.Errorf("failed to check service account permission: %w", err)

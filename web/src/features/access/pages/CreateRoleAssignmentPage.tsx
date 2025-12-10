@@ -27,11 +27,11 @@ const CreateRoleAssignmentPage: React.FC = () => {
 
   // Sort and group roles for better display
   const sortedRoles = useMemo(() => sortRoles(roles), [roles]);
-  
+
   // Group roles by category
   const rolesByCategory = useMemo(() => {
     const groups = new Map<string, typeof sortedRoles>();
-    sortedRoles.forEach(role => {
+    sortedRoles.forEach((role) => {
       const category = getRoleCategory(role);
       if (!groups.has(category)) {
         groups.set(category, []);
@@ -172,53 +172,57 @@ const CreateRoleAssignmentPage: React.FC = () => {
               <div className="text-center py-4">Loading roles...</div>
             ) : (
               <div className="space-y-4">
-                {Array.from(rolesByCategory.entries()).map(([category, categoryRoles]) => (
-                  <div key={category} className="space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">
-                      {category}
-                    </h3>
-                    <div className="grid gap-2">
-                      {categoryRoles.map((role) => (
-                        <div
-                          key={role.role_id}
-                          className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors hover:bg-accent ${
-                            selectedRoleId === role.role_id
-                              ? "ring-2 ring-primary bg-accent"
-                              : ""
-                          }`}
-                          onClick={() => setSelectedRoleId(role.role_id)}
-                        >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <input
-                              type="radio"
-                              name="role"
-                              value={role.role_id}
-                              checked={selectedRoleId === role.role_id}
-                              onChange={() => setSelectedRoleId(role.role_id)}
-                              className="h-4 w-4 flex-shrink-0"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm">
-                                {role.display_name}
-                              </div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {role.description}
-                              </div>
-                            </div>
-                          </div>
-                          {currentContext && (
-                            <div className="flex-shrink-0 ml-2">
-                              <RolePermissionsTooltip
-                                role={role}
-                                scopeType={currentContext.scopeType}
+                {Array.from(rolesByCategory.entries()).map(
+                  ([category, categoryRoles]) => (
+                    <div key={category} className="space-y-2">
+                      <h3 className="text-sm font-medium text-muted-foreground">
+                        {category}
+                      </h3>
+                      <div className="grid gap-2">
+                        {categoryRoles.map((role) => (
+                          <div
+                            key={role.role_id}
+                            className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors hover:bg-accent ${
+                              selectedRoleId === role.role_id
+                                ? "ring-2 ring-primary bg-accent"
+                                : ""
+                            }`}
+                            onClick={() => setSelectedRoleId(role.role_id)}
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <input
+                                type="radio"
+                                name="role"
+                                value={role.role_id}
+                                checked={selectedRoleId === role.role_id}
+                                onChange={() => setSelectedRoleId(role.role_id)}
+                                className="h-4 w-4 flex-shrink-0"
                               />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm">
+                                  {role.display_name}
+                                </div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {role.description.length > 60
+                                    ? `${role.description.slice(0, 57)}...`
+                                    : role.description}
+                                </div>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      ))}
+                            {currentContext && (
+                              <div className="flex-shrink-0 ml-2">
+                                <RolePermissionsTooltip
+                                  role={role}
+                                  scopeType={currentContext.scopeType}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             )}
           </CardContent>
