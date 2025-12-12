@@ -98,10 +98,10 @@ func (h *Handler) GetBillingStatus(c *gin.Context) {
 
 	// Return only status-relevant fields for onboarding
 	resp := gin.H{
-		"has_payment_method": len(billingInfo.PaymentMethods) > 0,
-		"payment_methods": billingInfo.PaymentMethods,
+		"has_payment_method":   len(billingInfo.PaymentMethods) > 0,
+		"payment_methods":      billingInfo.PaymentMethods,
 		"subscription_details": billingInfo.SubscriptionDetails,
-		"stripe_customer": billingInfo.StripeCustomer, // Stripe customer info (includes email)
+		"stripe_customer":      billingInfo.StripeCustomer, // Stripe customer info (includes email)
 	}
 	c.JSON(http.StatusOK, resp)
 }
@@ -180,15 +180,15 @@ func (h *Handler) ListOrganizations(c *gin.Context) {
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
- 		return
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
 	}
 
 	orgs, err := h.OrganizationService.ListOrganizations(c.Request.Context(), user.ID)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list organizations", "details": err.Error()})
- 		return
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list organizations", "details": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, orgs)
 }
@@ -199,15 +199,15 @@ func (h *Handler) GetOrganization(c *gin.Context) {
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
- 		return
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
 	}
 
 	org, err := h.OrganizationService.GetOrganization(c.Request.Context(), orgID, user.ID)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found", "details": err.Error()})
- 		return
+		c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found", "details": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, org)
 }
@@ -308,15 +308,15 @@ func (h *Handler) ListProjects(c *gin.Context) {
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
- 		return
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
 	}
 
 	projects, err := h.ProjectService.ListProjects(c.Request.Context(), user.ID)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list projects", "details": err.Error()})
- 		return
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list projects", "details": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, projects)
 }
@@ -428,15 +428,15 @@ func (h *Handler) ListResources(c *gin.Context) {
 	user, err := h.getUserFromContext(c)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
- 		return
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
 	}
 
 	resources, err := h.ResourceService.ListResources(c.Request.Context(), projectID, user.ID)
 	if err != nil {
 		_ = c.Error(err)
- 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list resources", "details": err.Error()})
- 		return
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list resources", "details": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, resources)
 }
@@ -464,6 +464,11 @@ func (h *Handler) UpdateResource(c *gin.Context) {
 		if err.Error() == "insufficient permissions to update resource" {
 			_ = c.Error(err)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to update resource"})
+			return
+		}
+		if err.Error() == "billing account with active subscription required for tier changes" {
+			_ = c.Error(err)
+			c.JSON(http.StatusPaymentRequired, gin.H{"error": "Billing account with active subscription required for tier changes", "details": err.Error()})
 			return
 		}
 		_ = c.Error(err)
