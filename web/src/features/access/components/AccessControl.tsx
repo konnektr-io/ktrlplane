@@ -87,7 +87,8 @@ export default function AccessControl({ context }: AccessControlProps) {
     ? roleAssignments.filter(
         (a) =>
           (a.user?.name || "").toLowerCase().includes(filter.toLowerCase()) ||
-          (a.user?.email || "").toLowerCase().includes(filter.toLowerCase())
+          (a.user?.email || "").toLowerCase().includes(filter.toLowerCase()) ||
+          (a.user?.id || "").toLowerCase().includes(filter.toLowerCase())
       )
     : roleAssignments;
 
