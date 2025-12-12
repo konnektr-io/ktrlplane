@@ -59,24 +59,35 @@ interface AccessControlProps {
 export default function AccessControl({ context }: AccessControlProps) {
   const navigate = useNavigate();
   const { setContext } = useAccessStore();
-  const { data: roleAssignments = [], isLoading: assignmentsLoading } = useRoleAssignments(context);
+  const {
+    data: roleAssignments = [],
+    isLoading: assignmentsLoading,
+    refetch: refetchRoleAssignments,
+  } = useRoleAssignments(context);
   const removeUserMutation = useRemoveUser(context);
 
   // Permissions for this scope
-  const { data: permissions = [] } = useUserPermissions(context.scopeType, context.scopeId);
+  const { data: permissions = [] } = useUserPermissions(
+    context.scopeType,
+    context.scopeId
+  );
 
-  const [removeConfirmation, setRemoveConfirmation] = useState<RoleAssignment | null>(null);
+  const [removeConfirmation, setRemoveConfirmation] =
+    useState<RoleAssignment | null>(null);
 
   useEffect(() => {
     setContext(context);
-  }, [context, setContext]);
-  
+    // Always refetch assignments when context changes or component mounts
+    refetchRoleAssignments();
+  }, [context, setContext, refetchRoleAssignments]);
+
   // Filter state for members
   const [filter, setFilter] = useState("");
   const filteredAssignments = filter
-    ? roleAssignments.filter(a =>
-        (a.user?.name || "").toLowerCase().includes(filter.toLowerCase()) ||
-        (a.user?.email || "").toLowerCase().includes(filter.toLowerCase())
+    ? roleAssignments.filter(
+        (a) =>
+          (a.user?.name || "").toLowerCase().includes(filter.toLowerCase()) ||
+          (a.user?.email || "").toLowerCase().includes(filter.toLowerCase())
       )
     : roleAssignments;
 
@@ -112,7 +123,7 @@ export default function AccessControl({ context }: AccessControlProps) {
   };
 
   const formatExpiryDate = (expiresAt?: string) => {
-    if (!expiresAt) return 'Never';
+    if (!expiresAt) return "Never";
     return new Date(expiresAt).toLocaleDateString();
   };
 
@@ -123,14 +134,19 @@ export default function AccessControl({ context }: AccessControlProps) {
         <div>
           <h2 className="text-2xl font-bold">Access & Permissions</h2>
           <p className="text-muted-foreground">
-            Manage who has access to this {context.scopeType} and what they can do
+            Manage who has access to this {context.scopeType} and what they can
+            do
           </p>
         </div>
         <Button
           onClick={() => navigate(getCreateAccessUrl())}
           className="gap-2"
-          disabled={!permissions?.includes('manage_access')}
-          title={!permissions?.includes('manage_access') ? 'You do not have permission to manage access' : undefined}
+          disabled={!permissions?.includes("manage_access")}
+          title={
+            !permissions?.includes("manage_access")
+              ? "You do not have permission to manage access"
+              : undefined
+          }
         >
           <UserPlus className="h-4 w-4" />
           Grant Access
@@ -151,7 +167,7 @@ export default function AccessControl({ context }: AccessControlProps) {
               placeholder="Filter members..."
               className="input input-sm border rounded px-2 py-1 text-sm w-48"
               value={filter}
-              onChange={e => setFilter(e.target.value)}
+              onChange={(e) => setFilter(e.target.value)}
               style={{ minWidth: 0 }}
             />
           </div>
@@ -165,15 +181,21 @@ export default function AccessControl({ context }: AccessControlProps) {
           ) : filteredAssignments.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No role assignments yet</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                No role assignments yet
+              </h3>
               <p className="text-muted-foreground mb-4">
                 Start by granting access to users for this {context.scopeType}
               </p>
               <Button
                 onClick={() => navigate(getCreateAccessUrl())}
                 className="gap-2"
-                disabled={!permissions?.includes('manage_access')}
-                title={!permissions?.includes('manage_access') ? 'You do not have permission to manage access' : undefined}
+                disabled={!permissions?.includes("manage_access")}
+                title={
+                  !permissions?.includes("manage_access")
+                    ? "You do not have permission to manage access"
+                    : undefined
+                }
               >
                 <UserPlus className="h-4 w-4" />
                 Grant Access
@@ -196,15 +218,22 @@ export default function AccessControl({ context }: AccessControlProps) {
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
+                          <Mail className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div>
                           <div className="font-medium">
-                            {assignment.user?.name || assignment.user?.email || 'Unknown User'}
+                            {assignment.user?.name ||
+                              assignment.user?.email ||
+                              "Unknown User"}
                           </div>
                           {assignment.user?.name && (
                             <div className="text-sm text-muted-foreground">
                               {assignment.user.email}
+                            </div>
+                          )}
+                          {assignment.user?.id && (
+                            <div className="text-xs text-muted-foreground font-mono">
+                              {assignment.user.id}
                             </div>
                           )}
                         </div>
@@ -213,17 +242,18 @@ export default function AccessControl({ context }: AccessControlProps) {
                     <TableCell>
                       <div className="space-y-1">
                         {assignment.role ? (
-                          <RolePermissionsTooltip 
-                            role={assignment.role} 
-                            scopeType={context.scopeType} 
+                          <RolePermissionsTooltip
+                            role={assignment.role}
+                            scopeType={context.scopeType}
                           />
                         ) : (
                           <Badge variant="outline">Unknown Role</Badge>
                         )}
-                        {assignment.inheritance_type === 'inherited' && (
+                        {assignment.inheritance_type === "inherited" && (
                           <div className="text-xs text-muted-foreground flex items-center space-x-1">
                             <span className="text-blue-600 font-medium">
-                              Inherited from {assignment.inherited_from_scope_type}
+                              Inherited from{" "}
+                              {assignment.inherited_from_scope_type}
                             </span>
                             {assignment.inherited_from_name && (
                               <span>({assignment.inherited_from_name})</span>
@@ -251,12 +281,18 @@ export default function AccessControl({ context }: AccessControlProps) {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {assignment.inheritance_type === 'direct' ? (
+                          {assignment.inheritance_type === "direct" ? (
                             <>
                               <DropdownMenuItem
-                                onClick={() => permissions?.includes('manage_access') && setRemoveConfirmation(assignment)}
+                                onClick={() =>
+                                  permissions?.includes("manage_access") &&
+                                  setRemoveConfirmation(assignment)
+                                }
                                 className="text-red-600 focus:text-red-600"
-                                disabled={!permissions?.includes('manage_access') || removeUserMutation.isPending}
+                                disabled={
+                                  !permissions?.includes("manage_access") ||
+                                  removeUserMutation.isPending
+                                }
                               >
                                 <UserX className="h-4 w-4 mr-2" />
                                 Remove Access
@@ -265,7 +301,8 @@ export default function AccessControl({ context }: AccessControlProps) {
                           ) : (
                             <DropdownMenuItem disabled>
                               <div className="text-sm text-muted-foreground">
-                                Inherited permissions can only be managed from {assignment.inherited_from_scope_type}
+                                Inherited permissions can only be managed from{" "}
+                                {assignment.inherited_from_scope_type}
                               </div>
                             </DropdownMenuItem>
                           )}
@@ -281,23 +318,31 @@ export default function AccessControl({ context }: AccessControlProps) {
       </Card>
 
       {/* Remove Confirmation Dialog */}
-      <AlertDialog open={!!removeConfirmation} onOpenChange={() => setRemoveConfirmation(null)}>
+      <AlertDialog
+        open={!!removeConfirmation}
+        onOpenChange={() => setRemoveConfirmation(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Access</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove {removeConfirmation?.user?.name || removeConfirmation?.user?.email}'s 
-              access to this {context.scopeType}? This action cannot be undone.
+              Are you sure you want to remove{" "}
+              {removeConfirmation?.user?.name ||
+                removeConfirmation?.user?.email}
+              's access to this {context.scopeType}? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => removeConfirmation && handleRemoveUser(removeConfirmation)}
+              onClick={() =>
+                removeConfirmation && handleRemoveUser(removeConfirmation)
+              }
               disabled={removeUserMutation.isPending}
               className="bg-red-600 hover:bg-red-700"
             >
-              {removeUserMutation.isPending ? 'Removing...' : 'Remove Access'}
+              {removeUserMutation.isPending ? "Removing..." : "Remove Access"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
