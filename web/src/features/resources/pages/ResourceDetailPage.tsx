@@ -27,13 +27,16 @@ import { ResourceTierChangeDialog } from "../components/ResourceTierChangeDialog
 import { DeleteResourceDialog } from "../components/DeleteResourceDialog";
 import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { resourceTypes } from "../catalog/resourceTypes";
+import { UnifiedBillingSetupModal } from "@/features/billing/components/BillingSetupModal";
+import { useBillingStatus } from "@/features/billing/hooks/useBillingApi";
 
 export default function ResourceDetailPage() {
   const { projectId, resourceId } = useParams<{
     projectId: string;
     resourceId: string;
   }>();
-  // --- All hooks must be called before any return ---
+  const { data: billingInfo } = useBillingStatus("project", projectId ?? "");
+  const [showBillingModal, setShowBillingModal] = useState(false);
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -162,8 +165,34 @@ export default function ResourceDetailPage() {
     );
   }
 
+  // Handler to open tier dialog, requiring billing if needed
+  const handleOpenTierDialog = () => {
+    if (
+      billingInfo &&
+      (!billingInfo.hasStripeCustomer || !billingInfo.hasPaymentMethod)
+    ) {
+      setShowBillingModal(true);
+    } else {
+      setIsTierDialogOpen(true);
+    }
+  };
+
+  // After billing setup, open tier dialog
+  const handleBillingComplete = () => {
+    setShowBillingModal(false);
+    setIsTierDialogOpen(true);
+  };
+
   return (
     <>
+      {/* Unified Billing Setup Modal */}
+      <UnifiedBillingSetupModal
+        open={showBillingModal}
+        onClose={() => setShowBillingModal(false)}
+        scopeType="project"
+        scopeId={projectId || ""}
+        onComplete={handleBillingComplete}
+      />
       <div className="space-y-6">
         {/* Success message for tier change */}
         {tierSuccess && (
@@ -262,11 +291,15 @@ export default function ResourceDetailPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => setIsTierDialogOpen(true)}
+                      onClick={handleOpenTierDialog}
                       className="h-7 text-xs"
                     >
                       <Settings2 className="h-3 w-3 mr-1" />
-                      Change
+                      {billingInfo &&
+                      (!billingInfo.hasStripeCustomer ||
+                        !billingInfo.hasPaymentMethod)
+                        ? "Set Up Billing to Change"
+                        : "Change"}
                     </Button>
                   )}
                 </div>
@@ -283,10 +316,14 @@ export default function ResourceDetailPage() {
                     <Button
                       size="sm"
                       variant="link"
-                      onClick={() => setIsTierDialogOpen(true)}
+                      onClick={handleOpenTierDialog}
                       className="h-auto p-0 text-xs"
                     >
-                      Upgrade
+                      {billingInfo &&
+                      (!billingInfo.hasStripeCustomer ||
+                        !billingInfo.hasPaymentMethod)
+                        ? "Set Up Billing to Upgrade"
+                        : "Upgrade"}
                     </Button>
                   )}
                 </div>
