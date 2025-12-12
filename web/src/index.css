@@ -163,4 +163,13 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+      Consolas, "Liberation Mono", "Courier New", monospace;
+    font-variant-ligatures: none;
+    font-size: 1em;
+  }
 }
