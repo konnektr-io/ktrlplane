@@ -60,11 +60,13 @@ export function ResourceTierChangeDialog({
   const isUpgrade =
     currentTier &&
     newTier &&
-    resourceType.skus.indexOf(newTier) > resourceType.skus.indexOf(currentTier);
+    currentTier.sku === "free" &&
+    newTier.sku !== "free";
   const isDowngrade =
     currentTier &&
     newTier &&
-    resourceType.skus.indexOf(newTier) < resourceType.skus.indexOf(currentTier);
+    currentTier.sku !== "free" &&
+    newTier.sku === "free";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
