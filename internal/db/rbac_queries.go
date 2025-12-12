@@ -32,7 +32,6 @@ const (
 				JOIN ktrlplane.role_permissions rp ON ra.role_id = rp.role_id
 				JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
 				WHERE ra.user_id = $1
-				  AND p.resource_type = 'Konnektr.KtrlPlane'
 				  AND ra.scope_type = $2
 				  AND ra.scope_id = $3
 				  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
@@ -46,7 +45,6 @@ const (
 				JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
 				JOIN ktrlplane.projects proj ON proj.project_id = $3 -- if scopeType is project
 				WHERE ra.user_id = $1
-				  AND p.resource_type = 'Konnektr.KtrlPlane'
 				  AND ra.scope_type = 'organization'
 				  AND ra.scope_id = proj.org_id
 				  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
@@ -61,7 +59,6 @@ const (
 				JOIN ktrlplane.permissions p ON rp.permission_id = p.permission_id
 				JOIN ktrlplane.resources res ON res.resource_id = $3 -- if scopeType is resource
 				WHERE ra.user_id = $1
-				  AND p.resource_type = 'Konnektr.KtrlPlane'
 				  AND ra.scope_type = 'project'
 				  AND ra.scope_id = res.project_id
 				  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
@@ -77,7 +74,6 @@ const (
 				JOIN ktrlplane.resources res ON res.resource_id = $3 -- if scopeType is resource
 				JOIN ktrlplane.projects proj ON proj.project_id = res.project_id
 				WHERE ra.user_id = $1
-				  AND p.resource_type = 'Konnektr.KtrlPlane'
 				  AND ra.scope_type = 'organization'
 				  AND ra.scope_id = proj.org_id
 				  AND (ra.expires_at IS NULL OR ra.expires_at > NOW())
