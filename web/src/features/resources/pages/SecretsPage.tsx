@@ -1,14 +1,10 @@
-import { useEffect, useState, useMemo } from "react";
-import { useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   PlusCircle,
-  Database,
-  Server,
-  Globe,
-  FileText,
   Filter,
   Trash2,
+  Key,
 } from "lucide-react";
 import { useResources, useDeleteResource } from "../hooks/useResourceApi";
 import { Button } from "@/components/ui/button";
@@ -33,23 +29,23 @@ import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { useMultipleResourcePermissions } from "@/features/access/hooks/useMultipleResourcePermissions";
 import { DeleteResourceDialog } from "../components/DeleteResourceDialog";
 
-const resourceTypeIcons = {
-  Database: Database,
-  API: Server,
-  Website: Globe,
-  Service: Server,
-  Storage: FileText,
-} as const;
-
-export default function ResourcesPage() {
+export default function SecretsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  // Fetch all resources, client-side filter
   const {
-    data: resources = [],
+    data: allResources = [],
     isLoading,
     error,
     refetch,
   } = useResources(projectId!);
+
+  // FILTER ONLY SECRETS
+  const resources = useMemo(
+    () => allResources.filter((r) => r.type === "Konnektr.Secret"),
+    [allResources]
+  );
+
   const resourceIds = useMemo(
     () => resources.map((r) => r.resource_id),
     [resources]
@@ -69,7 +65,6 @@ export default function ResourcesPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const resourceToDelete = resources.find((r) => r.resource_id === deletingId);
 
-  // Resource-level permissions will be handled via state and effect below
   const handleDelete = async () => {
     if (deletingId && projectId) {
       await deleteResourceMutation.mutateAsync();
@@ -97,7 +92,7 @@ export default function ResourcesPage() {
   }, [projectId, refetch]);
 
   if (isLoading) {
-    return <div>Loading resources...</div>;
+    return <div>Loading secrets...</div>;
   }
 
   if (error) {
@@ -112,11 +107,16 @@ export default function ResourcesPage() {
   const filteredResources = filter
     ? resources.filter(
         (r) =>
-          r.type !== "Konnektr.Secret" &&
-          ((r.name || "").toLowerCase().includes(filter.toLowerCase()) ||
-            (r.type || "").toLowerCase().includes(filter.toLowerCase()))
+          (r.name || "").toLowerCase().includes(filter.toLowerCase())
       )
-    : resources.filter((r) => r.type !== "Konnektr.Secret");
+    : resources;
+
+  const handleCreateSecret = () => {
+    // Pre-select Secret type and navigate to create page
+    navigate(
+      `/projects/${projectId}/resources/create?resource_type=Konnektr.Secret&sku=standard`
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -124,14 +124,14 @@ export default function ResourcesPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
-              <Server className="h-5 w-5" />
-              <span>Resources ({resources.length})</span>
+              <Key className="h-5 w-5" />
+              <span>Secrets ({resources.length})</span>
             </CardTitle>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Filter resources..."
+                  placeholder="Filter secrets..."
                   className="w-48 pl-8"
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
@@ -139,19 +139,15 @@ export default function ResourcesPage() {
                 <Filter className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
               {projectPermissions?.includes("write") && (
-                <Button
-                  onClick={() =>
-                    navigate(`/projects/${projectId}/resources/create`)
-                  }
-                >
+                <Button onClick={handleCreateSecret}>
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  New Resource
+                  New Secret
                 </Button>
               )}
             </div>
           </div>
           <CardDescription>
-            Manage your project resources and their configurations
+            Manage your secure credentials and secrets
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -173,16 +169,11 @@ export default function ResourcesPage() {
                       colSpan={5}
                       className="text-center py-8 text-muted-foreground"
                     >
-                      No resources found. Create your first resource!
+                      No secrets found. Create your first secret!
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredResources.map((resource) => {
-                    const IconComponent =
-                      resourceTypeIcons[
-                        resource.type as keyof typeof resourceTypeIcons
-                      ] || Server;
-                    // Use new hook for per-resource permissions
                     const resourcePermissions =
                       permissionsMap[resource.resource_id] || [];
                     const resourcePermLoading =
@@ -202,7 +193,7 @@ export default function ResourcesPage() {
                       >
                         <TableCell className="p-2 pl-4 align-middle whitespace-nowrap h-full">
                           <div className="flex items-center gap-2 h-full">
-                            <IconComponent className="h-4 w-4 text-primary" />
+                            <Key className="h-4 w-4 text-primary" />
                             <span className="font-medium">{resource.name}</span>
                           </div>
                         </TableCell>
@@ -224,7 +215,7 @@ export default function ResourcesPage() {
                               );
                             }}
                           >
-                            Configure
+                            View
                           </Button>
                           {/* Show delete button only if user has resource-level delete permission */}
                           {canDelete && (
@@ -232,7 +223,7 @@ export default function ResourcesPage() {
                               variant="ghost"
                               size="icon"
                               className="text-destructive hover:bg-destructive/10"
-                              title="Delete resource"
+                              title="Delete secret"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDeletingId(resource.resource_id);

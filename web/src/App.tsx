@@ -7,6 +7,7 @@ import OrganizationLayout from "@/features/organizations/layouts/OrganizationLay
 import ProtectedRoute from "@/features/auth/ProtectedRoute";
 import ProjectListPage from "@/features/projects/pages/ProjectListPage";
 import ResourcesPage from "@/features/resources/pages/ResourcesPage";
+import SecretsPage from "@/features/resources/pages/SecretsPage";
 import CreateResourcePage from "@/features/resources/pages/CreateResourcePage";
 import ResourceDetailPage from "@/features/resources/pages/ResourceDetailPage";
 import ResourceAccessPage from "@/features/resources/pages/ResourceAccessPage";
@@ -121,6 +122,7 @@ function App() {
           >
             <Route index element={<ProjectDetailPage />} />
             <Route path="resources" element={<ResourcesPage />} />
+            <Route path="secrets" element={<SecretsPage />} />
             <Route path="resources/create" element={<CreateResourcePage />} />
             <Route path="access" element={<ProjectAccessPage />} />
             <Route path="access/grant" element={<CreateRoleAssignmentPage />} />

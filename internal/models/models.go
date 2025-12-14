@@ -7,30 +7,30 @@ import (
 
 // Project represents a project in the system.
 type Project struct {
-	ProjectID string  `json:"project_id" agtype:"project_id"`
-	OrgID     *string `json:"org_id" agtype:"org_id" db:"org_id"`
-	Name      string  `json:"name" agtype:"name"`
-	Status    string  `json:"status" agtype:"status"`
+	ProjectID string  `json:"project_id"`
+	OrgID     *string `json:"org_id"`
+	Name      string  `json:"name"`
+	Status    string  `json:"status"`
 	// StripeCustomerID and StripeSubscriptionID removed; use BillingAccount
-	BillingEmail           *string   `json:"billing_email,omitempty" db:"billing_email"`
-	InheritsBillingFromOrg bool      `json:"inherits_billing_from_org" db:"inherits_billing_from_org"`
-	CreatedAt              time.Time `json:"created_at" agtype:"created_at"`
-	UpdatedAt              time.Time `json:"updated_at" agtype:"updated_at"`
+	BillingEmail           *string   `json:"billing_email,omitempty"`
+	InheritsBillingFromOrg bool      `json:"inherits_billing_from_org"`
+	CreatedAt              time.Time `json:"created_at"`
+	UpdatedAt              time.Time `json:"updated_at"`
 }
 
 // Resource represents a resource belonging to a project.
 type Resource struct {
-	ResourceID    string          `json:"resource_id" agtype:"resource_id"`
-	ProjectID     string          `json:"project_id"` // Added for context, not directly in node usually
-	Name          string          `json:"name" agtype:"name"`
-	Type          string          `json:"type" agtype:"type"` // e.g., "GraphDatabase", "Flow"
-	Status        string          `json:"status" agtype:"status"`
-	SKU           string          `json:"sku" agtype:"sku"`                                   // Resource tier (e.g., "free", "basic", "pro")
-	StripePriceID *string         `json:"stripe_price_id,omitempty" agtype:"stripe_price_id"` // Stripe price ID for paid tiers
-	SettingsJSON  json.RawMessage `json:"settings_json" agtype:"settings_json"`               // Store as raw JSON
-	CreatedAt     time.Time       `json:"created_at" agtype:"created_at"`
-	UpdatedAt     time.Time       `json:"updated_at" agtype:"updated_at"`
-	ErrorMessage  *string         `json:"error_message,omitempty" agtype:"error_message"`
+	ResourceID    string          `json:"resource_id"`
+	ProjectID     string          `json:"project_id"`
+	Name          string          `json:"name"`
+	Type          string          `json:"type"` // e.g., "Konnektr.Graph"
+	Status        string          `json:"status"`
+	SKU           string          `json:"sku"`                                   // Resource tier (e.g., "free", "basic", "pro")
+	StripePriceID *string         `json:"stripe_price_id,omitempty"` // Stripe price ID for paid tiers
+	SettingsJSON  json.RawMessage `json:"settings_json"`               // Store as raw JSON
+	CreatedAt     time.Time       `json:"created_at"`
+	UpdatedAt     time.Time       `json:"updated_at"`
+	ErrorMessage  *string         `json:"error_message,omitempty"`
 }
 
 // MarshalJSON ensures settings_json is always a JSON object (never a string/null).
