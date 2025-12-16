@@ -41,8 +41,8 @@ function App() {
     window.location.replace(appState?.returnTo || "/projects");
   };
 
-  // GTAG consent logic
-  const setGtagConsent = (consent: "accepted" | "declined") => {
+  // GTM consent logic
+  const setConsent = (consent: "accepted" | "declined") => {
     if (typeof window !== "undefined") {
       // Declare window.gtag for TypeScript
       type GtagFn = (
@@ -65,13 +65,28 @@ function App() {
         }
       }
     }
+    type ClarityFn = (command: string, params: Record<string, string>) => void;
+    const clarity = (window as typeof window & { clarity?: ClarityFn }).clarity;
+    if (clarity) {
+      if (consent === "accepted") {
+        clarity("consentv2", {
+          ad_Storage: "granted",
+          analytics_Storage: "granted",
+        });
+      } else {
+        clarity("consentv2", {
+          ad_Storage: "denied",
+          analytics_Storage: "denied",
+        });
+      }
+    }
   };
 
   const handleAccept = () => {
-    setGtagConsent("accepted");
+    setConsent("accepted");
   };
   const handleDecline = () => {
-    setGtagConsent("declined");
+    setConsent("declined");
   };
 
   return (
