@@ -101,11 +101,7 @@ export default function AppHeader() {
     <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
       <div className="flex items-center gap-4 mr-8">
         <SidebarTrigger className="-ml-1" />
-        <img
-          src={konnektrLogo}
-          alt="Konnektr logo"
-          className="h-6 w-6"
-        />
+        <img src={konnektrLogo} alt="Konnektr logo" className="h-6 w-6" />
         <span className="font-semibold hidden md:inline">Konnektr Portal</span>
       </div>
       <div className="flex flex-1 items-center justify-between">
@@ -142,7 +138,7 @@ export default function AppHeader() {
           </DropdownMenu>
 
           <ModeToggle />
-          
+
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -156,7 +152,9 @@ export default function AppHeader() {
                 ) : (
                   <User className="h-4 w-4" />
                 )}
-                <span className="hidden md:inline">{user?.email}</span>
+                <span className="hidden md:inline">
+                  {user?.email || user?.nickname}
+                </span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
