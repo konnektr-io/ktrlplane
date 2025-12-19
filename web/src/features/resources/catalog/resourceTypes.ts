@@ -172,14 +172,7 @@ export const resourceTypes: ResourceType[] = [
     icon: Key,
     category: "Security",
     features: ["Secure storage", "RBAC controlled", "Kubernetes Native"],
-    skus: [
-      {
-        sku: "free",
-        name: "Free",
-        features: ["Secure Encryption"],
-        limits: {},
-      },
-    ],
+    skus: [],
     documentationUrl: "https://docs.konnektr.io/secrets",
     isNew: true,
     hasSettings: false,

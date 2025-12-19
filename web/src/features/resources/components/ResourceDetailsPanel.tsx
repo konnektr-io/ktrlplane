@@ -1,6 +1,6 @@
 import GraphResourceDetails from "./graph/GraphResourceDetails";
 import FlowResourceDetails from "./flow/FlowResourceDetails";
-import SecretResourceDetails from "./SecretResourceDetails";
+import SecretResourceDetails from "./secret/SecretResourceDetails";
 
 import type { Resource } from "../types/resource.types";
 
