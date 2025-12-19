@@ -165,7 +165,8 @@ export const resourceTypes: ResourceType[] = [
   {
     id: "Konnektr.Secret",
     name: "Secret",
-    description: "Securely store sensitive information like passwords, tokens, and keys.",
+    description:
+      "Securely store sensitive information like passwords, tokens, and keys.",
     longDescription:
       "Kubernetes-backed secret storage for managing sensitive configuration data used by other resources.",
     icon: Key,
@@ -173,8 +174,8 @@ export const resourceTypes: ResourceType[] = [
     features: ["Secure storage", "RBAC controlled", "Kubernetes Native"],
     skus: [
       {
-        sku: "standard",
-        name: "Standard",
+        sku: "free",
+        name: "Free",
         features: ["Secure Encryption"],
         limits: {},
       },

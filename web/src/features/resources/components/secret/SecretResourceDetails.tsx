@@ -1,5 +1,5 @@
 import { ProjectSecretViewer } from "@/features/projects/components/ProjectSecretViewer";
-import type { Resource } from "../types/resource.types";
+import type { Resource } from "../../types/resource.types";
 
 interface SecretResourceDetailsProps {
   resource: Resource;
