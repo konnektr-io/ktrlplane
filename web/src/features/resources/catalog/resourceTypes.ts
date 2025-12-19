@@ -9,7 +9,7 @@ export interface ResourceTier {
 }
 
 export interface ResourceType {
-  id: string;
+  id: "Konnektr.Graph" | "Konnektr.Flow" | "Konnektr.Assembler" | "Konnektr.Compass" | "Konnektr.Secret";
   name: string;
   description: string;
   longDescription: string;
@@ -175,8 +175,8 @@ export const resourceTypes: ResourceType[] = [
     skus: [],
     documentationUrl: "https://docs.konnektr.io/secrets",
     isNew: true,
-    hasSettings: false,
-    settingsReady: false,
-    requiresSettings: false,
+    hasSettings: true,
+    settingsReady: true,
+    requiresSettings: true,
   },
 ];

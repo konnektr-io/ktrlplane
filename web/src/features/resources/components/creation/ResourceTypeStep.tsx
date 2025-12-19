@@ -6,8 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ResourceType as ResourceTypeEnum } from "../../schemas";
 import type { ResourceType } from "../../catalog/resourceTypes";
+
+type ResourceTypeEnum = ResourceType['id']; 
 
 interface ResourceTypeStepProps {
   resourceTypes: ResourceType[];

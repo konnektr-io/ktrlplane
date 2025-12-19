@@ -8,13 +8,15 @@ import {
 import type { ResourceType } from "../../catalog/resourceTypes";
 import type { GraphSettings } from "../../schemas/GraphSchema";
 import type { FlowSettings } from "../../schemas/FlowSchema";
+import type { SecretSettings } from "../../components/secret/SecretForm";
 
 interface SettingsConfigurationStepProps {
   resourceType: ResourceType | undefined;
   resourceName: string;
   tierName?: string;
-  initialValues?: GraphSettings | FlowSettings;
-  onSubmit: (settings: GraphSettings | FlowSettings) => void;
+  initialValues?: GraphSettings | FlowSettings | SecretSettings;
+  onSubmit: (settings: GraphSettings | FlowSettings | SecretSettings) => void;
+  onChange?: (settings: GraphSettings | FlowSettings | SecretSettings) => void;
   disabled?: boolean;
 }
 
@@ -24,6 +26,7 @@ export function SettingsConfigurationStep({
   tierName,
   initialValues,
   onSubmit,
+  onChange,
   disabled,
 }: SettingsConfigurationStepProps) {
   if (!resourceType) return null;
@@ -56,7 +59,9 @@ export function SettingsConfigurationStep({
         resourceType={resourceType.id}
         initialValues={initialValues}
         onSubmit={onSubmit}
+        onChange={onChange}
         disabled={disabled}
+        hideSaveButton={true}
       />
     </div>
   );

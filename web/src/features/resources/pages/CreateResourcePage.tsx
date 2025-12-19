@@ -102,6 +102,13 @@ export default function CreateResourcePage() {
     setSelectedProjectId(projectId);
     flow.setState({ projectId });
   };
+  
+  const handleUpdateSettings = (settings: unknown) => {
+      // Defer state update to flow
+      if (typeof settings === 'object') {
+          flow.setState({ settings: settings as Record<string, unknown> });
+      }
+  };
 
   const handleProjectCreated = (projectId: string) => {
     setSelectedProjectId(projectId);
@@ -235,7 +242,8 @@ export default function CreateResourcePage() {
     } else if (flow.isLastStep) {
       // Final step - create resource
       if (flow.currentStep.id === "settings") {
-        // Settings will be submitted via form
+        // Settings are now managed via onChange, so we can proceed to creation
+        handleCreateResource(flow.state.settings);
         return;
       } else if (flow.currentStep.id === "access") {
         // Skip access and create
@@ -362,7 +370,8 @@ export default function CreateResourcePage() {
                   ] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
                 : undefined
             }
-            onSubmit={handleCreateResource}
+            onSubmit={() => {}} // No-op for submission from form itself
+            onChange={handleUpdateSettings}
             disabled={isCreating}
           />
         )}
@@ -382,7 +391,8 @@ export default function CreateResourcePage() {
         )}
 
         {/* Navigation Buttons */}
-        {flow.currentStep?.id !== "settings" &&
+        {(flow.currentStep?.id !== "settings" ||
+          flow.state.resourceType === "Konnektr.Secret") &&
           flow.currentStep?.id !== "access" && (
             <div className="flex justify-between gap-3">
               {/* Hide Back button on first step of global route (no meaningful place to go back to) */}

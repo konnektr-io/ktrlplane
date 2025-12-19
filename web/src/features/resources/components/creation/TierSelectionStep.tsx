@@ -208,40 +208,42 @@ export function TierSelectionStep({
         </CardContent>
       </Card>
 
-      {/* Tier Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Tier</CardTitle>
-          <CardDescription>
-            Choose the plan that fits your needs
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {resourceType && resourceType.skus.length > 0 ? (
-            <div className="grid gap-6">
-              {resourceType.skus.map((tier) => (
-                <ResourceTierCard
-                  key={tier.sku}
-                  tier={tier}
-                  resourceTypeId={resourceType.id}
-                  selected={selectedSku === tier.sku}
-                  onSelect={() => onSkuSelect(tier.sku)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">
-                This resource type uses the free tier by default.
-              </p>
-              <div className="flex items-center justify-center gap-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span>Free tier selected</span>
+      {/* Tier Selection - Only show if there are SKUs */}
+      {resourceType && resourceType.skus.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Tier</CardTitle>
+            <CardDescription>
+              Choose the plan that fits your needs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {resourceType && resourceType.skus.length > 0 ? (
+              <div className="grid gap-6">
+                {resourceType.skus.map((tier) => (
+                  <ResourceTierCard
+                    key={tier.sku}
+                    tier={tier}
+                    resourceTypeId={resourceType.id}
+                    selected={selectedSku === tier.sku}
+                    onSelect={() => onSkuSelect(tier.sku)}
+                  />
+                ))}
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  This resource type uses the free tier by default.
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span>Free tier selected</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
