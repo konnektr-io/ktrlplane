@@ -235,7 +235,7 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 			if err != nil {
 				return fmt.Errorf("failed to begin transaction for placeholder transfer: %w", err)
 			}
-			defer tx.Rollback(ctx)
+			defer func() { _ = tx.Rollback(ctx) }()
 
 			// Create the real user first
 			_, err = tx.Exec(ctx, db.CreateUserQuery, userID, email, name)

@@ -80,10 +80,10 @@ func TestPlaceholderUserInvitationFlow(t *testing.T) {
 	defer func() {
 		pool := db.GetDB()
 		// Clean up any remaining data
-		pool.Exec(ctx, "DELETE FROM ktrlplane.role_assignments WHERE user_id = $1 OR user_id = $2", invitedEmail, realUserID)
-		pool.Exec(ctx, "DELETE FROM ktrlplane.users WHERE user_id = $1 OR user_id = $2", invitedEmail, realUserID)
-		pool.Exec(ctx, "DELETE FROM ktrlplane.users WHERE user_id = $1", assignerID)
-		pool.Exec(ctx, "DELETE FROM ktrlplane.organizations WHERE org_id = $1", organizationID)
+		_, _ = pool.Exec(ctx, "DELETE FROM ktrlplane.role_assignments WHERE user_id = $1 OR user_id = $2", invitedEmail, realUserID)
+		_, _ = pool.Exec(ctx, "DELETE FROM ktrlplane.users WHERE user_id = $1 OR user_id = $2", invitedEmail, realUserID)
+		_, _ = pool.Exec(ctx, "DELETE FROM ktrlplane.users WHERE user_id = $1", assignerID)
+		_, _ = pool.Exec(ctx, "DELETE FROM ktrlplane.organizations WHERE org_id = $1", organizationID)
 	}()
 
 	// Setup: Create assigner user and organization
@@ -141,7 +141,7 @@ func TestPlaceholderUserInvitationFlow(t *testing.T) {
 		// Start transaction for transfer
 		tx, err := pool.Begin(ctx)
 		require.NoError(t, err)
-		defer tx.Rollback(ctx)
+		defer func() { _ = tx.Rollback(ctx) }()
 
 		// Create real user
 		_, err = tx.Exec(ctx, db.CreateUserQuery, realUserID, invitedEmail, "Real User")
