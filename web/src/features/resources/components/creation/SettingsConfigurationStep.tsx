@@ -41,7 +41,8 @@ export function SettingsConfigurationStep({
             Configure {resourceType.name}
           </CardTitle>
           <CardDescription>
-            <span className="font-medium">Resource:</span> {resourceName}
+            <span className="font-medium">Name:</span> {resourceName}
+            <span className="font-medium">ID:</span> {resourceType.id}
             {tierName && (
               <>
                 <br />

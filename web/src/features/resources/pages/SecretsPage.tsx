@@ -114,7 +114,7 @@ export default function SecretsPage() {
   const handleCreateSecret = () => {
     // Pre-select Secret type and navigate to create page
     navigate(
-      `/projects/${projectId}/resources/create?resource_type=Konnektr.Secret&sku=standard`
+      `/projects/${projectId}/resources/create?resource_type=Konnektr.Secret&sku=standard&from=secrets`
     );
   };
 

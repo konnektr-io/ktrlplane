@@ -32,7 +32,7 @@ export function ResourceTypeStep({
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid gap-4 md:grid-cols-2">
-            {resourceTypes.map((resourceType) => {
+            {resourceTypes.filter((rt) => !rt.disable).map((resourceType) => {
               const IconComponent = resourceType.icon;
               const isSelected = selectedType === resourceType.id;
               const isDisabled = resourceType.disable;

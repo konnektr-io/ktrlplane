@@ -116,7 +116,7 @@ export function useCreateResource(projectId: string) {
            const secretSettings = data.settings_json as { secretType: string; data: Record<string, string> };
            if (secretSettings.data) {
              await createSecret({
-               name: data.name,
+               name: data.id,
                type: secretSettings.secretType || 'generic',
                data: secretSettings.data
              });
