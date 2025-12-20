@@ -5,6 +5,7 @@ import (
 	"ktrlplane/internal/models"
 	"ktrlplane/internal/service"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -284,6 +285,78 @@ func (h *Handler) CreateProject(c *gin.Context) {
 	c.JSON(http.StatusCreated, project)
 }
 
+
+// CreateProjectSecret handles the creation of a new secret.
+func (h *Handler) CreateProjectSecret(c *gin.Context) {
+	projectID := c.Param("projectId")
+	
+	var req service.SecretData
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	secret, err := h.SecretService.CreateProjectSecret(c.Request.Context(), projectID, req, user.ID)
+	if err != nil {
+		if err.Error() == "insufficient permissions to create project secrets" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create secret", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, secret)
+}
+
+// UpdateProjectSecret handles the update of an existing secret.
+func (h *Handler) UpdateProjectSecret(c *gin.Context) {
+	projectID := c.Param("projectId")
+    
+	secretName := c.Param("secretName")
+	
+	var req service.SecretData
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+    // Ensure name in body matches name in URL if both present (optional safety check)
+    if req.Name != "" && req.Name != secretName {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Secret name in body does not match URL"})
+        return
+    }
+    // If name missing in body, set it from URL
+    req.Name = secretName
+
+	user, err := h.getUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	secret, err := h.SecretService.UpdateProjectSecret(c.Request.Context(), projectID, secretName, req, user.ID)
+	if err != nil {
+		if err.Error() == "insufficient permissions to update project secrets" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Secret not found", "details": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update secret", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, secret)
+}
 // GetProject retrieves a project by ID for the current user.
 func (h *Handler) GetProject(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -1281,6 +1354,10 @@ func (h *Handler) GetProjectSecret(c *gin.Context) {
 	secretData, err := h.SecretService.GetProjectSecret(c.Request.Context(), projectID, secretName, user.ID)
 	if err != nil {
 		_ = c.Error(err)
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Secret not found", "details": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve secret", "details": err.Error()})
 		return
 	}

@@ -1,5 +1,6 @@
 import GraphResourceDetails from "./graph/GraphResourceDetails";
 import FlowResourceDetails from "./flow/FlowResourceDetails";
+import SecretResourceDetails from "./secret/SecretResourceDetails";
 
 import type { Resource } from "../types/resource.types";
 
@@ -14,6 +15,8 @@ export function ResourceDetailsPanel({ resource }: { resource: unknown }) {
         return <GraphResourceDetails resource={resource} />;
       case "Konnektr.Flow":
         return <FlowResourceDetails resource={resource} />;
+      case "Konnektr.Secret":
+        return <SecretResourceDetails resource={resource} />;
       default:
         return (
           <div className="mb-4">

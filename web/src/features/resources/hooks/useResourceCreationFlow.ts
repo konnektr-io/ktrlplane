@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import type { ResourceType } from "../schemas";
+import type { ResourceType } from "../catalog/resourceTypes";
 import { resourceTypes as catalogResourceTypes } from "../catalog/resourceTypes";
 import { isPaidResource } from "@/features/billing/utils/isPaidResource";
 
@@ -22,7 +22,7 @@ export interface StepConfig {
 
 export interface ResourceCreationState {
   projectId: string | null;
-  resourceType: ResourceType | "";
+  resourceType: ResourceType['id'] | "";
   resourceName: string;
   resourceId: string;
   sku: string;
@@ -55,7 +55,7 @@ export function useResourceCreationFlow({
   // Parse URL parameters
   const urlResourceType =
     searchParams.get("resourceType") || searchParams.get("resource_type");
-  const preselectedResourceType = urlResourceType as ResourceType | null;
+  const preselectedResourceType = urlResourceType as ResourceType['id'] | null;
   const preselectedSku = searchParams.get("tier") || searchParams.get("sku");
   const preselectedProjectId = searchParams.get("projectId");
 
@@ -106,7 +106,7 @@ export function useResourceCreationFlow({
         !billingStatus.hasPaymentMethod ||
         !billingStatus.hasActiveSubscription);
 
-    if (needsBillingSetup) {
+    if (needsBillingSetup && state.resourceType !== "Konnektr.Secret") {
       calculatedSteps.push({
         id: "billing",
         label: "Setup Billing",
@@ -190,9 +190,12 @@ export function useResourceCreationFlow({
   }, [steps, currentStepIndex, billingStatus, billingLoading]);
 
   // Helper: validate whether a sku belongs to a resource type
-  const isSkuValidForType = (type: ResourceType | "", sku: string) => {
-    if (!type || !sku) return false;
+  const isSkuValidForType = (type: ResourceType['id'] | "", sku: string) => {
+    if (!type) return false;
     const t = catalogResourceTypes.find((rt) => rt.id === type);
+    // If type has no SKUs (like Secret), then an empty SKU is valid
+    if (t && t.skus.length === 0) return true;
+    if (!sku) return false;
     return !!t?.skus.some((s) => s.sku === sku);
   };
 
@@ -231,7 +234,7 @@ export function useResourceCreationFlow({
         return (
           !!state.resourceName.trim() &&
           !!state.resourceId.trim() &&
-          !!state.sku &&
+          // SKU is required only if the type has SKUs
           isSkuValidForType(state.resourceType, state.sku)
         );
       case "billing":

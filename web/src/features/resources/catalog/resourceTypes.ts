@@ -1,4 +1,4 @@
-import { Database, Workflow } from "lucide-react";
+import { Database, Workflow, Key } from "lucide-react";
 
 export interface ResourceTier {
   sku: string;
@@ -9,7 +9,7 @@ export interface ResourceTier {
 }
 
 export interface ResourceType {
-  id: string;
+  id: "Konnektr.Graph" | "Konnektr.Flow" | "Konnektr.Assembler" | "Konnektr.Compass" | "Konnektr.Secret";
   name: string;
   description: string;
   longDescription: string;
@@ -161,5 +161,22 @@ export const resourceTypes: ResourceType[] = [
     hasSettings: true,
     settingsReady: false, // Compass settings not ready yet
     requiresSettings: false,
+  },
+  {
+    id: "Konnektr.Secret",
+    name: "Secret",
+    description:
+      "Securely store sensitive information like passwords, tokens, and keys.",
+    longDescription:
+      "Kubernetes-backed secret storage for managing sensitive configuration data used by other resources.",
+    icon: Key,
+    category: "Security",
+    features: ["Secure storage", "RBAC controlled", "Kubernetes Native"],
+    skus: [],
+    documentationUrl: "https://docs.konnektr.io/secrets",
+    isNew: true,
+    hasSettings: true,
+    settingsReady: true,
+    requiresSettings: true,
   },
 ];

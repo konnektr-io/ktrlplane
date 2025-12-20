@@ -154,7 +154,9 @@ func SetupRouter(handler *Handler) *gin.Engine {
 				// --- Secret Routes (nested under project) ---
 				secrets := projectDetail.Group("/secrets")
 				{
-					secrets.GET("/:secretName", handler.GetProjectSecret) // Get specific secret (requires read permission on project)
+					secrets.GET("/:secretName", handler.GetProjectSecret)    // Get specific secret
+					secrets.POST("", handler.CreateProjectSecret)            // Create secret
+					secrets.PUT("/:secretName", handler.UpdateProjectSecret) // Update secret
 				}
 			}
 		}

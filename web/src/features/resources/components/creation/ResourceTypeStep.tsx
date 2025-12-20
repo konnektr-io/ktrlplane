@@ -6,8 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ResourceType as ResourceTypeEnum } from "../../schemas";
 import type { ResourceType } from "../../catalog/resourceTypes";
+
+type ResourceTypeEnum = ResourceType['id']; 
 
 interface ResourceTypeStepProps {
   resourceTypes: ResourceType[];
@@ -31,7 +32,7 @@ export function ResourceTypeStep({
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid gap-4 md:grid-cols-2">
-            {resourceTypes.map((resourceType) => {
+            {resourceTypes.filter((rt) => !rt.disable).map((resourceType) => {
               const IconComponent = resourceType.icon;
               const isSelected = selectedType === resourceType.id;
               const isDisabled = resourceType.disable;

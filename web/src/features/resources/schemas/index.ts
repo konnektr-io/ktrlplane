@@ -3,6 +3,10 @@ import { FlowSchema } from "./FlowSchema";
 import { AssemblerSchema } from "./AssemblerSchema";
 import { CompassSchema } from "./CompassSchema";
 
+// DEPRECATED
+// USE catalog/resourceTypes
+
+/* @deprecated */
 export const resourceSchemas = {
   "Konnektr.Graph": GraphSchema,
   "Konnektr.Flow": FlowSchema,
@@ -10,9 +14,11 @@ export const resourceSchemas = {
   "Konnektr.Compass": CompassSchema,
 };
 
+/* @deprecated */
 export type ResourceType = keyof typeof resourceSchemas;
 
 // Default configurations
+/* @deprecated */
 export const defaultConfigurations = {
   "Konnektr.Graph": {
     eventSinks: {

@@ -14,11 +14,10 @@ import { isPaidResource } from "@/features/billing/utils/isPaidResource";
 import { useBillingStatus } from "@/features/billing/hooks/useBillingApi";
 import { UnifiedBillingSetupModal } from "@/features/billing/components/BillingSetupModal";
 import type { CreateResourceData } from "../types/resource.types";
-import type { ResourceType } from "../schemas";
 import { defaultConfigurations } from "@/features/resources/schemas";
 import { generateDNSId } from "@/lib/dnsUtils";
 import { useProjects } from "@/features/projects/hooks/useProjectApi";
-import { resourceTypes as catalogResourceTypes } from "@/features/resources/catalog/resourceTypes";
+import { resourceTypes as catalogResourceTypes, ResourceType } from "@/features/resources/catalog/resourceTypes";
 import { useResourceCreationFlow } from "../hooks/useResourceCreationFlow";
 import {
   CreationProgressBar,
@@ -102,6 +101,13 @@ export default function CreateResourcePage() {
     setSelectedProjectId(projectId);
     flow.setState({ projectId });
   };
+  
+  const handleUpdateSettings = (settings: unknown) => {
+      // Defer state update to flow
+      if (typeof settings === 'object') {
+          flow.setState({ settings: settings as Record<string, unknown> });
+      }
+  };
 
   const handleProjectCreated = (projectId: string) => {
     setSelectedProjectId(projectId);
@@ -113,7 +119,7 @@ export default function CreateResourcePage() {
   };
 
   // Resource type selection
-  const handleResourceTypeSelect = (type: ResourceType) => {
+  const handleResourceTypeSelect = (type: ResourceType['id']) => {
     flow.setState({ resourceType: type });
 
     // Auto-select first available SKU for this resource type
@@ -125,9 +131,15 @@ export default function CreateResourcePage() {
 
   // Name change handler with auto-ID generation
   const handleNameChange = (name: string) => {
+    // Generate slug and only update ID if it changes significantly or if it's currently empty or the name changed
+    // We want the ID to be stable once set, but still derived from name if name is edited for the first time
+    const currentId = flow.state.resourceId;
+    
     flow.setState({
       resourceName: name,
-      resourceId: generateDNSId(name),
+      resourceId: currentId && currentId.startsWith(name.toLowerCase().replace(/[^a-z0-9]/g, '-')) 
+        ? currentId 
+        : generateDNSId(name),
     });
   };
 
@@ -162,7 +174,7 @@ export default function CreateResourcePage() {
       const payload: CreateResourceData = {
         id: flow.state.resourceId.trim(),
         name: flow.state.resourceName.trim(),
-        type: flow.state.resourceType as ResourceType,
+        type: flow.state.resourceType as ResourceType['id'],
         sku,
         settings_json: settingsJson,
       };
@@ -175,9 +187,16 @@ export default function CreateResourcePage() {
           newResource.sku,
           newResource.project_id
         );
-        navigate(
-          `/projects/${selectedProjectId}/resources/${newResource.resource_id}`
-        );
+        
+        // Navigation after success
+        const from = searchParams.get("from");
+        if (from === "secrets") {
+            navigate(`/projects/${selectedProjectId}/secrets`);
+        } else {
+            navigate(
+              `/projects/${selectedProjectId}/resources/${newResource.resource_id}`
+            );
+        }
       }
     } catch (error) {
       console.error("Failed to create resource:", error);
@@ -204,8 +223,13 @@ export default function CreateResourcePage() {
       flow.goBack();
     } else {
       // If can't go back, navigate away
+      const from = searchParams.get("from");
       if (urlProjectId) {
-        navigate(`/projects/${urlProjectId}/resources`);
+        if (from === "secrets") {
+            navigate(`/projects/${urlProjectId}/secrets`);
+        } else {
+            navigate(`/projects/${urlProjectId}/resources`);
+        }
       } else {
         navigate("/projects");
       }
@@ -235,7 +259,8 @@ export default function CreateResourcePage() {
     } else if (flow.isLastStep) {
       // Final step - create resource
       if (flow.currentStep.id === "settings") {
-        // Settings will be submitted via form
+        // Settings are now managed via onChange, so we can proceed to creation
+        handleCreateResource(flow.state.settings);
         return;
       } else if (flow.currentStep.id === "access") {
         // Skip access and create
@@ -362,7 +387,8 @@ export default function CreateResourcePage() {
                   ] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
                 : undefined
             }
-            onSubmit={handleCreateResource}
+            onSubmit={() => {}} // No-op for submission from form itself
+            onChange={handleUpdateSettings}
             disabled={isCreating}
           />
         )}
@@ -382,7 +408,8 @@ export default function CreateResourcePage() {
         )}
 
         {/* Navigation Buttons */}
-        {flow.currentStep?.id !== "settings" &&
+        {(flow.currentStep?.id !== "settings" ||
+          flow.state.resourceType === "Konnektr.Secret") &&
           flow.currentStep?.id !== "access" && (
             <div className="flex justify-between gap-3">
               {/* Hide Back button on first step of global route (no meaningful place to go back to) */}

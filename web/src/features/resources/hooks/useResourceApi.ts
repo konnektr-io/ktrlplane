@@ -8,6 +8,7 @@ import {
 } from "../types/resource.types";
 import { handleApiError } from "@/lib/errorHandler";
 import { transformDates } from "@/lib/transformers";
+import { useCreateSecret } from "@/features/projects/hooks/useProjectSecret";
 
 // Fetch all resources for a project
 export function useResources(projectId: string) {
@@ -74,16 +75,54 @@ export function useResource(projectId: string, resourceId: string) {
 export function useCreateResource(projectId: string) {
   const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
   const queryClient = useQueryClient();
+  const { mutateAsync: createSecret } = useCreateSecret(projectId); // Hook for secret creation
+
   return useMutation({
     mutationFn: async (data: CreateResourceData) => {
       if (!projectId) throw new Error("Missing projectId");
       try {
         const token = await getAccessTokenSilently();
+        
+        // 1. Create the resource metadata in database
+        // For secrets, we might want to sanitize settings_json before saving to DB to avoid saving secret data there
+        // But for now, we assume the backend handles it or we pass it as is and the backend ignores it for the DB
+        // Actually, better to send empty settings for Secret resource creation to DB if we handle it separately?
+        // Let's pass it, assuming backend might need metadata. But CRITICAL: verify backend doesn't log it.
+        // SAFE APPROACH: If type is Secret, remove data from settings_json before sending to resource API
+        
+        let payload = { ...data, settings_json: data.settings_json ?? {} };
+        
+        if (data.type === 'Konnektr.Secret' && payload.settings_json) {
+           // We keep the structure but maybe empty the data? 
+           // For this implementation, we will act as if the backend resource creation is metadata only
+           // and we rely on the createSecret call below for the actual content.
+           // However, to be safe, we might clone and removing sensitive data for the DB call
+           const safeSettings = { ...payload.settings_json };
+           if ('data' in safeSettings) {
+             delete safeSettings.data; // Don't save secret values to Resource DB table
+           }
+           payload.settings_json = safeSettings;
+        }
+
         const response = await apiClient.post<Resource>(
           `/projects/${projectId}/resources`,
-          { ...data, settings_json: data.settings_json ?? {} },
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        
+        // 2. If it's a Secret, create the Kubernetes secret
+        if (data.type === 'Konnektr.Secret' && data.settings_json) {
+           // Type casting for safety
+           const secretSettings = data.settings_json as { secretType: string; data: Record<string, string> };
+           if (secretSettings.data) {
+             await createSecret({
+               name: data.id,
+               type: secretSettings.secretType || 'generic',
+               data: secretSettings.data
+             });
+           }
+        }
+
         return response.data;
       } catch (err: unknown) {
         await handleApiError(err, loginWithRedirect);

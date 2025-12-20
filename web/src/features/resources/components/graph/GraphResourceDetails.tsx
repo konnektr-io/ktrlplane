@@ -40,6 +40,8 @@ export default function GraphResourceDetails({
     setTimeout(() => setCopied(null), 1200);
   };
 
+  const deviceCodeClientId = "14xWhGB5yYyyzdOHqjOjAl0KOU6e6UbF";
+
   // Code examples - M2M (Client Credentials) or Personal (Device Code Flow)
   const codeExamples = hasM2MCredentials
     ? {
@@ -236,7 +238,7 @@ Console.WriteLine(await queryResp.Content.ReadAsStringAsync());`,
 DEVICE_RESPONSE=$(curl -s -X POST \\
   -H "content-type: application/json" \\
   -d '{
-    "client_id": "6LX8JHGz0T4rGNXzaBvZDWWo35fL8Kvg",
+    "client_id": "${deviceCodeClientId}",
     "scope": "openid profile email",
     "audience": "https://graph.konnektr.io"
   }' \\
@@ -255,7 +257,7 @@ while true; do
   TOKEN_RESPONSE=$(curl -s -X POST \\
     -H "content-type: application/json" \\
     -d "{
-      \\"client_id\\": \\"6LX8JHGz0T4rGNXzaBvZDWWo35fL8Kvg\\",
+      \\"client_id\\": \\"${deviceCodeClientId}\\",
       \\"device_code\\": \\"$DEVICE_CODE\\",
       \\"grant_type\\": \\"urn:ietf:params:oauth:grant-type:device_code\\"
     }" \\
@@ -290,7 +292,7 @@ import webbrowser
 # 1) Initiate device authorization
 device_url = "https://auth.konnektr.io/oauth/device/code"
 device_data = {
-    "client_id": "6LX8JHGz0T4rGNXzaBvZDWWo35fL8Kvg",
+    "client_id": "${deviceCodeClientId}",
     "scope": "openid profile email",
     "audience": "https://graph.konnektr.io"
 }
@@ -306,7 +308,7 @@ webbrowser.open(device_info['verification_uri_complete'])
 # 2) Poll for token
 token_url = "https://auth.konnektr.io/oauth/token"
 token_data = {
-    "client_id": "6LX8JHGz0T4rGNXzaBvZDWWo35fL8Kvg",
+    "client_id": "${deviceCodeClientId}",
     "device_code": device_info['device_code'],
     "grant_type": "urn:ietf:params:oauth:grant-type:device_code"
 }
@@ -341,7 +343,7 @@ import open from 'open';
 // 1) Initiate device authorization
 const deviceUrl = 'https://auth.konnektr.io/oauth/device/code';
 const deviceData = {
-  client_id: '6LX8JHGz0T4rGNXzaBvZDWWo35fL8Kvg',
+  client_id: '${deviceCodeClientId}',
   scope: 'openid profile email',
   audience: 'https://graph.konnektr.io'
 };
@@ -356,7 +358,7 @@ await open(deviceInfo.verification_uri_complete);
 // 2) Poll for token
 const tokenUrl = 'https://auth.konnektr.io/oauth/token';
 const tokenData = {
-  client_id: '6LX8JHGz0T4rGNXzaBvZDWWo35fL8Kvg',
+  client_id: '${deviceCodeClientId}',
   device_code: deviceInfo.device_code,
   grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
 };
@@ -397,7 +399,7 @@ var http = new HttpClient();
 
 // 1) Initiate device authorization
 var deviceResp = await http.PostAsJsonAsync("https://auth.konnektr.io/oauth/device/code", new {
-    client_id = "6LX8JHGz0T4rGNXzaBvZDWWo35fL8Kvg",
+    client_id = "${deviceCodeClientId}",
     scope = "openid profile email",
     audience = "https://graph.konnektr.io"
 });
@@ -418,7 +420,7 @@ while (accessToken == null)
 {
     await Task.Delay(5000);
     var tokenResp = await http.PostAsJsonAsync("https://auth.konnektr.io/oauth/token", new {
-        client_id = "6LX8JHGz0T4rGNXzaBvZDWWo35fL8Kvg",
+        client_id = "${deviceCodeClientId}",
         device_code = deviceCode,
         grant_type = "urn:ietf:params:oauth:grant-type:device_code"
     });

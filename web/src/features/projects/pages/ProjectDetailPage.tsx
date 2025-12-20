@@ -395,7 +395,7 @@ export default function ProjectDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {resources.slice(0, 5).map((resource) => (
+                {resources.filter((r) => r.type !== "Konnektr.Secret").slice(0, 5).map((resource) => (
                   <a
                     key={resource.resource_id}
                     href={`/projects/${projectId}/resources/${resource.resource_id}`}
