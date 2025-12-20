@@ -9,14 +9,14 @@ import (
 	"ktrlplane/internal/models"
 	"strings"
 
-	"github.com/stripe/stripe-go/v82"
-	"github.com/stripe/stripe-go/v82/billingportal/session"
-	"github.com/stripe/stripe-go/v82/customer"
-	"github.com/stripe/stripe-go/v82/invoice"
-	"github.com/stripe/stripe-go/v82/paymentmethod"
-	"github.com/stripe/stripe-go/v82/price"
-	"github.com/stripe/stripe-go/v82/setupintent"
-	"github.com/stripe/stripe-go/v82/subscription"
+	"github.com/stripe/stripe-go/v84"
+	"github.com/stripe/stripe-go/v84/billingportal/session"
+	"github.com/stripe/stripe-go/v84/customer"
+	"github.com/stripe/stripe-go/v84/invoice"
+	"github.com/stripe/stripe-go/v84/paymentmethod"
+	"github.com/stripe/stripe-go/v84/price"
+	"github.com/stripe/stripe-go/v84/setupintent"
+	"github.com/stripe/stripe-go/v84/subscription"
 )
 
 // BillingService handles billing operations and Stripe integration.

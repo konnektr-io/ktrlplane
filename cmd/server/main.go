@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v84"
 )
 
 func main() {

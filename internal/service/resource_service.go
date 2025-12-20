@@ -9,9 +9,9 @@ import (
 	"ktrlplane/internal/models"
 	"ktrlplane/internal/utils"
 
-	"github.com/stripe/stripe-go/v82"
-	"github.com/stripe/stripe-go/v82/subscription"
-	"github.com/stripe/stripe-go/v82/subscriptionitem"
+	"github.com/stripe/stripe-go/v84"
+	"github.com/stripe/stripe-go/v84/subscription"
+	"github.com/stripe/stripe-go/v84/subscriptionitem"
 )
 
 // ResourceService handles resource-related operations.

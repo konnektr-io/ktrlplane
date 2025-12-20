@@ -8,7 +8,7 @@ import (
 	"ktrlplane/internal/models"
 	"ktrlplane/internal/utils"
 
-	"github.com/stripe/stripe-go/v82/subscription"
+	"github.com/stripe/stripe-go/v84/subscription"
 )
 
 // ProjectService handles project-related operations.
