@@ -1,6 +1,7 @@
 {
     "title": "User Guides",
     "pages": [
+        "creating-resources",
         "resources",
         "service-accounts"
     ]

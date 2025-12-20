@@ -9,120 +9,28 @@ This comprehensive guide covers everything you need to know about managing resou
 
 ## Creating Resources
 
-### Step 1: Resource Planning
+For a detailed step-by-step walkthrough of the creation process, please refer to the **[Creating Resources](/guides/creating-resources)** guide.
 
-Before creating a resource, consider:
+## Secret Management
 
-**Purpose and Requirements**
-- What functionality do you need?
-- What are your performance requirements?
-- Do you need real-time processing or batch operations?
-- What are your data storage requirements?
+KtrlPlane employs a modern, secure approach to secret management that minimizes the need for handling long-lived static credentials.
 
-**Integration Needs**
-- Will this resource integrate with other resources in your project?
-- Do you need external API connections?
-- Are there specific data formats or protocols required?
+### Federated Identity
+For integrations with external services like Kafka or Azure Data Explorer, KtrlPlane utilizes **Federated Identity** (Workload Identity). This means you don't need to manually create or store secrets for these connections. Instead, you configure the connection details (like endpoints or cluster URIs), and authentication is handled securely and automatically via OAUTHBEARER tokens.
 
-**Scale and Growth**
-- What's your expected initial usage?
-- How might usage grow over time?
-- Do you need auto-scaling capabilities?
+### Project Credentials (M2M)
+For programmatic access to the KtrlPlane API (e.g., for CI/CD pipelines or external scripts), you should use **Service Accounts**.
 
-### Step 2: Resource Selection
+1.  Navigate to your **Project Dashboard**.
+2.  Locate the **API Authentication** card.
+3.  You will see your **Client ID** and **Client Secret**.
+4.  Use these credentials to obtain an access token via the standard OAuth2 Client Credentials flow.
 
-Choose the appropriate resource type:
-
-#### Konnektr.Graph
-**Choose when you need:**
-- Connected data storage and querying
-- Relationship mapping and analysis
-- Digital twin data models
-- Complex data relationships
-
-#### Konnektr.Flow
-**Choose when you need:**
-- Real-time event processing
-- Data transformation and routing
-- Workflow automation
-- Stream processing
-
-#### Konnektr.Assembler
-**Choose when you need:**
-- AI-powered model generation
-- Automated data mapping
-- DTDL model creation
-- Intelligent schema inference
-
-### Step 3: Tier Selection
-
-Select the appropriate tier based on your needs:
-
-| Feature | Free | Pro | Enterprise |
-|---------|------|-----|------------|
-| **Cost** | $0/month | Custom pricing | Custom pricing |
-| **Use Case** | Development & testing | Production workloads | Enterprise scale |
-| **Support** | Community | Email support | Dedicated support |
-| **Features** | Full functionality | Full functionality + SLA | Custom features + SLA |
-
-<Callout type="info">
-All tiers currently provide full functionality for development and testing. Tier-specific limits and billing enforcement are planned features.
+<Callout type="warning">
+  Store your Client Secret securely. It is only visible to Project Admins and allows full programmatic access to your project's resources.
 </Callout>
 
-### Step 4: Configuration
-
-Configure your resource settings based on your requirements:
-
-#### Graph Configuration Example
-```json
-{
-  "database_name": "production-twins",
-  "enable_analytics": true,
-  "backup_retention_days": 30,
-  "query_timeout_seconds": 60,
-  "max_concurrent_connections": 200,
-  "enable_audit_logging": true,
-  "performance_tier": "standard",
-  "auto_scaling": {
-    "enabled": true,
-    "min_capacity": 2,
-    "max_capacity": 10
-  }
-}
-```
-
-#### Flow Configuration Example
-```json
-{
-  "max_concurrent_flows": 25,
-  "retention_days": 90,
-  "enable_dead_letter_queue": true,
-  "processing_mode": "streaming",
-  "error_handling": "retry_with_backoff",
-  "auto_scaling": {
-    "enabled": true,
-    "min_instances": 2,
-    "max_instances": 20,
-    "target_cpu_utilization": 70
-  }
-}
-```
-
-#### Assembler Configuration Example
-```json
-{
-  "model_complexity": "standard",
-  "output_format": "dtdl_v2",
-  "confidence_threshold": 0.8
-}
-```
-
-### Step 5: Deployment
-
-1. Review your configuration
-2. Click **"Create Resource"**
-3. Monitor the deployment progress
-4. Wait for the resource to become available (typically 2-5 minutes)
+For more details on using these credentials, see the [Service Accounts](/guides/service-accounts) guide.
 
 ## Managing Existing Resources
 

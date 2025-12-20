@@ -1,0 +1,60 @@
+---
+title: Creating Resources
+description: Step-by-step guide to creating and configuring new resources in KtrlPlane
+---
+
+# Creating Resources
+
+This guide walks you through the process of creating new resources in your KtrlPlane projects. KtrlPlane uses a unified wizard to make resource creation simple and consistent across different types.
+
+## The Creation Wizard
+
+To start creating a resource:
+1. Navigate to your **Project** dashboard.
+2. Click the **"Add Resource"** button in the top right or the **"Create Resource"** card in the dashboard.
+
+### Step 1: Select Resource Type
+
+Choose the type of resource you need from the catalog.
+
+*   **Konnektr.Graph**: A high-performance graph database for digital twins.
+*   **Konnektr.Flow**: A real-time event processing and routing engine.
+*   **Konnektr.Assembler**: An AI-powered tool for generating data models.
+
+### Step 2: Configure Details
+
+1.  **Name**: Enter a unique display name for your resource.
+2.  **ID**: A DNS-compliant ID will be automatically generated from your name. You can customize this if needed, but it must be unique within the project.
+3.  **Tier**: Select a performance tier.
+    *   **Free**: Good for development and testing. Shared infrastructure.
+    *   **Pro**: For production workloads requiring guaranteed performance.
+    *   **Enterprise**: Dedicated infrastructure with custom SLAs.
+
+### Step 3: Billing (If Required)
+
+If you select a paid tier (Pro or Enterprise) and haven't set up billing for your project yet, you will be prompted to:
+1.  Enter your billing details.
+2.  Add a payment method via the secure Stripe portal.
+
+*Note: You only need to do this once per project.*
+
+### Step 4: Resource Configuration
+
+Different resources require different configuration settings.
+
+*   **Graphs**: configuring database names, backup retention, and scaling options.
+*   **Flows**: configuring processing modes (streaming/batch), retention policies, and instance counts.
+*   **Secrets**: Add key-value pairs for sensitive data.
+
+Refer to the specific product documentation for detailed configuration parameters for each resource type.
+
+### Step 5: Creation and Deployment
+
+Once configured, click **Create Resource**. KtrlPlane will provision your dedicated infrastructure. This process typically takes 1-3 minutes. You will be redirected to the resource details page automatically.
+
+## Next Steps
+
+After your resource is created:
+1.  **View Details**: Check the resource overview for status and connection endpoints.
+2.  **Manage Access**: Use the **Access** tab to grant permissions to other users or service accounts.
+3.  **Check Logs**: Use the **Logs** tab to monitor initialization and runtime events.
