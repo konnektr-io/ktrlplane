@@ -88,7 +88,7 @@ func TestPlaceholderUserInvitationFlow(t *testing.T) {
 
 	// Setup: Create assigner user and organization
 	pool := db.GetDB()
-	_, err := pool.Exec(ctx, db.CreateUserQuery, assignerID, "assigner@example.com", "Assigner", assignerID)
+	_, err := pool.Exec(ctx, db.CreateUserQuery, assignerID, "assigner@example.com", "Assigner")
 	require.NoError(t, err, "Failed to create assigner user")
 
 	_, err = pool.Exec(ctx, "INSERT INTO ktrlplane.organizations (org_id, name) VALUES ($1, $2)", organizationID, "Test Org")
@@ -144,7 +144,7 @@ func TestPlaceholderUserInvitationFlow(t *testing.T) {
 		defer tx.Rollback(ctx)
 
 		// Create real user
-		_, err = tx.Exec(ctx, db.CreateUserQuery, realUserID, invitedEmail, "Real User", realUserID)
+		_, err = tx.Exec(ctx, db.CreateUserQuery, realUserID, invitedEmail, "Real User")
 		require.NoError(t, err, "Should create real user")
 
 		// Transfer role assignments
@@ -217,7 +217,7 @@ func TestAssignRoleToInvalidEmail(t *testing.T) {
 
 	// Setup
 	pool := db.GetDB()
-	_, err := pool.Exec(ctx, db.CreateUserQuery, assignerID, "assigner@example.com", "Assigner", assignerID)
+	_, err := pool.Exec(ctx, db.CreateUserQuery, assignerID, "assigner@example.com", "Assigner")
 	require.NoError(t, err)
 
 	_, err = pool.Exec(ctx, "INSERT INTO ktrlplane.organizations (org_id, name) VALUES ($1, $2)", organizationID, "Test Org")
@@ -254,10 +254,10 @@ func TestAssignRoleToExistingUser(t *testing.T) {
 
 	// Setup: Create existing user
 	pool := db.GetDB()
-	_, err := pool.Exec(ctx, db.CreateUserQuery, existingUserID, "existing@example.com", "Existing User", existingUserID)
+	_, err := pool.Exec(ctx, db.CreateUserQuery, existingUserID, "existing@example.com", "Existing User")
 	require.NoError(t, err)
 
-	_, err = pool.Exec(ctx, db.CreateUserQuery, assignerID, "assigner@example.com", "Assigner", assignerID)
+	_, err = pool.Exec(ctx, db.CreateUserQuery, assignerID, "assigner@example.com", "Assigner")
 	require.NoError(t, err)
 
 	_, err = pool.Exec(ctx, "INSERT INTO ktrlplane.organizations (org_id, name) VALUES ($1, $2)", organizationID, "Test Org")

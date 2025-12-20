@@ -40,7 +40,7 @@ var (
 	userCacheMutex sync.RWMutex
 
 	// Per-user locks to prevent race conditions in ensureUserExists
- 	userLocks sync.Map // map[string]*sync.Mutex
+	userLocks sync.Map // map[string]*sync.Mutex
 )
 
 // SetupAuth configures JWT validation for Auth0.
@@ -59,8 +59,8 @@ func SetupAuth(audience, issuer string) error {
 		[]string{audience},
 		validator.WithCustomClaims(
 			func() validator.CustomClaims {
-				   // Intentionally returns an empty CustomClaims struct to satisfy the validator.CustomClaims interface.
-				   return &CustomClaims{}
+				// Intentionally returns an empty CustomClaims struct to satisfy the validator.CustomClaims interface.
+				return &CustomClaims{}
 			},
 		),
 		validator.WithAllowedClockSkew(time.Minute),
@@ -124,9 +124,9 @@ func Middleware() gin.HandlerFunc {
 
 		// Create user object for context
 		user := models.User{
-			ID:              userID,
-			Email:           email,
-			Name:            name,
+			ID:               userID,
+			Email:            email,
+			Name:             name,
 			IsServiceAccount: isServiceAccount,
 		}
 
@@ -201,7 +201,7 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 		return nil // User already processed, skip
 	}
 	userCacheMutex.RUnlock()
-	
+
 	// Acquire per-user lock
 	lockIface, _ := userLocks.LoadOrStore(userID, &sync.Mutex{})
 	lock := lockIface.(*sync.Mutex)
@@ -238,8 +238,8 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 			defer tx.Rollback(ctx)
 
 			// Create the real user first
-			_, err = tx.Exec(ctx, db.CreateUserQuery, userID, email, name, userID)
-			if err != nil && !strings.Contains(err.Error(), "duplicate key value") {
+			_, err = tx.Exec(ctx, db.CreateUserQuery, userID, email, name)
+			if err != nil {
 				return fmt.Errorf("failed to create real user during transfer: %w", err)
 			}
 
@@ -294,14 +294,9 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 
 	if !userExists {
 		// User doesn't exist, create them
-		err = db.ExecQuery(ctx, db.CreateUserQuery, userID, email, name, userID)
+		err = db.ExecQuery(ctx, db.CreateUserQuery, userID, email, name)
 		if err != nil {
-			// If error is duplicate key, treat as benign race and proceed
-			if strings.Contains(err.Error(), "duplicate key value") || strings.Contains(err.Error(), "SQLSTATE 23505") {
-				log.Printf("User already created in parallel: %s (%s)", email, userID)
-			} else {
-				return fmt.Errorf("failed to create user: %w", err)
-			}
+			return fmt.Errorf("failed to create user: %w", err)
 		} else {
 			log.Printf("Created new user: %s (%s)", email, userID)
 		}
@@ -340,4 +335,3 @@ func ensureUserExists(ctx context.Context, userID, email, name string) error {
 
 	return nil
 }
-

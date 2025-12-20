@@ -4,8 +4,8 @@ package db
 const (
 	// CreateUserQuery inserts a new user into the users table.
 	CreateUserQuery = `
-		INSERT INTO ktrlplane.users (user_id, email, name, external_auth_id, created_at)
-		VALUES ($1, $2, $3, $4, NOW())`
+		INSERT INTO ktrlplane.users (user_id, email, name, created_at)
+		VALUES ($1, $2, $3, NOW())`
 
 	// GetUserByIDQuery selects a user by ID.
 	GetUserByIDQuery = `
@@ -54,7 +54,7 @@ const (
 
 	// CreatePlaceholderUserQuery creates a placeholder user with email as user_id
 	CreatePlaceholderUserQuery = `
-		INSERT INTO ktrlplane.users (user_id, email, name, external_auth_id, created_at)
-		VALUES ($1, $1, $2, NULL, NOW())
+		INSERT INTO ktrlplane.users (user_id, email, name, created_at)
+		VALUES ($1, $1, $2, NOW())
 		ON CONFLICT (user_id) DO NOTHING`
 )
