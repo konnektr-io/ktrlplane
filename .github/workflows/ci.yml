@@ -24,6 +24,19 @@ jobs:
         ports:
           - 5432:5432
 
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: ktrlplane_test
+      KTRLPLANE_DATABASE_HOST: localhost
+      KTRLPLANE_DATABASE_PORT: 5432
+      KTRLPLANE_DATABASE_USER: postgres
+      KTRLPLANE_DATABASE_PASSWORD: postgres
+      KTRLPLANE_DATABASE_DBNAME: ktrlplane_test
+      KTRLPLANE_DATABASE_SSLMODE: disable
+
     steps:
       - uses: actions/checkout@v4
 
@@ -35,14 +48,11 @@ jobs:
       - name: Go mod tidy
         run: go mod tidy
 
+      - name: Run migrations
+        run: go run cmd/migrate/main.go
+
       - name: Run tests
         run: go test -v ./...
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: ktrlplane_test
 
       - name: Run linting
         uses: golangci/golangci-lint-action@v4
