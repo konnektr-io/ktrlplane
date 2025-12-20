@@ -49,8 +49,8 @@ export function UnifiedBillingSetupModal({
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  const setupStripeCustomer = useSetupStripeCustomer(scopeType, scopeId);
-  const createSetupIntent = useCreateSetupIntent(scopeType, scopeId);
+  const { mutateAsync: setupCustomer } = useSetupStripeCustomer(scopeType, scopeId);
+  const { mutateAsync: createIntent } = useCreateSetupIntent(scopeType, scopeId);
 
   const handleSetup = useCallback(async () => {
     setError(null);
@@ -58,12 +58,12 @@ export function UnifiedBillingSetupModal({
 
     try {
       // Step 1: Create Stripe customer (uses Auth0 user info from token)
-      await setupStripeCustomer.mutateAsync({
+      await setupCustomer({
         description: `${scopeType} ${scopeId}`,
       });
 
       // Step 2: Get SetupIntent for payment method
-      const secret = await createSetupIntent.mutateAsync();
+      const secret = await createIntent();
       setClientSecret(secret);
       setStep("payment");
     } catch (err) {
@@ -71,7 +71,7 @@ export function UnifiedBillingSetupModal({
       setError("Failed to setup billing. Please try again.");
       setStep("error");
     }
-  }, [createSetupIntent, scopeId, scopeType, setupStripeCustomer]);
+  }, [createIntent, scopeId, scopeType, setupCustomer]);
 
   // Reset state when modal opens
   useEffect(() => {
