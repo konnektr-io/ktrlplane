@@ -3,7 +3,6 @@
 -- Assign to Konnektr.Graph.Owner and Konnektr.Data.Owner roles
 -- Date: 2025-12-13
 
-begin
 SET search_path TO ktrlplane, public;
 
 -- Insert new mcp/* data plane permission for Konnektr.Graph
