@@ -47,6 +47,7 @@ export function useResourceCreationFlow({
   urlProjectId,
   billingStatus,
   billingLoading,
+  isGlobalRoute,
 }: UseResourceCreationFlowParams) {
   const [searchParams] = useSearchParams();
 
@@ -194,7 +195,7 @@ export function useResourceCreationFlow({
     return !!t?.skus.some((s) => s.sku === sku);
   };
 
-  // Auto-select/normalize SKU if preselected from URL
+  // Auto-select/normalize SKU if preselected from URL - only on initial load
   useEffect(() => {
     if (preselectedResourceType) {
       const catalogType = catalogResourceTypes.find(
@@ -205,24 +206,28 @@ export function useResourceCreationFlow({
           preselectedSku &&
           catalogType.skus.some((s) => s.sku === preselectedSku)
         ) {
-          // Valid preselected sku
-          setState((prev) => ({ ...prev, sku: preselectedSku }));
-        } else {
-          // Fallback to free or first available
-          const fallbackSku = catalogType.skus[0]?.sku;
+          // Valid preselected sku - only set if not already set by user
+          setState((prev) => {
+            if (prev.sku === "" || prev.sku === preselectedSku) {
+              return { ...prev, sku: preselectedSku };
+            }
+            return prev;
+          });
+        } else if (!state.sku) {
+          // Fallback to first available SKU only if no SKU is set
+          const fallbackSku = catalogType.skus[0]?.sku || "";
           setState((prev) => ({ ...prev, sku: fallbackSku }));
         }
       }
     }
-  }, [preselectedResourceType, preselectedSku, state.sku]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectedResourceType, preselectedSku]);
 
   // Navigation helpers
   const canGoNext = () => {
     if (!currentStep) return false;
 
     switch (currentStep.id) {
-      case "project":
-        return !!state.projectId;
       case "resourceType":
         return !!state.resourceType;
       case "tier":

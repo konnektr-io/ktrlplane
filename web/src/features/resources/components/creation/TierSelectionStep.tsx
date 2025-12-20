@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ResourceTierCard } from "../ResourceTierCard";
 import type { ResourceType } from "../../catalog/resourceTypes";
 import { generateDNSId } from "@/lib/dnsUtils";
@@ -21,22 +28,22 @@ interface Project {
   name: string;
 }
 
-interface TierSelectionStepProps {
+interface ConfigureResourceStepProps {
   resourceType: ResourceType | undefined;
   resourceName: string;
   selectedSku: string;
   onNameChange: (name: string) => void;
   onSkuSelect: (sku: string) => void;
-  preselectedSku?: string | null;
-  // Optional project selection/creation props
+  // Project selection/creation props (for global route)
   projects?: Project[];
   selectedProjectId?: string | null;
   onProjectSelect?: (projectId: string) => void;
   onProjectCreated?: (projectId: string) => void;
   showProjectSelection?: boolean;
+  isLoadingProjects?: boolean;
 }
 
-export function TierSelectionStep({
+export function ConfigureResourceStep({
   resourceType,
   resourceName,
   selectedSku,
@@ -47,21 +54,41 @@ export function TierSelectionStep({
   onProjectSelect,
   onProjectCreated,
   showProjectSelection = false,
-}: TierSelectionStepProps) {
-  const [showCreateForm, setShowCreateForm] = useState(
-    !projects || projects.length === 0
-  );
+  isLoadingProjects = false,
+}: ConfigureResourceStepProps) {
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const { mutateAsync: createProject } = useCreateProject();
   const [isCreating, setIsCreating] = useState(false);
-  const [projectFormData, setProjectFormData] = useState({
-    name: "",
-  });
+  const [projectFormData, setProjectFormData] = useState({ name: "" });
+
+  // Auto-select first project when projects load
+  useEffect(() => {
+    if (
+      showProjectSelection &&
+      onProjectSelect &&
+      !selectedProjectId &&
+      projects &&
+      projects.length > 0 &&
+      !isLoadingProjects
+    ) {
+      onProjectSelect(projects[0].project_id);
+    }
+  }, [projects, selectedProjectId, showProjectSelection, onProjectSelect, isLoadingProjects]);
+
+  // Show create form if no projects exist (after loading completes)
+  useEffect(() => {
+    if (
+      showProjectSelection &&
+      !isLoadingProjects &&
+      projects &&
+      projects.length === 0
+    ) {
+      setShowCreateForm(true);
+    }
+  }, [projects, isLoadingProjects, showProjectSelection]);
 
   const handleProjectNameChange = (name: string) => {
-    setProjectFormData((prev) => ({
-      ...prev,
-      name,
-    }));
+    setProjectFormData((prev) => ({ ...prev, name }));
   };
 
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -94,40 +121,46 @@ export function TierSelectionStep({
 
   return (
     <div className="space-y-6">
-      {/* Optional Project Selection/Creation - shown inline when needed */}
+      {/* Project Selection/Creation - shown when on global route */}
       {showProjectSelection && onProjectSelect && (
         <Card>
           <CardHeader>
             <CardTitle>Project</CardTitle>
             <CardDescription>
-              {!showCreateForm && projects && projects.length > 0
+              {isLoadingProjects
+                ? "Loading your projects..."
+                : !showCreateForm && projects && projects.length > 0
                 ? "Select the project where this resource will be created"
                 : "Create a project to organize your resources"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!showCreateForm && projects && projects.length > 0 ? (
+            {isLoadingProjects ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : !showCreateForm && projects && projects.length > 0 ? (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="project-select">Project *</Label>
-                  <select
-                    id="project-select"
+                  <Select
                     value={selectedProjectId || ""}
-                    onChange={(e) => onProjectSelect(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    onValueChange={onProjectSelect}
                   >
-                    <option value="" disabled>
-                      Select a project...
-                    </option>
-                    {projects.map((project) => (
-                      <option
-                        key={project.project_id}
-                        value={project.project_id}
-                      >
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a project..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects.map((project) => (
+                        <SelectItem
+                          key={project.project_id}
+                          value={project.project_id}
+                        >
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="mt-4">
                   <Button
@@ -247,3 +280,6 @@ export function TierSelectionStep({
     </div>
   );
 }
+
+// Keep backwards compatibility alias
+export { ConfigureResourceStep as TierSelectionStep };

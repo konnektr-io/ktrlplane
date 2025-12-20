@@ -10,7 +10,7 @@ import {
 import { 
   // Settings,
   Shield,
-  FileText,
+  // FileText,
   // Activity,
   Database
 } from 'lucide-react';
@@ -26,12 +26,12 @@ const resourceMenuItems = [
     icon: Shield,
     path: 'access',
   },
-  {
+  /* {
     title: 'Logs',
     icon: FileText,
     path: 'logs',
   },
-  /* {
+  {
     title: 'Monitoring',
     icon: Activity,
     path: 'monitoring',

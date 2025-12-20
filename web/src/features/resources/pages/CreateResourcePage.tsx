@@ -42,7 +42,7 @@ export default function CreateResourcePage() {
 
   // Billing status for selected project
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    urlProjectId || (projects.length > 0 ? projects[0].project_id : null)
+    urlProjectId || null
   );
 
   const {
@@ -343,7 +343,6 @@ export default function CreateResourcePage() {
             selectedSku={flow.state.sku}
             onNameChange={handleNameChange}
             onSkuSelect={(sku) => flow.setState({ sku })}
-            preselectedSku={flow.preselectedSku}
             projects={isGlobalCreateRoute ? projects : undefined}
             selectedProjectId={selectedProjectId}
             onProjectSelect={
@@ -353,6 +352,7 @@ export default function CreateResourcePage() {
               isGlobalCreateRoute ? handleProjectCreated : undefined
             }
             showProjectSelection={isGlobalCreateRoute}
+            isLoadingProjects={projectsLoading}
           />
         )}
 
