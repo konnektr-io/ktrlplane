@@ -14,6 +14,7 @@ import {
 export interface SecretSettings {
   secretType: string;
   data: Record<string, string>;
+  [key: string]: unknown;
 }
 
 interface SecretFormProps {
