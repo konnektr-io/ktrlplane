@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import {
   trackResourceCreationStart,
@@ -35,23 +35,10 @@ export default function CreateResourcePage() {
   const navigate = useNavigate();
   // Get search params for UTM tracking
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
   // Determine if we're on the global create route
   const isGlobalCreateRoute = window.location.pathname === "/resources/create";
-
-  // Track begin_resource_creation event on mount
-  useEffect(() => {
-    const resourceType =
-      searchParams.get("resource_type") || flow.state.resourceType;
-    const sku = searchParams.get("sku") || flow.state.sku;
-    const utmSource =
-      searchParams.get("utm_source") ||
-      (document.referrer.includes("konnektr.io") ? "marketing" : "direct");
-    if (resourceType) {
-      trackResourceCreationStart(resourceType, sku, utmSource);
-    }
-  }, []);
 
   // Billing status for selected project
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
@@ -63,15 +50,6 @@ export default function CreateResourcePage() {
     isLoading: billingLoading,
     refetch: refetchBillingStatus,
   } = useBillingStatus("project", selectedProjectId || "");
-
-  // Sync selectedProjectId when projects are loaded (async data)
-  // Also sync the flow state's projectId
-  useEffect(() => {
-    if (!urlProjectId && !selectedProjectId && projects.length > 0) {
-      const firstProjectId = projects[0].project_id;
-      setSelectedProjectId(firstProjectId);
-    }
-  }, [projects, urlProjectId, selectedProjectId]);
 
   // Pass typed billingStatus directly to flow
   const flow = useResourceCreationFlow({
@@ -88,6 +66,30 @@ export default function CreateResourcePage() {
     billingLoading,
     isGlobalRoute: isGlobalCreateRoute,
   });
+
+  // Track begin_resource_creation event on mount
+  useEffect(() => {
+    const resourceType =
+      searchParams.get("resource_type") || flow.state.resourceType;
+    const sku = searchParams.get("sku") || flow.state.sku;
+    const utmSource =
+      searchParams.get("utm_source") ||
+      (document.referrer.includes("konnektr.io") ? "marketing" : "direct");
+    if (resourceType) {
+      trackResourceCreationStart(resourceType, sku, utmSource);
+    }
+  }, [flow.state.resourceType, flow.state.sku, searchParams]);
+
+
+  // Sync selectedProjectId when projects are loaded (async data)
+  // Also sync the flow state's projectId
+  useEffect(() => {
+    if (!urlProjectId && !selectedProjectId && projects.length > 0) {
+      const firstProjectId = projects[0].project_id;
+      setSelectedProjectId(firstProjectId);
+    }
+  }, [projects, urlProjectId, selectedProjectId]);
+
 
   // Keep flow state in sync with selectedProjectId
   useEffect(() => {

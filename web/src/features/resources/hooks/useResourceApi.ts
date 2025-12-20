@@ -90,7 +90,7 @@ export function useCreateResource(projectId: string) {
         // Let's pass it, assuming backend might need metadata. But CRITICAL: verify backend doesn't log it.
         // SAFE APPROACH: If type is Secret, remove data from settings_json before sending to resource API
         
-        let payload = { ...data, settings_json: data.settings_json ?? {} };
+        const payload = { ...data, settings_json: data.settings_json ?? {} };
         
         if (data.type === 'Konnektr.Secret' && payload.settings_json) {
            // We keep the structure but maybe empty the data? 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import {
@@ -52,18 +52,7 @@ export function UnifiedBillingSetupModal({
   const setupStripeCustomer = useSetupStripeCustomer(scopeType, scopeId);
   const createSetupIntent = useCreateSetupIntent(scopeType, scopeId);
 
-  // Reset state when modal opens
-  useEffect(() => {
-    if (open) {
-      setStep("creating");
-      setError(null);
-      setClientSecret(null);
-      // Start the setup process immediately
-      handleSetup();
-    }
-  }, [open]);
-
-  const handleSetup = async () => {
+  const handleSetup = useCallback(async () => {
     setError(null);
     setStep("creating");
 
@@ -82,7 +71,18 @@ export function UnifiedBillingSetupModal({
       setError("Failed to setup billing. Please try again.");
       setStep("error");
     }
-  };
+  }, [createSetupIntent, scopeId, scopeType, setupStripeCustomer]);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (open) {
+      setStep("creating");
+      setError(null);
+      setClientSecret(null);
+      // Start the setup process immediately
+      handleSetup();
+    }
+  }, [open, handleSetup]);
 
   const handlePaymentSuccess = () => {
     setStep("done");

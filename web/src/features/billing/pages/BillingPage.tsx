@@ -78,6 +78,18 @@ export default function BillingPage() {
     setPendingSubscriptionCheck(true);
   };
 
+  const createSubscription = React.useCallback(async () => {
+    setUpdating(true);
+    try {
+      await createSubscriptionMutation.mutateAsync();
+      await refetch();
+    } catch {
+      setError("Failed to create subscription");
+    } finally {
+      setUpdating(false);
+    }
+  }, [createSubscriptionMutation, refetch]);
+
   // Effect: if billingInfo changes and we just completed billing setup, check for resources and subscription
   React.useEffect(() => {
     if (pendingSubscriptionCheck && billingInfo) {
@@ -94,19 +106,8 @@ export default function BillingPage() {
       }
       setPendingSubscriptionCheck(false);
     }
-  }, [billingInfo, pendingSubscriptionCheck]);
+  }, [billingInfo, pendingSubscriptionCheck, createSubscription]);
 
-  const createSubscription = async () => {
-    setUpdating(true);
-    try {
-      await createSubscriptionMutation.mutateAsync();
-      await refetch();
-    } catch {
-      setError("Failed to create subscription");
-    } finally {
-      setUpdating(false);
-    }
-  };
 
   const cancelSubscription = async () => {
     setUpdating(true);

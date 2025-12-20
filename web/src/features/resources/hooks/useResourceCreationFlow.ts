@@ -45,10 +45,8 @@ interface UseResourceCreationFlowParams {
 
 export function useResourceCreationFlow({
   urlProjectId,
-  hasProjects,
   billingStatus,
   billingLoading,
-  isGlobalRoute,
 }: UseResourceCreationFlowParams) {
   const [searchParams] = useSearchParams();
 
@@ -145,16 +143,13 @@ export function useResourceCreationFlow({
 
     return calculatedSteps;
   }, [
-    isGlobalRoute,
-    urlProjectId,
-    hasProjects,
     preselectedResourceType,
     state.resourceType,
     state.sku,
-    state.skipSettings,
-    state.skipAccess,
     billingStatus,
     billingLoading,
+    state.skipSettings,
+    state.skipAccess,
   ]);
 
   // Get current step
@@ -219,7 +214,7 @@ export function useResourceCreationFlow({
         }
       }
     }
-  }, [preselectedResourceType, preselectedSku]);
+  }, [preselectedResourceType, preselectedSku, state.sku]);
 
   // Navigation helpers
   const canGoNext = () => {
@@ -309,7 +304,7 @@ export function useResourceCreationFlow({
         setState((prev) => ({ ...prev, sku: fallbackSku }));
       }
     }
-  }, [state.resourceType]);
+  }, [state.resourceType, state.sku]);
 
   return {
     state,

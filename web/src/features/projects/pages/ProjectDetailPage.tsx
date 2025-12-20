@@ -98,10 +98,10 @@ export default function ProjectDetailPage() {
           setNameError(null);
           toast.success("Project name updated successfully");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           if (
+            error &&
             typeof error === "object" &&
-            error !== null &&
             "response" in error &&
             typeof (error as { response?: { data?: { error?: unknown } } })
               .response?.data?.error !== "undefined"
@@ -131,10 +131,10 @@ export default function ProjectDetailPage() {
         toast.success("Project and all its resources have been deleted");
         navigate("/projects");
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         if (
+          error &&
           typeof error === "object" &&
-          error !== null &&
           "response" in error &&
           typeof (error as { response?: { data?: { error?: string } } })
             .response?.data?.error === "string"

@@ -112,7 +112,7 @@ export default function SecretResourceDetails({
                         data: Object.entries(secretData.data || {}).reduce((acc, [k, v]) => {
                             try {
                                 acc[k] = atob(v);
-                            } catch (e) {
+                            } catch {
                                 acc[k] = v; // Fallback
                             }
                             return acc;

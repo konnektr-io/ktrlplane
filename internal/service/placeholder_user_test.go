@@ -2,14 +2,57 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"ktrlplane/internal/db"
 	"ktrlplane/internal/utils"
 	"testing"
+
+	"ktrlplane/internal/config"
+	"os"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestMain(m *testing.M) {
+	// Skip DB init if in short mode
+	if os.Getenv("GO_TEST_SHORT") == "true" {
+		os.Exit(m.Run())
+	}
+
+	// Initialize DB for integration tests using env vars
+	port, _ := strconv.Atoi(os.Getenv("DB_PORT"))
+	if port == 0 {
+		port = 5432
+	}
+
+	cfg := config.DatabaseConfig{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     port,
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  "disable",
+	}
+
+	// Only attempt init if we have a host (implies integration test environment)
+	if cfg.Host != "" {
+		if err := db.InitDB(cfg); err != nil {
+			fmt.Printf("Failed to initialize database for tests: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	code := m.Run()
+
+	if cfg.Host != "" {
+		db.CloseDB()
+	}
+
+	os.Exit(code)
+}
 
 // TestPlaceholderUserInvitationFlow tests the complete invitation flow:
 // 1. Role is assigned to non-existent user (email)
@@ -19,7 +62,7 @@ import (
 // 5. Placeholder user is deleted
 func TestPlaceholderUserInvitationFlow(t *testing.T) {
 	// Skip if not in integration test mode
-	if testing.Short() {
+	if testing.Short() || os.Getenv("DB_HOST") == "" {
 		t.Skip("Skipping integration test")
 	}
 
@@ -152,7 +195,8 @@ func TestPlaceholderUserInvitationFlow(t *testing.T) {
 
 // TestAssignRoleToInvalidEmail tests that assigning a role to an invalid identifier fails
 func TestAssignRoleToInvalidEmail(t *testing.T) {
-	if testing.Short() {
+	// Skip if not in integration test mode
+	if testing.Short() || os.Getenv("DB_HOST") == "" {
 		t.Skip("Skipping integration test")
 	}
 
@@ -187,7 +231,8 @@ func TestAssignRoleToInvalidEmail(t *testing.T) {
 
 // TestAssignRoleToExistingUser tests that assigning a role to an existing user works normally
 func TestAssignRoleToExistingUser(t *testing.T) {
-	if testing.Short() {
+	// Skip if not in integration test mode
+	if testing.Short() || os.Getenv("DB_HOST") == "" {
 		t.Skip("Skipping integration test")
 	}
 
