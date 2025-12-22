@@ -337,10 +337,9 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 			}
 		}
 
-		// Get payment methods
+		// Get payment methods (all types: card, link, us_bank_account, etc.)
 		pmParams := &stripe.PaymentMethodListParams{
 			Customer: stripe.String(*account.StripeCustomerID),
-			Type:     stripe.String("card"),
 		}
 
 		pmIterator := paymentmethod.List(pmParams)
