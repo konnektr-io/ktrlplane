@@ -179,6 +179,8 @@ export default function BillingPage() {
   } = billingInfo;
 
   const hasStripeCustomer = !!stripe_customer?.id;
+  const hasPaymentMethods =
+    Array.isArray(payment_methods) && payment_methods.length > 0;
   // const hasActiveSubscription =
   //   !!subscription_details?.id && subscription_details.status === "active";
 
@@ -198,91 +200,98 @@ export default function BillingPage() {
         </Alert>
       )}
 
-      {/* Combined Subscription Card: only show if subscription_details exists */}
-      {subscription_details ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Subscription
-            </CardTitle>
-            <CardDescription>
-              Subscription details are fetched live from Stripe.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Subscription ID:</span>
-              <span className="font-mono text-sm">
-                {subscription_details.id}
+      {/* Combined Subscription Card: only show if billing is set up */}
+      {hasStripeCustomer && hasPaymentMethods && (
+        <>
+          {subscription_details ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Subscription
+                </CardTitle>
+                <CardDescription>
+                  Subscription details are fetched live from Stripe.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Subscription ID:</span>
+                  <span className="font-mono text-sm">
+                    {subscription_details.id}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Status:</span>
+                  <Badge
+                    className={getStatusColor(subscription_details.status)}
+                  >
+                    {subscription_details.status}
+                  </Badge>
+                </div>
+                {/* Pending cancellation note */}
+                {subscription_details.cancel_at_period_end && (
+                  <div className="flex items-center mt-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
+                    <span className="text-sm text-destructive">
+                      This subscription is pending cancellation and will end at
+                      the end of the current billing period. To continue your
+                      subscription, open the Payment Management Portal below.
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Cancel at Period End:</span>
+                  <Badge
+                    variant={
+                      subscription_details.cancel_at_period_end
+                        ? "destructive"
+                        : "default"
+                    }
+                  >
+                    {subscription_details.cancel_at_period_end ? "Yes" : "No"}
+                  </Badge>
+                </div>
+                {/* Billing Email: now shown from Stripe customer info, not DB */}
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Billing Email:</span>
+                  <span>{stripe_customer?.email || "Not set"}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Subscription
+                </CardTitle>
+                <CardDescription>
+                  No active subscription. You can create one below.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+
+          {/* Create subscription button if no subscription exists but customer exists */}
+          {!subscription_details && (
+            <div className="flex flex-col gap-2 items-start mt-4">
+              <Button
+                variant="default"
+                onClick={createSubscription}
+                disabled={updating}
+              >
+                Create subscription
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                You can create a subscription now to enable paid resources
+                later.
+                <br />
+                Free resources remain available without a subscription.
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Status:</span>
-              <Badge className={getStatusColor(subscription_details.status)}>
-                {subscription_details.status}
-              </Badge>
-            </div>
-            {/* Pending cancellation note */}
-            {subscription_details.cancel_at_period_end && (
-              <div className="flex items-center mt-2">
-                <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
-                <span className="text-sm text-destructive">
-                  This subscription is pending cancellation and will end at the
-                  end of the current billing period. To continue your
-                  subscription, open the Payment Management Portal below.
-                </span>
-              </div>
-            )}
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Cancel at Period End:</span>
-              <Badge
-                variant={
-                  subscription_details.cancel_at_period_end
-                    ? "destructive"
-                    : "default"
-                }
-              >
-                {subscription_details.cancel_at_period_end ? "Yes" : "No"}
-              </Badge>
-            </div>
-            {/* Billing Email: now shown from Stripe customer info, not DB */}
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Billing Email:</span>
-              <span>{stripe_customer?.email || "Not set"}</span>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Subscription
-            </CardTitle>
-            <CardDescription>
-              No active subscription. You can create one below.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
-      {/* Create subscription button if no subscription exists but customer exists */}
-      {hasStripeCustomer && !subscription_details && (
-        <div className="flex flex-col gap-2 items-start mt-4">
-          <Button
-            variant="default"
-            onClick={createSubscription}
-            disabled={updating}
-          >
-            Create subscription
-          </Button>
-          <span className="text-xs text-muted-foreground">
-            You can create a subscription now to enable paid resources later.
-            <br />
-            Free resources remain available without a subscription.
-          </span>
-        </div>
+          )}
+        </>
       )}
 
       {/* Subscription Items */}
@@ -361,7 +370,7 @@ export default function BillingPage() {
       />
 
       {/* Stripe Integration */}
-      {!hasStripeCustomer ? (
+      {!hasStripeCustomer || !hasPaymentMethods ? (
         <Card>
           <CardHeader>
             <CardTitle>Setup Billing</CardTitle>
