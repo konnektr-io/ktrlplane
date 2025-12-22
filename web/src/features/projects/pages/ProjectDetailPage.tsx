@@ -35,13 +35,15 @@ import {
 import { Auth0ClientSecretViewer } from "../components/Auth0ClientSecretViewer";
 import { DeleteProjectDialog } from "../components/DeleteProjectDialog";
 import { useProjectSecret } from "../hooks/useProjectSecret";
+import { UnifiedBillingSetupModal } from "@/features/billing/components/BillingSetupModal";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { data: currentProject } = useProject(projectId ?? "");
   const { data: resources = [] } = useResources(projectId ?? "");
-  const { data: billingInfo } = useBilling("project", projectId ?? "");
+  const { data: billingInfo, refetch: refetchBillingInfo } = useBilling("project", projectId ?? "");
+  const [showBillingSetupModal, setShowBillingSetupModal] = useState(false);
   const secretName = `auth0-client-${projectId}`;
   const { data: m2mSecret, isLoading: isLoadingSecret } = useProjectSecret(
     projectId ?? "",
@@ -311,7 +313,6 @@ export default function ProjectDetailPage() {
         <Card>
           <CardHeader>
             <CardTitle>Project Metrics</CardTitle>
-            <CardDescription>High-level project statistics</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-4">
@@ -325,14 +326,18 @@ export default function ProjectDetailPage() {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {billingInfo?.billing_account?.stripe_customer_id ? (
-                    <span className="text-green-600">Linked</span>
+                  {billingInfo?.billing_account?.stripe_customer_id &&
+                  billingInfo?.payment_methods &&
+                  billingInfo.payment_methods.length > 0 ? (
+                    <span className="text-green-600">Active</span>
+                  ) : billingInfo?.billing_account?.stripe_customer_id ? (
+                    <span className="text-yellow-600">Incomplete</span>
                   ) : (
-                    <span className="text-red-600">Not Linked</span>
+                    <span className="text-red-600">Not Setup</span>
                   )}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Billing Account
+                  Billing Status
                 </div>
               </div>
               <div className="text-center">
@@ -359,16 +364,18 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             </div>
-            {!billingInfo?.billing_account?.stripe_customer_id && (
+            {(!billingInfo?.billing_account?.stripe_customer_id ||
+              !billingInfo?.payment_methods ||
+              billingInfo.payment_methods.length === 0) && (
               <div className="flex justify-end mt-4 gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    (window.location.href = `/projects/${projectId}/billing`)
-                  }
+                  onClick={() => setShowBillingSetupModal(true)}
                 >
-                  Add Billing Account
+                  {billingInfo?.billing_account?.stripe_customer_id
+                    ? "Add Payment Method"
+                    : "Setup Billing"}
                 </Button>
               </div>
             )}
@@ -395,27 +402,30 @@ export default function ProjectDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {resources.filter((r) => r.type !== "Konnektr.Secret").slice(0, 5).map((resource) => (
-                  <a
-                    key={resource.resource_id}
-                    href={`/projects/${projectId}/resources/${resource.resource_id}`}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
-                    title={`View resource: ${resource.name}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium mb-0">{resource.name}</p>
-                        {resource.type && (
-                          <span className="text-xs text-muted-foreground">
-                            {resource.type}
-                          </span>
-                        )}
+                {resources
+                  .filter((r) => r.type !== "Konnektr.Secret")
+                  .slice(0, 5)
+                  .map((resource) => (
+                    <a
+                      key={resource.resource_id}
+                      href={`/projects/${projectId}/resources/${resource.resource_id}`}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+                      title={`View resource: ${resource.name}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Activity className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium mb-0">{resource.name}</p>
+                          {resource.type && (
+                            <span className="text-xs text-muted-foreground">
+                              {resource.type}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <ResourceStatusBadge status={resource.status} />
-                  </a>
-                ))}
+                      <ResourceStatusBadge status={resource.status} />
+                    </a>
+                  ))}
               </div>
               {/* Add Resource button moved to header */}
             </CardContent>
@@ -474,6 +484,18 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Billing Setup Modal */}
+      <UnifiedBillingSetupModal
+        open={showBillingSetupModal}
+        onClose={() => setShowBillingSetupModal(false)}
+        scopeType="project"
+        scopeId={projectId || ""}
+        onComplete={async () => {
+          setShowBillingSetupModal(false);
+          await refetchBillingInfo();
+        }}
+      />
 
       {/* Delete Confirmation Dialog */}
       {currentProject && (

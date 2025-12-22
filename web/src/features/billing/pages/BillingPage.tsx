@@ -108,7 +108,6 @@ export default function BillingPage() {
     }
   }, [billingInfo, pendingSubscriptionCheck, createSubscription]);
 
-
   const cancelSubscription = async () => {
     setUpdating(true);
     try {
@@ -137,6 +136,7 @@ export default function BillingPage() {
       case "active":
         return "bg-green-100 text-green-800";
       case "trial":
+      case "trialing":
         return "bg-blue-100 text-blue-800";
       case "canceled":
       case "cancelled":
@@ -179,8 +179,8 @@ export default function BillingPage() {
   } = billingInfo;
 
   const hasStripeCustomer = !!stripe_customer?.id;
-  const hasActiveSubscription =
-    !!subscription_details?.id && subscription_details.status === "active";
+  // const hasActiveSubscription =
+  //   !!subscription_details?.id && subscription_details.status === "active";
 
   return (
     <div className="space-y-6 p-6">
@@ -268,7 +268,7 @@ export default function BillingPage() {
       )}
 
       {/* Create subscription button if no subscription exists but customer exists */}
-      {hasStripeCustomer && !hasActiveSubscription && (
+      {hasStripeCustomer && !subscription_details && (
         <div className="flex flex-col gap-2 items-start mt-4">
           <Button
             variant="default"
@@ -286,7 +286,7 @@ export default function BillingPage() {
       )}
 
       {/* Subscription Items */}
-      {hasActiveSubscription &&
+      {subscription_details &&
         subscription_items &&
         subscription_items.length > 0 && (
           <Card>
@@ -487,7 +487,7 @@ export default function BillingPage() {
           )}
 
           {/* Subscription Actions */}
-          {hasActiveSubscription && (
+          {subscription_details && (
             <Card>
               <CardHeader>
                 <CardTitle>Subscription Actions</CardTitle>
