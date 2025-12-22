@@ -32,11 +32,6 @@ const projectMenuItems = [
     path: "",
   },
   {
-    title: "Resources",
-    icon: Database,
-    path: "resources",
-  },
-  {
     title: "Access & Permissions",
     icon: Shield,
     path: "access",
@@ -45,6 +40,11 @@ const projectMenuItems = [
     title: "Billing",
     icon: CreditCard,
     path: "billing",
+  },
+  {
+    title: "Resources",
+    icon: Database,
+    path: "resources",
   },
   {
     title: "Secrets",
