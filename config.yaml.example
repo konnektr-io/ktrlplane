@@ -9,7 +9,7 @@ database:
   sslmode: "disable"
 auth:
   issuer: "https://your-domain.auth0.com/"
-  audience: "https://api.ktrlplane.example.com"
+  audience: "https://your-audience.example.com"
 stripe:
   secret_key: "sk_test_your_stripe_secret_key"
   publishable_key: "pk_test_your_stripe_publishable_key"
