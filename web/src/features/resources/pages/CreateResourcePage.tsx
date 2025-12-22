@@ -23,7 +23,7 @@ import {
   CreationProgressBar,
   ProjectSelectionStep,
   ResourceTypeStep,
-  TierSelectionStep,
+  ConfigureResourceStep,
   BillingSetupStep,
   SettingsConfigurationStep,
   AccessControlStep,
@@ -35,7 +35,10 @@ export default function CreateResourcePage() {
   const navigate = useNavigate();
   // Get search params for UTM tracking
   const location = useLocation();
-  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const searchParams = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search]
+  );
 
   // Determine if we're on the global create route
   const isGlobalCreateRoute = window.location.pathname === "/resources/create";
@@ -64,7 +67,7 @@ export default function CreateResourcePage() {
       subscription_details: null,
     },
     billingLoading,
-    isGlobalRoute: isGlobalCreateRoute,
+    // isGlobalRoute: isGlobalCreateRoute,
   });
 
   // Track begin_resource_creation event on mount
@@ -80,7 +83,6 @@ export default function CreateResourcePage() {
     }
   }, [flow.state.resourceType, flow.state.sku, searchParams]);
 
-
   // Sync selectedProjectId when projects are loaded (async data)
   // Also sync the flow state's projectId
   useEffect(() => {
@@ -89,7 +91,6 @@ export default function CreateResourcePage() {
       setSelectedProjectId(firstProjectId);
     }
   }, [projects, urlProjectId, selectedProjectId]);
-
 
   // Keep flow state in sync with selectedProjectId
   useEffect(() => {
@@ -103,12 +104,12 @@ export default function CreateResourcePage() {
     setSelectedProjectId(projectId);
     flow.setState({ projectId });
   };
-  
+
   const handleUpdateSettings = (settings: unknown) => {
-      // Defer state update to flow
-      if (typeof settings === 'object') {
-          flow.setState({ settings: settings as Record<string, unknown> });
-      }
+    // Defer state update to flow
+    if (typeof settings === "object") {
+      flow.setState({ settings: settings as Record<string, unknown> });
+    }
   };
 
   const handleProjectCreated = (projectId: string) => {
@@ -121,7 +122,7 @@ export default function CreateResourcePage() {
   };
 
   // Resource type selection
-  const handleResourceTypeSelect = (type: ResourceType['id']) => {
+  const handleResourceTypeSelect = (type: ResourceType["id"]) => {
     flow.setState({ resourceType: type });
 
     // Auto-select first available SKU for this resource type
@@ -136,12 +137,14 @@ export default function CreateResourcePage() {
     // Generate slug and only update ID if it changes significantly or if it's currently empty or the name changed
     // We want the ID to be stable once set, but still derived from name if name is edited for the first time
     const currentId = flow.state.resourceId;
-    
+
     flow.setState({
       resourceName: name,
-      resourceId: currentId && currentId.startsWith(name.toLowerCase().replace(/[^a-z0-9]/g, '-')) 
-        ? currentId 
-        : generateDNSId(name),
+      resourceId:
+        currentId &&
+        currentId.startsWith(name.toLowerCase().replace(/[^a-z0-9]/g, "-"))
+          ? currentId
+          : generateDNSId(name),
     });
   };
 
@@ -176,7 +179,7 @@ export default function CreateResourcePage() {
       const payload: CreateResourceData = {
         id: flow.state.resourceId.trim(),
         name: flow.state.resourceName.trim(),
-        type: flow.state.resourceType as ResourceType['id'],
+        type: flow.state.resourceType as ResourceType["id"],
         sku,
         settings_json: settingsJson,
       };
@@ -189,15 +192,15 @@ export default function CreateResourcePage() {
           newResource.sku,
           newResource.project_id
         );
-        
+
         // Navigation after success
         const from = searchParams.get("from");
         if (from === "secrets") {
-            navigate(`/projects/${selectedProjectId}/secrets`);
+          navigate(`/projects/${selectedProjectId}/secrets`);
         } else {
-            navigate(
-              `/projects/${selectedProjectId}/resources/${newResource.resource_id}`
-            );
+          navigate(
+            `/projects/${selectedProjectId}/resources/${newResource.resource_id}`
+          );
         }
       }
     } catch (error) {
@@ -228,9 +231,9 @@ export default function CreateResourcePage() {
       const from = searchParams.get("from");
       if (urlProjectId) {
         if (from === "secrets") {
-            navigate(`/projects/${urlProjectId}/secrets`);
+          navigate(`/projects/${urlProjectId}/secrets`);
         } else {
-            navigate(`/projects/${urlProjectId}/resources`);
+          navigate(`/projects/${urlProjectId}/resources`);
         }
       } else {
         navigate("/projects");
@@ -337,7 +340,7 @@ export default function CreateResourcePage() {
         )}
 
         {flow.currentStep?.id === "tier" && (
-          <TierSelectionStep
+          <ConfigureResourceStep
             resourceType={selectedResourceType}
             resourceName={flow.state.resourceName}
             selectedSku={flow.state.sku}

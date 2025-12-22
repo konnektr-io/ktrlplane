@@ -40,21 +40,21 @@ interface UseResourceCreationFlowParams {
     hasActiveSubscription?: boolean;
   };
   billingLoading: boolean;
-  isGlobalRoute: boolean;
+  // isGlobalRoute: boolean;
 }
 
 export function useResourceCreationFlow({
   urlProjectId,
   billingStatus,
   billingLoading,
-  isGlobalRoute,
-}: UseResourceCreationFlowParams) {
+}: // isGlobalRoute,
+UseResourceCreationFlowParams) {
   const [searchParams] = useSearchParams();
 
   // Parse URL parameters
   const urlResourceType =
     searchParams.get("resourceType") || searchParams.get("resource_type");
-  const preselectedResourceType = urlResourceType as ResourceType['id'] | null;
+  const preselectedResourceType = urlResourceType as ResourceType["id"] | null;
   const preselectedSku = searchParams.get("tier") || searchParams.get("sku");
   const preselectedProjectId = searchParams.get("projectId");
 
@@ -186,7 +186,7 @@ export function useResourceCreationFlow({
   }, [steps, currentStepIndex, billingStatus, billingLoading]);
 
   // Helper: validate whether a sku belongs to a resource type
-  const isSkuValidForType = (type: ResourceType['id'] | "", sku: string) => {
+  const isSkuValidForType = (type: ResourceType["id"] | "", sku: string) => {
     if (!type) return false;
     const t = catalogResourceTypes.find((rt) => rt.id === type);
     // If type has no SKUs (like Secret), then an empty SKU is valid

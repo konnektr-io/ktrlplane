@@ -73,7 +73,13 @@ export function ConfigureResourceStep({
     ) {
       onProjectSelect(projects[0].project_id);
     }
-  }, [projects, selectedProjectId, showProjectSelection, onProjectSelect, isLoadingProjects]);
+  }, [
+    projects,
+    selectedProjectId,
+    showProjectSelection,
+    onProjectSelect,
+    isLoadingProjects,
+  ]);
 
   // Show create form if no projects exist (after loading completes)
   useEffect(() => {
@@ -280,6 +286,3 @@ export function ConfigureResourceStep({
     </div>
   );
 }
-
-// Keep backwards compatibility alias
-export { ConfigureResourceStep as TierSelectionStep };
