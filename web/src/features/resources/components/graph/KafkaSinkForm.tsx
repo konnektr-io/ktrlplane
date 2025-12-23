@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SecretSelector } from "./SecretSelector";
+import { SecretSelector } from "../secret/SecretSelector";
 
 interface KafkaSinkFormProps {
   form: UseFormReturn<any>;

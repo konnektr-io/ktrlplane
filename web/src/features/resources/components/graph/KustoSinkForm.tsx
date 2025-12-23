@@ -7,7 +7,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { SecretSelector } from "./SecretSelector";
+import { SecretSelector } from "../secret/SecretSelector";
 
 interface KustoSinkFormProps {
   form: UseFormReturn<any>;

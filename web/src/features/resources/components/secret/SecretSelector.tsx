@@ -15,10 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useProjectSecret } from "../../../projects/hooks/useProjectSecret";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { SecretForm, SecretSettings } from "../secret/SecretForm";
+import { SecretForm, SecretSettings } from "./SecretForm";
 import { useResources, useCreateResource } from "../../hooks/useResourceApi";
 import { getSecretType } from "../../types/secretTypes";
 import { toast } from "sonner";
@@ -62,10 +63,14 @@ export function SecretSelector({
     undefined,
   ];
 
-  // Get keys for selected secret
-  const currentSecret = secrets.find((s) => s.name === selectedSecret);
-  const availableKeys = currentSecret?.settings_json?.data
-    ? Object.keys(currentSecret.settings_json.data)
+  // Get keys for selected secret using useProjectSecret
+  const { data: fetchedSecret } = useProjectSecret(
+    projectId,
+    selectedSecret || ""
+  );
+
+  const availableKeys = fetchedSecret?.data
+    ? Object.keys(fetchedSecret.data)
     : [];
 
   const handleCreateSecret = async () => {
@@ -86,7 +91,7 @@ export function SecretSelector({
         id: resourceId,
         name: newSecretName,
         type: "Konnektr.Secret",
-        sku: "standard",
+        sku: "free",
         settings_json: newSecretData as Record<string, unknown>,
       });
 

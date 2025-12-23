@@ -89,7 +89,7 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
 
   const addSink = () => {
     const currentSinks = form.getValues(`eventSinks.${newSinkType}`) || [];
-    
+
     let newSink: KafkaSink | KustoSink | MqttSink | WebhookSink;
     switch (newSinkType) {
       case "kafka":
@@ -112,7 +112,7 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
         newSink = {
           name: "",
           broker: "",
-          port: 1883,
+          port: 8883,
           topic: "",
           clientId: "",
           protocolVersion: "5.0.0",
@@ -127,8 +127,12 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
         };
         break;
     }
-    
-    form.setValue(`eventSinks.${newSinkType}` as any, [...currentSinks, newSink]);
+
+    form.setValue(`eventSinks.${newSinkType}`, [...currentSinks, newSink] as
+      | KafkaSink[]
+      | KustoSink[]
+      | MqttSink[]
+      | WebhookSink[]);
     setIsAdding(false);
     // Auto-expand the new sink
     const newIndex = currentSinks.length;
@@ -202,13 +206,18 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
             <div className="flex gap-4 items-end mb-4 p-4 border rounded-lg bg-muted/50">
               <div className="flex-1">
                 <Label>Sink Type</Label>
-                <Select value={newSinkType} onValueChange={(value: string) => setNewSinkType(value as SinkType)}>
+                <Select
+                  value={newSinkType}
+                  onValueChange={(value: string) =>
+                    setNewSinkType(value as SinkType)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="kafka">Kafka</SelectItem>
-                    <SelectItem value="kusto">Azure Data Explorer (Kusto)</SelectItem>
+                    <SelectItem value="kusto">Kusto</SelectItem>
                     <SelectItem value="mqtt">MQTT</SelectItem>
                     <SelectItem value="webhook">Webhook</SelectItem>
                   </SelectContent>
@@ -217,7 +226,11 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
               <Button onClick={addSink} type="button">
                 Add
               </Button>
-              <Button onClick={() => setIsAdding(false)} type="button" variant="outline">
+              <Button
+                onClick={() => setIsAdding(false)}
+                type="button"
+                variant="outline"
+              >
                 Cancel
               </Button>
             </div>
@@ -226,7 +239,9 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
           {allSinks.length === 0 && !isAdding && (
             <div className="text-center py-8 text-muted-foreground">
               <p>No event sinks configured yet</p>
-              <p className="text-sm mt-1">Click "Add Sink" to create your first sink</p>
+              <p className="text-sm mt-1">
+                Click "Add Sink" to create your first sink
+              </p>
             </div>
           )}
 
@@ -247,7 +262,10 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
 
                   return (
                     <>
-                      <TableRow key={sinkId} className="cursor-pointer hover:bg-muted/50">
+                      <TableRow
+                        key={sinkId}
+                        className="cursor-pointer hover:bg-muted/50"
+                      >
                         <TableCell onClick={() => toggleExpanded(sinkId)}>
                           {isExpanded ? (
                             <ChevronDown className="h-4 w-4" />
@@ -256,7 +274,11 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
                           )}
                         </TableCell>
                         <TableCell onClick={() => toggleExpanded(sinkId)}>
-                          {sink.name || <span className="text-muted-foreground italic">Unnamed</span>}
+                          {sink.name || (
+                            <span className="text-muted-foreground italic">
+                              Unnamed
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell onClick={() => toggleExpanded(sinkId)}>
                           {getSinkTypeLabel(sink.type)}
