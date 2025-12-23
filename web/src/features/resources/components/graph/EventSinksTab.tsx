@@ -1,15 +1,20 @@
 import { UseFormReturn } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  Trash2,
+  Save,
+  Loader2,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -22,12 +27,20 @@ import { KafkaSinkForm } from "./KafkaSinkForm";
 import { KustoSinkForm } from "./KustoSinkForm";
 import { MqttSinkForm } from "./MqttSinkForm";
 import { WebhookSinkForm } from "./WebhookSinkForm";
-import type { GraphSettings, KafkaSink, KustoSink, MqttSink, WebhookSink } from "../../schemas/GraphSchema";
-import { useState } from "react";
+import type {
+  GraphSettings,
+  KafkaSink,
+  KustoSink,
+  MqttSink,
+  WebhookSink,
+} from "../../schemas/GraphSchema";
+import { useState, Fragment } from "react";
 
 interface EventSinksTabProps {
   form: UseFormReturn<GraphSettings>;
   projectId: string;
+  onSave: () => Promise<void>;
+  disabled?: boolean;
 }
 
 type SinkType = "kafka" | "kusto" | "mqtt" | "webhook";
@@ -39,10 +52,14 @@ interface SinkItem {
   data: KafkaSink | KustoSink | MqttSink | WebhookSink;
 }
 
-export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
+export function EventSinksTab({
+  form,
+  projectId,
+  onSave,
+  disabled,
+}: EventSinksTabProps) {
   const [expandedSinks, setExpandedSinks] = useState<Set<string>>(new Set());
-  const [isAdding, setIsAdding] = useState(false);
-  const [newSinkType, setNewSinkType] = useState<SinkType>("kafka");
+  const [savingSink, setSavingSink] = useState<string | null>(null);
 
   const kafkaSinks = form.watch("eventSinks.kafka") || [];
   const kustoSinks = form.watch("eventSinks.kusto") || [];
@@ -87,11 +104,11 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
     setExpandedSinks(newExpanded);
   };
 
-  const addSink = () => {
-    const currentSinks = form.getValues(`eventSinks.${newSinkType}`) || [];
+  const addSink = (sinkType: SinkType) => {
+    const currentSinks = form.getValues(`eventSinks.${sinkType}`) || [];
 
     let newSink: KafkaSink | KustoSink | MqttSink | WebhookSink;
-    switch (newSinkType) {
+    switch (sinkType) {
       case "kafka":
         newSink = {
           name: "",
@@ -128,15 +145,14 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
         break;
     }
 
-    form.setValue(`eventSinks.${newSinkType}`, [...currentSinks, newSink] as
+    form.setValue(`eventSinks.${sinkType}`, [...currentSinks, newSink] as
       | KafkaSink[]
       | KustoSink[]
       | MqttSink[]
       | WebhookSink[]);
-    setIsAdding(false);
     // Auto-expand the new sink
     const newIndex = currentSinks.length;
-    const sinkId = `${newSinkType}-${newIndex}`;
+    const sinkId = `${sinkType}-${newIndex}`;
     setExpandedSinks(new Set([...expandedSinks, sinkId]));
   };
 
@@ -161,6 +177,15 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
       webhook: "Webhook",
     };
     return labels[type];
+  };
+
+  const handleSaveSink = async (sinkId: string) => {
+    setSavingSink(sinkId);
+    try {
+      await onSave();
+    } finally {
+      setSavingSink(null);
+    }
   };
 
   const renderSinkForm = (sink: SinkItem) => {
@@ -193,50 +218,32 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
                 Configure destinations where events will be sent
               </CardDescription>
             </div>
-            {!isAdding && (
-              <Button onClick={() => setIsAdding(true)} type="button" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Sink
-              </Button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Sink
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => addSink("kafka")}>
+                  Kafka
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => addSink("kusto")}>
+                  Kusto
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => addSink("mqtt")}>
+                  MQTT
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => addSink("webhook")}>
+                  Webhook
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent>
-          {isAdding && (
-            <div className="flex gap-4 items-end mb-4 p-4 border rounded-lg bg-muted/50">
-              <div className="flex-1">
-                <Label>Sink Type</Label>
-                <Select
-                  value={newSinkType}
-                  onValueChange={(value: string) =>
-                    setNewSinkType(value as SinkType)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kafka">Kafka</SelectItem>
-                    <SelectItem value="kusto">Kusto</SelectItem>
-                    <SelectItem value="mqtt">MQTT</SelectItem>
-                    <SelectItem value="webhook">Webhook</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={addSink} type="button">
-                Add
-              </Button>
-              <Button
-                onClick={() => setIsAdding(false)}
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
-
-          {allSinks.length === 0 && !isAdding && (
+          {allSinks.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <p>No event sinks configured yet</p>
               <p className="text-sm mt-1">
@@ -261,11 +268,8 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
                   const isExpanded = expandedSinks.has(sinkId);
 
                   return (
-                    <>
-                      <TableRow
-                        key={sinkId}
-                        className="cursor-pointer hover:bg-muted/50"
-                      >
+                    <Fragment key={sinkId}>
+                      <TableRow className="cursor-pointer hover:bg-muted/50">
                         <TableCell onClick={() => toggleExpanded(sinkId)}>
                           {isExpanded ? (
                             <ChevronDown className="h-4 w-4" />
@@ -301,11 +305,32 @@ export function EventSinksTab({ form, projectId }: EventSinksTabProps) {
                       {isExpanded && (
                         <TableRow key={`${sinkId}-details`}>
                           <TableCell colSpan={4} className="bg-muted/30 p-6">
-                            {renderSinkForm(sink)}
+                            <div className="space-y-4">
+                              {renderSinkForm(sink)}
+                              <div className="flex justify-end pt-4 border-t">
+                                <Button
+                                  type="button"
+                                  onClick={() => handleSaveSink(sinkId)}
+                                  disabled={disabled || savingSink === sinkId}
+                                >
+                                  {savingSink === sinkId ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save className="h-4 w-4 mr-2" />
+                                      Save Sink
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
                           </TableCell>
                         </TableRow>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </TableBody>

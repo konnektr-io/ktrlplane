@@ -5,7 +5,8 @@ import type { GraphSettings } from "@/features/resources/schemas/GraphSchema";
 interface ResourceSettingsFormProps {
   resourceType: string;
   projectId?: string;
-  onSubmit: (values: GraphSettings | SecretSettings) => void;
+  initialValues?: GraphSettings | SecretSettings | Record<string, unknown>;
+  onSubmit: (values: GraphSettings | SecretSettings) => void | Promise<void>;
   onChange?: (values: GraphSettings | SecretSettings) => void;
   disabled?: boolean;
   hideSaveButton?: boolean;
@@ -14,16 +15,17 @@ interface ResourceSettingsFormProps {
 export function ResourceSettingsForm({
   resourceType,
   projectId,
+  initialValues,
   onSubmit,
   onChange,
   disabled,
   hideSaveButton,
 }: ResourceSettingsFormProps) {
-  // Type guards for initialValues and onSubmit
   if (resourceType === "Konnektr.Graph") {
     return (
       <GraphForm
-        onSubmit={onSubmit as (values: GraphSettings) => void}
+        initialValues={initialValues as GraphSettings | undefined}
+        onSave={onSubmit as (values: GraphSettings) => Promise<void>}
         disabled={disabled}
         projectId={projectId || ""}
       />

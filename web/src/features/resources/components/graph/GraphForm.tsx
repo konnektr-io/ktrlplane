@@ -1,35 +1,45 @@
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventSinksTab } from "./EventSinksTab";
 import { EventRoutesTab } from "./EventRoutesTab";
 import type { GraphSettings } from "../../schemas/GraphSchema";
 
 interface GraphFormProps {
-  onSubmit: (values: GraphSettings) => void;
+  initialValues?: GraphSettings;
+  onSave: (values: GraphSettings) => Promise<void>;
   disabled?: boolean;
   projectId: string;
 }
 
-export function GraphForm({ onSubmit, disabled, projectId }: GraphFormProps) {
-  const defaultValues: GraphSettings = {
-    eventSinks: {
-      kafka: [],
-      kusto: [],
-      mqtt: [],
-      webhook: [],
-    },
-    eventRoutes: [],
-  };
+const defaultGraphSettings: GraphSettings = {
+  eventSinks: {
+    kafka: [],
+    kusto: [],
+    mqtt: [],
+    webhook: [],
+  },
+  eventRoutes: [],
+};
 
-  const form = useForm({
-    defaultValues,
+export function GraphForm({
+  initialValues,
+  onSave,
+  disabled,
+  projectId,
+}: GraphFormProps) {
+  const form = useForm<GraphSettings>({
+    defaultValues: initialValues ?? defaultGraphSettings,
   });
+
+  const handleSave = async () => {
+    const values = form.getValues();
+    await onSave(values);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-6">
         <Tabs defaultValue="sinks" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="sinks">Event Sinks</TabsTrigger>
@@ -37,20 +47,23 @@ export function GraphForm({ onSubmit, disabled, projectId }: GraphFormProps) {
           </TabsList>
 
           <TabsContent value="sinks" className="mt-6">
-            <EventSinksTab form={form as any} projectId={projectId} />
+            <EventSinksTab
+              form={form}
+              projectId={projectId}
+              onSave={handleSave}
+              disabled={disabled}
+            />
           </TabsContent>
 
           <TabsContent value="routes" className="mt-6">
-            <EventRoutesTab form={form as any} />
+            <EventRoutesTab
+              form={form}
+              onSave={handleSave}
+              disabled={disabled}
+            />
           </TabsContent>
         </Tabs>
-
-        <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={disabled} size="lg">
-            Save Configuration and Deploy
-          </Button>
-        </div>
-      </form>
+      </div>
     </Form>
   );
 }

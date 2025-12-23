@@ -30,17 +30,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+  Save,
+  Loader2,
+} from "lucide-react";
 import type { GraphSettings } from "../../schemas/GraphSchema";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 
 interface EventRoutesTabProps {
   form: UseFormReturn<GraphSettings>;
+  onSave: () => Promise<void>;
+  disabled?: boolean;
 }
 
-export function EventRoutesTab({ form }: EventRoutesTabProps) {
+export function EventRoutesTab({
+  form,
+  onSave,
+  disabled,
+}: EventRoutesTabProps) {
   const [expandedRoutes, setExpandedRoutes] = useState<Set<number>>(new Set());
-  const [isAdding, setIsAdding] = useState(false);
+  const [savingRoute, setSavingRoute] = useState<number | null>(null);
 
   const eventRoutes = form.watch("eventRoutes") || [];
   const eventSinks = form.watch("eventSinks") || {
@@ -78,7 +91,6 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
         typeMappings: {},
       },
     ]);
-    setIsAdding(false);
     // Auto-expand the new route
     setExpandedRoutes(new Set([...expandedRoutes, currentRoutes.length]));
   };
@@ -140,6 +152,15 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
     });
   };
 
+  const handleSaveRoute = async (routeIndex: number) => {
+    setSavingRoute(routeIndex);
+    try {
+      await onSave();
+    } finally {
+      setSavingRoute(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -151,8 +172,8 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
                 Configure how events are routed to your sinks
               </CardDescription>
             </div>
-            {!isAdding && allSinkNames.length > 0 && (
-              <Button onClick={() => setIsAdding(true)} type="button" size="sm">
+            {allSinkNames.length > 0 && (
+              <Button onClick={addRoute} type="button" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Route
               </Button>
@@ -172,27 +193,7 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
             </div>
           ) : (
             <>
-              {isAdding && (
-                <div className="flex gap-4 items-center mb-4 p-4 border rounded-lg bg-muted/50">
-                  <p className="text-sm">
-                    Create a new event route to connect events to a sink
-                  </p>
-                  <div className="ml-auto flex gap-2">
-                    <Button onClick={addRoute} type="button">
-                      Add
-                    </Button>
-                    <Button
-                      onClick={() => setIsAdding(false)}
-                      type="button"
-                      variant="outline"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {eventRoutes.length === 0 && !isAdding && (
+              {eventRoutes.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No event routes configured yet</p>
                   <p className="text-sm mt-1">
@@ -222,11 +223,8 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
                       const mappingCount = Object.keys(typeMappings).length;
 
                       return (
-                        <>
-                          <TableRow
-                            key={routeIndex}
-                            className="cursor-pointer hover:bg-muted/50"
-                          >
+                        <Fragment key={routeIndex}>
+                          <TableRow className="cursor-pointer hover:bg-muted/50">
                             <TableCell
                               onClick={() => toggleExpanded(routeIndex)}
                             >
@@ -355,7 +353,9 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
                                   <div>
                                     <div className="flex items-center justify-between mb-3">
                                       <div>
-                                        <FormLabel>Type Mappings</FormLabel>
+                                        <FormLabel>
+                                          Event Type Mappings
+                                        </FormLabel>
                                         <p className="text-sm text-muted-foreground mt-1">
                                           Map event types to specific topics or
                                           categories
@@ -431,10 +431,31 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
                                     )}
                                   </div>
                                 </div>
+                                <div className="flex justify-end pt-4 border-t mt-4">
+                                  <Button
+                                    type="button"
+                                    onClick={() => handleSaveRoute(routeIndex)}
+                                    disabled={
+                                      disabled || savingRoute === routeIndex
+                                    }
+                                  >
+                                    {savingRoute === routeIndex ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Saving...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Save className="h-4 w-4 mr-2" />
+                                        Save Route
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           )}
-                        </>
+                        </Fragment>
                       );
                     })}
                   </TableBody>
