@@ -14,10 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { GraphSettings } from "../../schemas/GraphSchema";
 import { SecretSelector } from "../secret/SecretSelector";
 
 interface WebhookSinkFormProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<GraphSettings>;
   index: number;
   projectId: string;
 }

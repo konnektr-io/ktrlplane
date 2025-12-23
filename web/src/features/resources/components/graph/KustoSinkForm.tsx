@@ -8,9 +8,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SecretSelector } from "../secret/SecretSelector";
+import type { GraphSettings } from "../../schemas/GraphSchema";
 
 interface KustoSinkFormProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<GraphSettings>;
   index: number;
   projectId: string;
 }

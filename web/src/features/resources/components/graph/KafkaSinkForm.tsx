@@ -15,9 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SecretSelector } from "../secret/SecretSelector";
+import type { GraphSettings } from "../../schemas/GraphSchema";
 
 interface KafkaSinkFormProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<GraphSettings>;
   index: number;
   projectId: string;
 }
