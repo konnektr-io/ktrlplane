@@ -1,15 +1,12 @@
 import { GraphForm } from "./graph/GraphForm";
-import { FlowForm } from "./flow/FlowForm";
 import { SecretForm, SecretSettings } from "./secret/SecretForm";
 import type { GraphSettings } from "@/features/resources/schemas/GraphSchema";
-import type { FlowSettings } from "@/features/resources/schemas/FlowSchema";
 
 interface ResourceSettingsFormProps {
   resourceType: string;
   projectId?: string;
-  initialValues?: GraphSettings | FlowSettings | SecretSettings;
-  onSubmit: (values: GraphSettings | FlowSettings | SecretSettings) => void;
-  onChange?: (values: GraphSettings | FlowSettings | SecretSettings) => void;
+  onSubmit: (values: GraphSettings | SecretSettings) => void;
+  onChange?: (values: GraphSettings | SecretSettings) => void;
   disabled?: boolean;
   hideSaveButton?: boolean;
 }
@@ -17,7 +14,6 @@ interface ResourceSettingsFormProps {
 export function ResourceSettingsForm({
   resourceType,
   projectId,
-  initialValues,
   onSubmit,
   onChange,
   disabled,
@@ -27,7 +23,6 @@ export function ResourceSettingsForm({
   if (resourceType === "Konnektr.Graph") {
     return (
       <GraphForm
-        initialValues={initialValues as GraphSettings | undefined}
         onSubmit={onSubmit as (values: GraphSettings) => void}
         disabled={disabled}
         projectId={projectId || ""}
@@ -35,20 +30,9 @@ export function ResourceSettingsForm({
     );
   }
 
-  if (resourceType === "Konnektr.Flow") {
-    return (
-      <FlowForm
-        initialValues={initialValues as FlowSettings | undefined}
-        onSubmit={onSubmit as (values: FlowSettings) => void}
-        disabled={disabled}
-      />
-    );
-  }
-
   if (resourceType === "Konnektr.Secret") {
     return (
       <SecretForm
-        initialValues={initialValues as SecretSettings | undefined}
         onSubmit={onSubmit as (values: SecretSettings) => void}
         onChange={onChange as (values: SecretSettings) => void}
         disabled={disabled}

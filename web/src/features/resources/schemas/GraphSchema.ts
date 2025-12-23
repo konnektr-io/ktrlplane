@@ -91,6 +91,3 @@ export interface GraphSettings {
   };
   eventRoutes: EventRoute[];
 }
-
-// Legacy Zod export for backward compatibility
-export const GraphSchema = {} as any;

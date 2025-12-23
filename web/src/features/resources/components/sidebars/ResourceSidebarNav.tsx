@@ -7,24 +7,23 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { 
-  // Settings,
-  Shield,
-  // FileText,
-  // Activity,
-  Database
-} from 'lucide-react';
+import { Shield, Database, Settings } from "lucide-react";
 
 const resourceMenuItems = [
   {
-    title: 'Overview',
+    title: "Overview",
     icon: Database,
-    path: '',
+    path: "",
   },
   {
-    title: 'Access & Permissions', 
+    title: "Access & Permissions",
     icon: Shield,
-    path: 'access',
+    path: "access",
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    path: "settings",
   },
   /* {
     title: 'Logs',
@@ -35,11 +34,6 @@ const resourceMenuItems = [
     title: 'Monitoring',
     icon: Activity,
     path: 'monitoring',
-  },
-  {
-    title: 'Settings',
-    icon: Settings,
-    path: 'settings',
   }, */
 ];
 

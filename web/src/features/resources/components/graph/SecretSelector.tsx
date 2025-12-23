@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Plus, Key } from "lucide-react";
+import { Plus } from "lucide-react";
 import { SecretForm, SecretSettings } from "../secret/SecretForm";
 import { useResources, useCreateResource } from "../../hooks/useResourceApi";
 import { getSecretType } from "../../types/secretTypes";
@@ -57,7 +57,10 @@ export function SecretSelector({
   );
 
   // Parse current value (format: "secretName/keyName")
-  const [selectedSecret, selectedKey] = value?.split("/") || [undefined, undefined];
+  const [selectedSecret, selectedKey] = value?.split("/") || [
+    undefined,
+    undefined,
+  ];
 
   // Get keys for selected secret
   const currentSecret = secrets.find((s) => s.name === selectedSecret);
@@ -119,7 +122,9 @@ export function SecretSelector({
             onValueChange={(secretName) => {
               // When secret changes, try to auto-select a key
               const secret = secrets.find((s) => s.name === secretName);
-              const keys = secret?.settings_json?.data ? Object.keys(secret.settings_json.data) : [];
+              const keys = secret?.settings_json?.data
+                ? Object.keys(secret.settings_json.data)
+                : [];
               const firstKey = keys[0];
               onChange(firstKey ? `${secretName}/${firstKey}` : secretName);
             }}
@@ -128,26 +133,16 @@ export function SecretSelector({
               <SelectValue placeholder="Select secret..." />
             </SelectTrigger>
             <SelectContent>
-              {secrets.length === 0 && (
-                <SelectItem value="" disabled>
-                  No secrets available
-                </SelectItem>
-              )}
               {secrets.map((secret) => {
-                const secretTypeDef = getSecretType(secret.settings_json?.secretType || "generic");
+                const secretTypeDef = getSecretType(
+                  secret.settings_json?.secretType || "generic"
+                );
+                const label = secretTypeDef
+                  ? `${secret.name} (${secretTypeDef.name})`
+                  : secret.name;
                 return (
                   <SelectItem key={secret.resource_id} value={secret.name}>
-                    <div className="flex items-center gap-2">
-                      <Key className="h-4 w-4" />
-                      <div>
-                        <div>{secret.name}</div>
-                        {secretTypeDef && (
-                          <div className="text-xs text-muted-foreground">
-                            {secretTypeDef.name}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    {label}
                   </SelectItem>
                 );
               })}
@@ -192,7 +187,8 @@ export function SecretSelector({
       )}
       {value && (
         <p className="text-xs text-muted-foreground">
-          Reference: <code className="bg-muted px-1 py-0.5 rounded">{value}</code>
+          Reference:{" "}
+          <code className="bg-muted px-1 py-0.5 rounded">{value}</code>
         </p>
       )}
 
@@ -235,9 +231,14 @@ export function SecretSelector({
             </Button>
             <Button
               onClick={handleCreateSecret}
-              disabled={!newSecretName.trim() || createResourceMutation.status === "pending"}
+              disabled={
+                !newSecretName.trim() ||
+                createResourceMutation.status === "pending"
+              }
             >
-              {createResourceMutation.status === "pending" ? "Creating..." : "Create Secret"}
+              {createResourceMutation.status === "pending"
+                ? "Creating..."
+                : "Create Secret"}
             </Button>
           </DialogFooter>
         </DialogContent>

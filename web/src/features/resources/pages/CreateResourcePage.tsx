@@ -381,17 +381,6 @@ export default function CreateResourcePage() {
             resourceType={selectedResourceType}
             resourceName={flow.state.resourceName}
             tierName={selectedTier?.name}
-            initialValues={
-              flow.state.resourceType === "Konnektr.Graph"
-                ? (defaultConfigurations[
-                    "Konnektr.Graph"
-                  ] as import("@/features/resources/schemas/GraphSchema").GraphSettings)
-                : flow.state.resourceType === "Konnektr.Flow"
-                ? (defaultConfigurations[
-                    "Konnektr.Flow"
-                  ] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
-                : undefined
-            }
             onSubmit={() => {}} // No-op for submission from form itself
             onChange={handleUpdateSettings}
             disabled={isCreating}

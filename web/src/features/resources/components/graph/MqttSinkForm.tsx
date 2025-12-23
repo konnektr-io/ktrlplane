@@ -14,216 +14,183 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 import { SecretSelector } from "./SecretSelector";
 
 interface MqttSinkFormProps {
   form: UseFormReturn<any>;
   index: number;
-  onRemove: () => void;
   projectId: string;
 }
 
-export function MqttSinkForm({
-  form,
-  index,
-  onRemove,
-  projectId,
-}: MqttSinkFormProps) {
+export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">MQTT Sink #{index + 1}</CardTitle>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onRemove}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name={`eventSinks.mqtt.${index}.name`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Sink Name *</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g., mqtt-broker" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name={`eventSinks.mqtt.${index}.name`}
+          name={`eventSinks.mqtt.${index}.broker`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sink Name *</FormLabel>
+              <FormLabel>Broker Address *</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., mqtt-broker" {...field} />
+                <Input placeholder="e.g., mqtt.example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name={`eventSinks.mqtt.${index}.broker`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Broker Address *</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., mqtt.example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name={`eventSinks.mqtt.${index}.port`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Port *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="1883"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseInt(e.target.value, 10))
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
         <FormField
           control={form.control}
-          name={`eventSinks.mqtt.${index}.topic`}
+          name={`eventSinks.mqtt.${index}.port`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Topic *</FormLabel>
+              <FormLabel>Port *</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., twin/events" {...field} />
+                <Input
+                  type="number"
+                  placeholder="1883"
+                  {...field}
+                  onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <FormField
+        control={form.control}
+        name={`eventSinks.mqtt.${index}.topic`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Topic *</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g., twin/events" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name={`eventSinks.mqtt.${index}.clientId`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Client ID *</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., konnektr-graph" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name={`eventSinks.mqtt.${index}.clientId`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Client ID *</FormLabel>
+        <FormField
+          control={form.control}
+          name={`eventSinks.mqtt.${index}.protocolVersion`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Protocol Version</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <Input placeholder="e.g., konnektr-graph" {...field} />
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+                <SelectContent>
+                  <SelectItem value="3.1.0">MQTT 3.1.0</SelectItem>
+                  <SelectItem value="3.1.1">MQTT 3.1.1</SelectItem>
+                  <SelectItem value="5.0.0">MQTT 5.0.0</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Authentication Section */}
+      <div className="border-t pt-4">
+        <h4 className="text-sm font-medium mb-4">Authentication</h4>
+
+        <div className="space-y-4">
+          <h5 className="text-sm font-medium">Basic Credentials</h5>
+          <SecretSelector
+            projectId={projectId}
+            value={form.watch(`eventSinks.mqtt.${index}.usernameRef`)}
+            onChange={(ref: string) =>
+              form.setValue(`eventSinks.mqtt.${index}.usernameRef`, ref)
+            }
+            label="Username"
+            suggestedSecretType="mqtt-credentials"
           />
 
-          <FormField
-            control={form.control}
-            name={`eventSinks.mqtt.${index}.protocolVersion`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Protocol Version</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="3.1.0">MQTT 3.1.0</SelectItem>
-                    <SelectItem value="3.1.1">MQTT 3.1.1</SelectItem>
-                    <SelectItem value="5.0.0">MQTT 5.0.0</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+          <SecretSelector
+            projectId={projectId}
+            value={form.watch(`eventSinks.mqtt.${index}.passwordRef`)}
+            onChange={(ref: string) =>
+              form.setValue(`eventSinks.mqtt.${index}.passwordRef`, ref)
+            }
+            label="Password"
+            suggestedSecretType="mqtt-credentials"
           />
         </div>
 
-        {/* Authentication Section */}
-        <div className="border-t pt-4">
-          <h4 className="text-sm font-medium mb-4">Authentication</h4>
-
+        <div className="border-t pt-4 mt-4">
+          <h5 className="text-sm font-medium mb-2">
+            OAuth (Optional, for Azure IoT Hub)
+          </h5>
           <div className="space-y-4">
-            <h5 className="text-sm font-medium">Basic Credentials</h5>
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.mqtt.${index}.usernameRef`)}
+              value={form.watch(`eventSinks.mqtt.${index}.tokenEndpointRef`)}
               onChange={(ref: string) =>
-                form.setValue(`eventSinks.mqtt.${index}.usernameRef`, ref)
+                form.setValue(`eventSinks.mqtt.${index}.tokenEndpointRef`, ref)
               }
-              label="Username"
-              suggestedSecretType="mqtt-credentials"
+              label="Token Endpoint"
+              suggestedSecretType="oauth-client"
             />
 
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.mqtt.${index}.passwordRef`)}
+              value={form.watch(`eventSinks.mqtt.${index}.tenantIdRef`)}
               onChange={(ref: string) =>
-                form.setValue(`eventSinks.mqtt.${index}.passwordRef`, ref)
+                form.setValue(`eventSinks.mqtt.${index}.tenantIdRef`, ref)
               }
-              label="Password"
-              suggestedSecretType="mqtt-credentials"
+              label="Tenant ID"
+              suggestedSecretType="oauth-client"
             />
-          </div>
 
-          <div className="border-t pt-4 mt-4">
-            <h5 className="text-sm font-medium mb-2">
-              OAuth (Optional, for Azure IoT Hub)
-            </h5>
-            <div className="space-y-4">
-              <SecretSelector
-                projectId={projectId}
-                value={form.watch(`eventSinks.mqtt.${index}.tokenEndpointRef`)}
-                onChange={(ref: string) =>
-                  form.setValue(
-                    `eventSinks.mqtt.${index}.tokenEndpointRef`,
-                    ref
-                  )
-                }
-                label="Token Endpoint"
-                suggestedSecretType="oauth-client"
-              />
-
-              <SecretSelector
-                projectId={projectId}
-                value={form.watch(`eventSinks.mqtt.${index}.tenantIdRef`)}
-                onChange={(ref: string) =>
-                  form.setValue(`eventSinks.mqtt.${index}.tenantIdRef`, ref)
-                }
-                label="Tenant ID"
-                suggestedSecretType="oauth-client"
-              />
-
-              <SecretSelector
-                projectId={projectId}
-                value={form.watch(`eventSinks.mqtt.${index}.clientSecretRef`)}
-                onChange={(ref: string) =>
-                  form.setValue(`eventSinks.mqtt.${index}.clientSecretRef`, ref)
-                }
-                label="Client Secret"
-                suggestedSecretType="oauth-client"
-              />
-            </div>
+            <SecretSelector
+              projectId={projectId}
+              value={form.watch(`eventSinks.mqtt.${index}.clientSecretRef`)}
+              onChange={(ref: string) =>
+                form.setValue(`eventSinks.mqtt.${index}.clientSecretRef`, ref)
+              }
+              label="Client Secret"
+              suggestedSecretType="oauth-client"
+            />
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

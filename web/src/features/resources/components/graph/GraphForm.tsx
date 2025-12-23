@@ -7,19 +7,13 @@ import { EventRoutesTab } from "./EventRoutesTab";
 import type { GraphSettings } from "../../schemas/GraphSchema";
 
 interface GraphFormProps {
-  initialValues?: GraphSettings;
   onSubmit: (values: GraphSettings) => void;
   disabled?: boolean;
   projectId: string;
 }
 
-export function GraphForm({
-  initialValues,
-  onSubmit,
-  disabled,
-  projectId,
-}: GraphFormProps) {
-  const defaultValues: GraphSettings = initialValues || {
+export function GraphForm({ onSubmit, disabled, projectId }: GraphFormProps) {
+  const defaultValues: GraphSettings = {
     eventSinks: {
       kafka: [],
       kusto: [],
@@ -41,11 +35,11 @@ export function GraphForm({
             <TabsTrigger value="sinks">Event Sinks</TabsTrigger>
             <TabsTrigger value="routes">Event Routes</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="sinks" className="mt-6">
             <EventSinksTab form={form as any} projectId={projectId} />
           </TabsContent>
-          
+
           <TabsContent value="routes" className="mt-6">
             <EventRoutesTab form={form as any} />
           </TabsContent>

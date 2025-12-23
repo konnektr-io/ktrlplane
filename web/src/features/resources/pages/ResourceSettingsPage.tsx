@@ -3,14 +3,62 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useState } from 'react';
 import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
-import { resourceSchemas, ResourceType } from "../schemas";
-import { ZodObject, ZodRawShape } from "zod";
 import { Button } from "@/components/ui/button";
+import { resourceTypes } from "../catalog/resourceTypes";
 import { useResource, useUpdateResource } from "../hooks/useResourceApi";
 import type { UpdateResourceData } from "../types/resource.types";
+import type { GraphSettings } from "../schemas/GraphSchema";
+
+function GraphSettingsSummary({ settings }: { settings: GraphSettings }) {
+  const totalSinks =
+    (settings.eventSinks?.kafka?.length || 0) +
+    (settings.eventSinks?.kusto?.length || 0) +
+    (settings.eventSinks?.mqtt?.length || 0) +
+    (settings.eventSinks?.webhook?.length || 0);
+
+  const totalRoutes = settings.eventRoutes?.length || 0;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="text-sm font-medium">Event Sinks</label>
+        <p className="text-sm text-muted-foreground mt-1">
+          {totalSinks === 0
+            ? "No sinks configured"
+            : `${totalSinks} sink(s) configured`}
+        </p>
+        {totalSinks > 0 && (
+          <div className="mt-2 space-y-1 text-sm">
+            {(settings.eventSinks?.kafka?.length || 0) > 0 && (
+              <div>• Kafka: {settings.eventSinks.kafka.length}</div>
+            )}
+            {(settings.eventSinks?.kusto?.length || 0) > 0 && (
+              <div>
+                • Azure Data Explorer: {settings.eventSinks.kusto.length}
+              </div>
+            )}
+            {(settings.eventSinks?.mqtt?.length || 0) > 0 && (
+              <div>• MQTT: {settings.eventSinks.mqtt.length}</div>
+            )}
+            {(settings.eventSinks?.webhook?.length || 0) > 0 && (
+              <div>• Webhook: {settings.eventSinks.webhook.length}</div>
+            )}
+          </div>
+        )}
+      </div>
+      <div>
+        <label className="text-sm font-medium">Event Routes</label>
+        <p className="text-sm text-muted-foreground mt-1">
+          {totalRoutes === 0
+            ? "No routes configured"
+            : `${totalRoutes} route(s) configured`}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function ResourceSettingsPage() {
-  // ...existing code...
   const { projectId, resourceId } = useParams<{
     projectId: string;
     resourceId: string;
@@ -90,30 +138,19 @@ export default function ResourceSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Show dynamic form if schema exists and has fields, else fallback */}
             {(() => {
               const type = currentResource?.type;
-              const isKnownType =
-                type && Object.keys(resourceSchemas).includes(type);
-              const schema = isKnownType
-                ? resourceSchemas[type as ResourceType]
-                : undefined;
-              const shape =
-                schema && "shape" in schema
-                  ? (schema as ZodObject<ZodRawShape>).shape
-                  : undefined;
-              // Show dynamic form if schema exists and has fields
-              if (editing && schema && shape && Object.keys(shape).length > 0) {
+              const resourceTypeDef = resourceTypes.find(
+                (rt) => rt.id === type
+              );
+              const hasSettings = resourceTypeDef?.settingsReady;
+
+              // Show form when editing and settings are available
+              if (editing && hasSettings) {
                 return (
                   <ResourceSettingsForm
                     resourceType={type as string}
                     projectId={projectId}
-                    initialValues={
-                      currentResource &&
-                      typeof currentResource.settings_json === "string"
-                        ? JSON.parse(currentResource.settings_json)
-                        : currentResource?.settings_json || {}
-                    }
                     onSubmit={async (values) => {
                       setSaving(true);
                       const payload: UpdateResourceData = {
@@ -127,57 +164,40 @@ export default function ResourceSettingsPage() {
                   />
                 );
               }
-              // Show summary if not editing and schema exists
-              if (
-                !editing &&
-                schema &&
-                shape &&
-                Object.keys(shape).length > 0
-              ) {
-                return (
-                  <div>
-                    {Object.keys(shape).map((field) => {
-                      let val = currentResource?.settings_json;
-                      if (typeof val === "string") {
-                        try {
-                          val = JSON.parse(val);
-                        } catch {
-                          return (
-                            <div key={field}>
-                              <label className="text-sm font-medium">
-                                {field}
-                              </label>
-                              <p className="text-sm font-mono mt-1">-</p>
-                            </div>
-                          );
+
+              // Show summary when not editing and settings are available
+              if (!editing && hasSettings) {
+                // Special display for Graph resources
+                if (type === "Konnektr.Graph") {
+                  const graphSettings =
+                    currentResource?.settings_json as GraphSettings;
+                  return (
+                    <GraphSettingsSummary
+                      settings={
+                        graphSettings || {
+                          eventSinks: {
+                            kafka: [],
+                            kusto: [],
+                            mqtt: [],
+                            webhook: [],
+                          },
+                          eventRoutes: [],
                         }
                       }
-                      return (
-                        <div key={field}>
-                          <label className="text-sm font-medium">{field}</label>
-                          <p className="text-sm font-mono mt-1">
-                            {val && typeof val === "object" && field in val
-                              ? typeof val[field] === "object"
-                                ? JSON.stringify(val[field], null, 2)
-                                : String(val[field])
-                              : "-"}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              }
-              // If schema exists but has no fields (e.g. Flow), show message
-              if (schema && shape && Object.keys(shape).length === 0) {
+                    />
+                  );
+                }
+
+                // Generic summary for other resource types
                 return (
-                  <div className="text-muted-foreground text-sm">
-                    No configurable settings for this resource type.
+                  <div className="text-sm text-muted-foreground">
+                    Settings configured. Click Edit to modify.
                   </div>
                 );
               }
-              // Fallback for unknown types: show raw JSON
-              if (currentResource && (!type || !isKnownType)) {
+
+              // No settings UI available - show raw JSON fallback
+              if (!hasSettings && currentResource) {
                 return (
                   <div>
                     <label className="text-sm font-medium">
@@ -198,24 +218,18 @@ export default function ResourceSettingsPage() {
                   </div>
                 );
               }
+
               return null;
             })()}
             <div className="flex gap-2 mt-2">
               {(() => {
                 const type = currentResource?.type;
-                const isKnownType =
-                  type && Object.keys(resourceSchemas).includes(type);
-                const schema = isKnownType
-                  ? resourceSchemas[type as ResourceType]
-                  : undefined;
-                const shape =
-                  schema && "shape" in schema
-                    ? (schema as ZodObject<ZodRawShape>).shape
-                    : undefined;
-                const hasFormSchema =
-                  schema && shape && Object.keys(shape).length > 0;
+                const resourceTypeDef = resourceTypes.find(
+                  (rt) => rt.id === type
+                );
+                const hasSettings = resourceTypeDef?.settingsReady;
 
-                if (editing && !hasFormSchema) {
+                if (editing && !hasSettings) {
                   return (
                     <>
                       <Button

@@ -21,15 +21,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import type { GraphSettings } from "../../schemas/GraphSchema";
+import { useState } from "react";
 
 interface EventRoutesTabProps {
   form: UseFormReturn<GraphSettings>;
 }
 
 export function EventRoutesTab({ form }: EventRoutesTabProps) {
+  const [expandedRoutes, setExpandedRoutes] = useState<Set<number>>(new Set());
+  const [isAdding, setIsAdding] = useState(false);
+
   const eventRoutes = form.watch("eventRoutes") || [];
   const eventSinks = form.watch("eventSinks") || {
     kafka: [],
@@ -46,6 +58,16 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
     ...eventSinks.webhook.map((s) => s.name),
   ].filter(Boolean);
 
+  const toggleExpanded = (index: number) => {
+    const newExpanded = new Set(expandedRoutes);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedRoutes(newExpanded);
+  };
+
   const addRoute = () => {
     const currentRoutes = form.getValues("eventRoutes") || [];
     form.setValue("eventRoutes", [
@@ -56,6 +78,9 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
         typeMappings: {},
       },
     ]);
+    setIsAdding(false);
+    // Auto-expand the new route
+    setExpandedRoutes(new Set([...expandedRoutes, currentRoutes.length]));
   };
 
   const removeRoute = (index: number) => {
@@ -64,12 +89,15 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
       "eventRoutes",
       currentRoutes.filter((_, i) => i !== index)
     );
+    // Remove from expanded set
+    const newExpanded = new Set(expandedRoutes);
+    newExpanded.delete(index);
+    setExpandedRoutes(newExpanded);
   };
 
   const addTypeMapping = (routeIndex: number) => {
-    const currentMappings = form.getValues(
-      `eventRoutes.${routeIndex}.typeMappings`
-    ) || {};
+    const currentMappings =
+      form.getValues(`eventRoutes.${routeIndex}.typeMappings`) || {};
     const newKey = `EventType${Object.keys(currentMappings).length + 1}`;
     form.setValue(`eventRoutes.${routeIndex}.typeMappings`, {
       ...currentMappings,
@@ -78,9 +106,8 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
   };
 
   const removeTypeMapping = (routeIndex: number, key: string) => {
-    const currentMappings = form.getValues(
-      `eventRoutes.${routeIndex}.typeMappings`
-    ) || {};
+    const currentMappings =
+      form.getValues(`eventRoutes.${routeIndex}.typeMappings`) || {};
     const { [key]: _, ...rest } = currentMappings;
     form.setValue(`eventRoutes.${routeIndex}.typeMappings`, rest);
   };
@@ -90,9 +117,8 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
     oldKey: string,
     newKey: string
   ) => {
-    const currentMappings = form.getValues(
-      `eventRoutes.${routeIndex}.typeMappings`
-    ) || {};
+    const currentMappings =
+      form.getValues(`eventRoutes.${routeIndex}.typeMappings`) || {};
     const value = currentMappings[oldKey];
     const { [oldKey]: _, ...rest } = currentMappings;
     form.setValue(`eventRoutes.${routeIndex}.typeMappings`, {
@@ -106,9 +132,8 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
     key: string,
     value: string
   ) => {
-    const currentMappings = form.getValues(
-      `eventRoutes.${routeIndex}.typeMappings`
-    ) || {};
+    const currentMappings =
+      form.getValues(`eventRoutes.${routeIndex}.typeMappings`) || {};
     form.setValue(`eventRoutes.${routeIndex}.typeMappings`, {
       ...currentMappings,
       [key]: value,
@@ -119,202 +144,306 @@ export function EventRoutesTab({ form }: EventRoutesTabProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Event Routes</CardTitle>
-          <CardDescription>
-            Configure how events are routed to your sinks. Each route specifies
-            a destination sink, event format, and optional type mappings.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Event Routes</CardTitle>
+              <CardDescription>
+                Configure how events are routed to your sinks
+              </CardDescription>
+            </div>
+            {!isAdding && allSinkNames.length > 0 && (
+              <Button onClick={() => setIsAdding(true)} type="button" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Route
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {allSinkNames.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground">
               <p>
                 You need to configure at least one event sink before creating
-                routes.
+                routes
               </p>
-              <p className="text-sm mt-2">
-                Switch to the "Event Sinks" tab to add a sink.
+              <p className="text-sm mt-1">
+                Switch to the "Event Sinks" tab to add a sink
               </p>
             </div>
           ) : (
-            <Button onClick={addRoute} type="button">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Event Route
-            </Button>
+            <>
+              {isAdding && (
+                <div className="flex gap-4 items-center mb-4 p-4 border rounded-lg bg-muted/50">
+                  <p className="text-sm">
+                    Create a new event route to connect events to a sink
+                  </p>
+                  <div className="ml-auto flex gap-2">
+                    <Button onClick={addRoute} type="button">
+                      Add
+                    </Button>
+                    <Button
+                      onClick={() => setIsAdding(false)}
+                      type="button"
+                      variant="outline"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {eventRoutes.length === 0 && !isAdding && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No event routes configured yet</p>
+                  <p className="text-sm mt-1">
+                    Click "Add Route" to create your first route
+                  </p>
+                </div>
+              )}
+
+              {eventRoutes.length > 0 && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead>Route</TableHead>
+                      <TableHead>Sink</TableHead>
+                      <TableHead>Format</TableHead>
+                      <TableHead>Mappings</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {eventRoutes.map((route, routeIndex) => {
+                      const isExpanded = expandedRoutes.has(routeIndex);
+                      const typeMappings =
+                        form.watch(`eventRoutes.${routeIndex}.typeMappings`) ||
+                        {};
+                      const mappingCount = Object.keys(typeMappings).length;
+
+                      return (
+                        <>
+                          <TableRow
+                            key={routeIndex}
+                            className="cursor-pointer hover:bg-muted/50"
+                          >
+                            <TableCell
+                              onClick={() => toggleExpanded(routeIndex)}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </TableCell>
+                            <TableCell
+                              onClick={() => toggleExpanded(routeIndex)}
+                            >
+                              Route #{routeIndex + 1}
+                            </TableCell>
+                            <TableCell
+                              onClick={() => toggleExpanded(routeIndex)}
+                            >
+                              {route.sinkName || (
+                                <span className="text-muted-foreground italic">
+                                  Not set
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell
+                              onClick={() => toggleExpanded(routeIndex)}
+                            >
+                              {route.eventFormat || "EventNotification"}
+                            </TableCell>
+                            <TableCell
+                              onClick={() => toggleExpanded(routeIndex)}
+                            >
+                              {mappingCount > 0 ? (
+                                `${mappingCount} mapping${
+                                  mappingCount !== 1 ? "s" : ""
+                                }`
+                              ) : (
+                                <span className="text-muted-foreground italic">
+                                  None
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeRoute(routeIndex);
+                                }}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                          {isExpanded && (
+                            <TableRow key={`${routeIndex}-details`}>
+                              <TableCell
+                                colSpan={6}
+                                className="bg-muted/30 p-6"
+                              >
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                      control={form.control}
+                                      name={`eventRoutes.${routeIndex}.sinkName`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Sink Name</FormLabel>
+                                          <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value}
+                                          >
+                                            <FormControl>
+                                              <SelectTrigger>
+                                                <SelectValue placeholder="Select a sink" />
+                                              </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                              {allSinkNames.map((sinkName) => (
+                                                <SelectItem
+                                                  key={sinkName}
+                                                  value={sinkName}
+                                                >
+                                                  {sinkName}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+
+                                    <FormField
+                                      control={form.control}
+                                      name={`eventRoutes.${routeIndex}.eventFormat`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Event Format</FormLabel>
+                                          <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value}
+                                          >
+                                            <FormControl>
+                                              <SelectTrigger>
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                              <SelectItem value="EventNotification">
+                                                Event Notification
+                                              </SelectItem>
+                                              <SelectItem value="CloudEvent">
+                                                Cloud Event
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                      <div>
+                                        <FormLabel>Type Mappings</FormLabel>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                          Map event types to specific topics or
+                                          categories
+                                        </p>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() =>
+                                          addTypeMapping(routeIndex)
+                                        }
+                                      >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Add Mapping
+                                      </Button>
+                                    </div>
+
+                                    {Object.keys(typeMappings).length === 0 ? (
+                                      <div className="text-center py-6 text-muted-foreground text-sm border rounded-lg bg-muted/20">
+                                        No type mappings configured
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-2 border rounded-lg p-3">
+                                        {Object.entries(typeMappings).map(
+                                          ([key, value]) => (
+                                            <div
+                                              key={key}
+                                              className="flex gap-2 items-center"
+                                            >
+                                              <Input
+                                                placeholder="Event Type"
+                                                value={key}
+                                                onChange={(e) =>
+                                                  updateTypeMappingKey(
+                                                    routeIndex,
+                                                    key,
+                                                    e.target.value
+                                                  )
+                                                }
+                                              />
+                                              <span className="text-muted-foreground">
+                                                →
+                                              </span>
+                                              <Input
+                                                placeholder="Mapped Value"
+                                                value={value as string}
+                                                onChange={(e) =>
+                                                  updateTypeMappingValue(
+                                                    routeIndex,
+                                                    key,
+                                                    e.target.value
+                                                  )
+                                                }
+                                              />
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() =>
+                                                  removeTypeMapping(
+                                                    routeIndex,
+                                                    key
+                                                  )
+                                                }
+                                                className="flex-shrink-0 text-destructive hover:text-destructive"
+                                              >
+                                                <Trash2 className="h-4 w-4" />
+                                              </Button>
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
-
-      {eventRoutes.length === 0 && allSinkNames.length > 0 && (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">
-              No event routes configured yet. Add a route to start sending
-              events to your sinks.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="space-y-4">
-        {eventRoutes.map((_, routeIndex) => {
-          const typeMappings =
-            form.watch(`eventRoutes.${routeIndex}.typeMappings`) || {};
-
-          return (
-            <Card key={routeIndex}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">
-                    Event Route #{routeIndex + 1}
-                  </CardTitle>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeRoute(routeIndex)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name={`eventRoutes.${routeIndex}.sinkName`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Destination Sink *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a sink" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {allSinkNames.map((sinkName) => (
-                            <SelectItem key={sinkName} value={sinkName}>
-                              {sinkName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name={`eventRoutes.${routeIndex}.eventFormat`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Format</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="EventNotification">
-                            Event Notification
-                          </SelectItem>
-                          <SelectItem value="DataHistory">
-                            Data History
-                          </SelectItem>
-                          <SelectItem value="Telemetry">Telemetry</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Format of the CloudEvent sent to the sink
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Type Mappings */}
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h4 className="text-sm font-medium">
-                        Event Type Mappings (Optional)
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Map event types to specific tables/topics in the sink
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addTypeMapping(routeIndex)}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add Mapping
-                    </Button>
-                  </div>
-
-                  {Object.keys(typeMappings).length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No type mappings configured. Events will use default
-                      routing.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {Object.entries(typeMappings).map(([key, value]) => (
-                        <div key={key} className="flex gap-2">
-                          <Input
-                            placeholder="Event Type (e.g., TwinCreate)"
-                            value={key}
-                            onChange={(e) =>
-                              updateTypeMappingKey(
-                                routeIndex,
-                                key,
-                                e.target.value
-                              )
-                            }
-                            className="flex-1"
-                          />
-                          <Input
-                            placeholder="Table/Topic name"
-                            value={value as string}
-                            onChange={(e) =>
-                              updateTypeMappingValue(
-                                routeIndex,
-                                key,
-                                e.target.value
-                              )
-                            }
-                            className="flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeTypeMapping(routeIndex, key)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
     </div>
   );
 }
