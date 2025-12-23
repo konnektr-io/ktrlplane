@@ -6,6 +6,7 @@ import type { FlowSettings } from "@/features/resources/schemas/FlowSchema";
 
 interface ResourceSettingsFormProps {
   resourceType: string;
+  projectId?: string;
   initialValues?: GraphSettings | FlowSettings | SecretSettings;
   onSubmit: (values: GraphSettings | FlowSettings | SecretSettings) => void;
   onChange?: (values: GraphSettings | FlowSettings | SecretSettings) => void;
@@ -15,6 +16,7 @@ interface ResourceSettingsFormProps {
 
 export function ResourceSettingsForm({
   resourceType,
+  projectId,
   initialValues,
   onSubmit,
   onChange,
@@ -28,6 +30,7 @@ export function ResourceSettingsForm({
         initialValues={initialValues as GraphSettings | undefined}
         onSubmit={onSubmit as (values: GraphSettings) => void}
         disabled={disabled}
+        projectId={projectId || ""}
       />
     );
   }

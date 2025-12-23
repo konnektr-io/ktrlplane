@@ -24,6 +24,8 @@ export const defaultConfigurations = {
     eventSinks: {
       kafka: [],
       kusto: [],
+      mqtt: [],
+      webhook: [],
     },
     eventRoutes: [],
   },

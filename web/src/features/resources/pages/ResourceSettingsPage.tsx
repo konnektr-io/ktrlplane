@@ -107,6 +107,7 @@ export default function ResourceSettingsPage() {
                 return (
                   <ResourceSettingsForm
                     resourceType={type as string}
+                    projectId={projectId}
                     initialValues={
                       currentResource &&
                       typeof currentResource.settings_json === "string"
@@ -116,7 +117,7 @@ export default function ResourceSettingsPage() {
                     onSubmit={async (values) => {
                       setSaving(true);
                       const payload: UpdateResourceData = {
-                        settings_json: values,
+                        settings_json: values as Record<string, unknown>,
                       };
                       await updateResourceMutation.mutateAsync(payload);
                       setSaving(false);

@@ -60,7 +60,7 @@ export const resourceTypes: ResourceType[] = [
     documentationUrl: "https://docs.konnektr.io/graph",
     isPopular: true,
     hasSettings: true,
-    settingsReady: false, // Graph settings not ready for production yet
+    settingsReady: true,
     requiresSettings: false,
   },
   {
