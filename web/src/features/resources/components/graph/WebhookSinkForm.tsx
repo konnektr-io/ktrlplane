@@ -122,12 +122,9 @@ export function WebhookSinkForm({
               <>
                 <SecretSelector
                   projectId={projectId}
-                  value={form.watch(`eventSinks.webhook.${index}.usernameRef`)}
-                  onChange={(ref: string) =>
-                    form.setValue(
-                      `eventSinks.webhook.${index}.usernameRef`,
-                      ref
-                    )
+                  value={form.watch(`eventSinks.webhook.${index}.username`)}
+                  onChange={(val) =>
+                    form.setValue(`eventSinks.webhook.${index}.username`, val)
                   }
                   label="Username"
                   suggestedSecretType="basic-auth"
@@ -135,12 +132,9 @@ export function WebhookSinkForm({
 
                 <SecretSelector
                   projectId={projectId}
-                  value={form.watch(`eventSinks.webhook.${index}.passwordRef`)}
-                  onChange={(ref: string) =>
-                    form.setValue(
-                      `eventSinks.webhook.${index}.passwordRef`,
-                      ref
-                    )
+                  value={form.watch(`eventSinks.webhook.${index}.password`)}
+                  onChange={(val) =>
+                    form.setValue(`eventSinks.webhook.${index}.password`, val)
                   }
                   label="Password"
                   suggestedSecretType="basic-auth"
@@ -151,9 +145,9 @@ export function WebhookSinkForm({
             {authType === "Bearer" && (
               <SecretSelector
                 projectId={projectId}
-                value={form.watch(`eventSinks.webhook.${index}.tokenRef`)}
-                onChange={(ref: string) =>
-                  form.setValue(`eventSinks.webhook.${index}.tokenRef`, ref)
+                value={form.watch(`eventSinks.webhook.${index}.token`)}
+                onChange={(val) =>
+                  form.setValue(`eventSinks.webhook.${index}.token`, val)
                 }
                 label="Bearer Token"
                 suggestedSecretType="bearer-token"
@@ -164,14 +158,9 @@ export function WebhookSinkForm({
               <>
                 <SecretSelector
                   projectId={projectId}
-                  value={form.watch(
-                    `eventSinks.webhook.${index}.headerNameRef`
-                  )}
-                  onChange={(ref: string) =>
-                    form.setValue(
-                      `eventSinks.webhook.${index}.headerNameRef`,
-                      ref
-                    )
+                  value={form.watch(`eventSinks.webhook.${index}.headerName`)}
+                  onChange={(val) =>
+                    form.setValue(`eventSinks.webhook.${index}.headerName`, val)
                   }
                   label="Header Name"
                   suggestedSecretType="api-key"
@@ -179,13 +168,11 @@ export function WebhookSinkForm({
 
                 <SecretSelector
                   projectId={projectId}
-                  value={form.watch(
-                    `eventSinks.webhook.${index}.headerValueRef`
-                  )}
-                  onChange={(ref: string) =>
+                  value={form.watch(`eventSinks.webhook.${index}.headerValue`)}
+                  onChange={(val) =>
                     form.setValue(
-                      `eventSinks.webhook.${index}.headerValueRef`,
-                      ref
+                      `eventSinks.webhook.${index}.headerValue`,
+                      val
                     )
                   }
                   label="Header Value (API Key)"
@@ -199,12 +186,12 @@ export function WebhookSinkForm({
                 <SecretSelector
                   projectId={projectId}
                   value={form.watch(
-                    `eventSinks.webhook.${index}.tokenEndpointRef`
+                    `eventSinks.webhook.${index}.tokenEndpoint`
                   )}
-                  onChange={(ref: string) =>
+                  onChange={(val) =>
                     form.setValue(
-                      `eventSinks.webhook.${index}.tokenEndpointRef`,
-                      ref
+                      `eventSinks.webhook.${index}.tokenEndpoint`,
+                      val
                     )
                   }
                   label="Token Endpoint"
@@ -213,12 +200,9 @@ export function WebhookSinkForm({
 
                 <SecretSelector
                   projectId={projectId}
-                  value={form.watch(`eventSinks.webhook.${index}.clientIdRef`)}
-                  onChange={(ref: string) =>
-                    form.setValue(
-                      `eventSinks.webhook.${index}.clientIdRef`,
-                      ref
-                    )
+                  value={form.watch(`eventSinks.webhook.${index}.clientId`)}
+                  onChange={(val) =>
+                    form.setValue(`eventSinks.webhook.${index}.clientId`, val)
                   }
                   label="Client ID"
                   suggestedSecretType="oauth-client"
@@ -226,13 +210,11 @@ export function WebhookSinkForm({
 
                 <SecretSelector
                   projectId={projectId}
-                  value={form.watch(
-                    `eventSinks.webhook.${index}.clientSecretRef`
-                  )}
-                  onChange={(ref: string) =>
+                  value={form.watch(`eventSinks.webhook.${index}.clientSecret`)}
+                  onChange={(val) =>
                     form.setValue(
-                      `eventSinks.webhook.${index}.clientSecretRef`,
-                      ref
+                      `eventSinks.webhook.${index}.clientSecret`,
+                      val
                     )
                   }
                   label="Client Secret"

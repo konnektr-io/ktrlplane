@@ -123,9 +123,9 @@ export function KustoSinkForm({ form, index, projectId }: KustoSinkFormProps) {
         <div className="space-y-4">
           <SecretSelector
             projectId={projectId}
-            value={form.watch(`eventSinks.kusto.${index}.tenantIdRef`)}
-            onChange={(ref: string) =>
-              form.setValue(`eventSinks.kusto.${index}.tenantIdRef`, ref)
+            value={form.watch(`eventSinks.kusto.${index}.tenantId`)}
+            onChange={(val) =>
+              form.setValue(`eventSinks.kusto.${index}.tenantId`, val)
             }
             label="Tenant ID"
             suggestedSecretType="oauth-client"
@@ -133,9 +133,9 @@ export function KustoSinkForm({ form, index, projectId }: KustoSinkFormProps) {
 
           <SecretSelector
             projectId={projectId}
-            value={form.watch(`eventSinks.kusto.${index}.clientIdRef`)}
-            onChange={(ref: string) =>
-              form.setValue(`eventSinks.kusto.${index}.clientIdRef`, ref)
+            value={form.watch(`eventSinks.kusto.${index}.clientId`)}
+            onChange={(val) =>
+              form.setValue(`eventSinks.kusto.${index}.clientId`, val)
             }
             label="Client ID"
             suggestedSecretType="oauth-client"
@@ -143,9 +143,9 @@ export function KustoSinkForm({ form, index, projectId }: KustoSinkFormProps) {
 
           <SecretSelector
             projectId={projectId}
-            value={form.watch(`eventSinks.kusto.${index}.clientSecretRef`)}
-            onChange={(ref: string) =>
-              form.setValue(`eventSinks.kusto.${index}.clientSecretRef`, ref)
+            value={form.watch(`eventSinks.kusto.${index}.clientSecret`)}
+            onChange={(val) =>
+              form.setValue(`eventSinks.kusto.${index}.clientSecret`, val)
             }
             label="Client Secret"
             suggestedSecretType="oauth-client"

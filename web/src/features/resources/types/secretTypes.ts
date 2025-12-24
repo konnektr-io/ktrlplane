@@ -1,3 +1,13 @@
+// Secret Reference format used in resource definitions
+export interface SecretRef {
+  valueFrom: {
+    secretKeyRef: {
+      name: string;
+      key: string;
+    };
+  };
+}
+
 // Secret Types define which keys are required/optional for each secret type
 export interface SecretType {
   id: string;
@@ -24,10 +34,32 @@ export const secretTypes: SecretType[] = [
     name: "OAuth Client Credentials",
     description: "For OAuth 2.0 client credentials flow (Azure AD, etc.)",
     keys: [
-      { name: "tenantId", label: "Tenant ID", placeholder: "Azure Tenant ID", required: true },
-      { name: "clientId", label: "Client ID", placeholder: "Application (client) ID", required: true },
-      { name: "clientSecret", label: "Client Secret", placeholder: "Client secret value", required: true, isPassword: true },
-      { name: "tokenEndpoint", label: "Token Endpoint", placeholder: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", required: false },
+      {
+        name: "tenantId",
+        label: "Tenant ID",
+        placeholder: "Azure Tenant ID",
+        required: true,
+      },
+      {
+        name: "clientId",
+        label: "Client ID",
+        placeholder: "Application (client) ID",
+        required: true,
+      },
+      {
+        name: "clientSecret",
+        label: "Client Secret",
+        placeholder: "Client secret value",
+        required: true,
+        isPassword: true,
+      },
+      {
+        name: "tokenEndpoint",
+        label: "Token Endpoint",
+        placeholder:
+          "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
+        required: false,
+      },
     ],
   },
   {
@@ -35,8 +67,19 @@ export const secretTypes: SecretType[] = [
     name: "Basic Authentication",
     description: "Username and password for Basic Auth",
     keys: [
-      { name: "username", label: "Username", placeholder: "Username", required: true },
-      { name: "password", label: "Password", placeholder: "Password", required: true, isPassword: true },
+      {
+        name: "username",
+        label: "Username",
+        placeholder: "Username",
+        required: true,
+      },
+      {
+        name: "password",
+        label: "Password",
+        placeholder: "Password",
+        required: true,
+        isPassword: true,
+      },
     ],
   },
   {
@@ -44,7 +87,13 @@ export const secretTypes: SecretType[] = [
     name: "Bearer Token",
     description: "Single bearer token for API authentication",
     keys: [
-      { name: "token", label: "Bearer Token", placeholder: "Your bearer token", required: true, isPassword: true },
+      {
+        name: "token",
+        label: "Bearer Token",
+        placeholder: "Your bearer token",
+        required: true,
+        isPassword: true,
+      },
     ],
   },
   {
@@ -52,8 +101,19 @@ export const secretTypes: SecretType[] = [
     name: "API Key",
     description: "API key with custom header name",
     keys: [
-      { name: "headerName", label: "Header Name", placeholder: "e.g., X-API-Key", required: true },
-      { name: "headerValue", label: "Header Value", placeholder: "Your API key", required: true, isPassword: true },
+      {
+        name: "headerName",
+        label: "Header Name",
+        placeholder: "e.g., X-API-Key",
+        required: true,
+      },
+      {
+        name: "headerValue",
+        label: "Header Value",
+        placeholder: "Your API key",
+        required: true,
+        isPassword: true,
+      },
     ],
   },
   {
@@ -61,8 +121,19 @@ export const secretTypes: SecretType[] = [
     name: "Kafka SASL PLAIN",
     description: "Username and password for Kafka SASL PLAIN authentication",
     keys: [
-      { name: "username", label: "SASL Username", placeholder: "Kafka username", required: true },
-      { name: "password", label: "SASL Password", placeholder: "Kafka password", required: true, isPassword: true },
+      {
+        name: "username",
+        label: "SASL Username",
+        placeholder: "Kafka username",
+        required: true,
+      },
+      {
+        name: "password",
+        label: "SASL Password",
+        placeholder: "Kafka password",
+        required: true,
+        isPassword: true,
+      },
     ],
   },
   {
@@ -70,8 +141,19 @@ export const secretTypes: SecretType[] = [
     name: "MQTT Credentials",
     description: "Username and password for MQTT broker authentication",
     keys: [
-      { name: "username", label: "Username", placeholder: "MQTT username", required: true },
-      { name: "password", label: "Password", placeholder: "MQTT password", required: true, isPassword: true },
+      {
+        name: "username",
+        label: "Username",
+        placeholder: "MQTT username",
+        required: true,
+      },
+      {
+        name: "password",
+        label: "Password",
+        placeholder: "MQTT password",
+        required: true,
+        isPassword: true,
+      },
     ],
   },
 ];

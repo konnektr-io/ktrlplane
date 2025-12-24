@@ -127,9 +127,9 @@ export function KafkaSinkForm({ form, index, projectId }: KafkaSinkFormProps) {
           <div className="space-y-4">
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.kafka.${index}.tenantIdRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.kafka.${index}.tenantIdRef`, ref)
+              value={form.watch(`eventSinks.kafka.${index}.tenantId`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.tenantId`, val)
               }
               label="Tenant ID"
               suggestedSecretType="oauth-client"
@@ -137,9 +137,9 @@ export function KafkaSinkForm({ form, index, projectId }: KafkaSinkFormProps) {
 
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.kafka.${index}.clientIdRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.kafka.${index}.clientIdRef`, ref)
+              value={form.watch(`eventSinks.kafka.${index}.clientId`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.clientId`, val)
               }
               label="Client ID"
               suggestedSecretType="oauth-client"
@@ -147,9 +147,9 @@ export function KafkaSinkForm({ form, index, projectId }: KafkaSinkFormProps) {
 
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.kafka.${index}.clientSecretRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.kafka.${index}.clientSecretRef`, ref)
+              value={form.watch(`eventSinks.kafka.${index}.clientSecret`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.clientSecret`, val)
               }
               label="Client Secret"
               suggestedSecretType="oauth-client"
@@ -157,9 +157,9 @@ export function KafkaSinkForm({ form, index, projectId }: KafkaSinkFormProps) {
 
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.kafka.${index}.tokenEndpointRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.kafka.${index}.tokenEndpointRef`, ref)
+              value={form.watch(`eventSinks.kafka.${index}.tokenEndpoint`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.tokenEndpoint`, val)
               }
               label="Token Endpoint"
               suggestedSecretType="oauth-client"
@@ -171,9 +171,9 @@ export function KafkaSinkForm({ form, index, projectId }: KafkaSinkFormProps) {
           <div className="space-y-4">
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.kafka.${index}.saslUsernameRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.kafka.${index}.saslUsernameRef`, ref)
+              value={form.watch(`eventSinks.kafka.${index}.saslUsername`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.saslUsername`, val)
               }
               label="SASL Username"
               suggestedSecretType="kafka-plain"
@@ -181,9 +181,9 @@ export function KafkaSinkForm({ form, index, projectId }: KafkaSinkFormProps) {
 
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.kafka.${index}.saslPasswordRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.kafka.${index}.saslPasswordRef`, ref)
+              value={form.watch(`eventSinks.kafka.${index}.saslPassword`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.saslPassword`, val)
               }
               label="SASL Password"
               suggestedSecretType="kafka-plain"

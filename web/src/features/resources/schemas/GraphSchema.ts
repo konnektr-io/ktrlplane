@@ -1,3 +1,5 @@
+import { SecretRef } from "../types/secretTypes";
+
 // Kafka Sink Configuration
 export interface KafkaSink {
   id?: string;
@@ -6,15 +8,15 @@ export interface KafkaSink {
   topic: string;
   saslMechanism: "PLAIN" | "OAUTHBEARER";
   securityProtocol: "PLAINTEXT" | "SASL_PLAINTEXT" | "SASL_SSL";
-  
+
   // Secret references (required for authentication)
   // Format: {secretName}/{keyName}
-  tenantIdRef?: string;      // e.g., "kafka-oauth/tenantId"
-  clientIdRef?: string;       // e.g., "kafka-oauth/clientId"
-  clientSecretRef?: string;   // e.g., "kafka-oauth/clientSecret"
-  tokenEndpointRef?: string;  // e.g., "kafka-oauth/tokenEndpoint"
-  saslUsernameRef?: string;   // e.g., "kafka-plain/username"
-  saslPasswordRef?: string;   // e.g., "kafka-plain/password"
+  tenantId?: SecretRef;
+  clientId?: SecretRef;
+  clientSecret?: SecretRef;
+  tokenEndpoint?: SecretRef;
+  saslUsername?: SecretRef;
+  saslPassword?: SecretRef;
 }
 
 // Kusto Sink Configuration
@@ -26,12 +28,12 @@ export interface KustoSink {
   propertyEventsTable?: string;
   twinLifeCycleEventsTable?: string;
   relationshipLifeCycleEventsTable?: string;
-  
+
   // Secret references (required for Azure AD auth)
   // Format: {secretName}/{keyName}
-  tenantIdRef?: string;     // e.g., "kusto-auth/tenantId"
-  clientIdRef?: string;      // e.g., "kusto-auth/clientId"
-  clientSecretRef?: string;  // e.g., "kusto-auth/clientSecret"
+  tenantId?: SecretRef;
+  clientId?: SecretRef;
+  clientSecret?: SecretRef;
 }
 
 // MQTT Sink Configuration
@@ -43,14 +45,14 @@ export interface MqttSink {
   topic: string;
   clientId: string;
   protocolVersion: "3.1.0" | "3.1.1" | "5.0.0";
-  
+
   // Secret references (for authentication)
   // Format: {secretName}/{keyName}
-  usernameRef?: string;       // e.g., "mqtt-creds/username"
-  passwordRef?: string;        // e.g., "mqtt-creds/password"
-  tokenEndpointRef?: string;   // e.g., "mqtt-oauth/tokenEndpoint"
-  tenantIdRef?: string;        // e.g., "mqtt-oauth/tenantId"
-  clientSecretRef?: string;    // e.g., "mqtt-oauth/clientSecret"
+  username?: SecretRef;
+  password?: SecretRef;
+  tokenEndpoint?: SecretRef;
+  tenantId?: SecretRef;
+  clientSecret?: SecretRef;
 }
 
 // Webhook Sink Configuration
@@ -60,17 +62,17 @@ export interface WebhookSink {
   url: string;
   method: "POST" | "PUT";
   authenticationType: "None" | "Basic" | "Bearer" | "ApiKey" | "OAuth";
-  
+
   // Secret references (for authentication)
   // Format: {secretName}/{keyName}
-  usernameRef?: string;       // e.g., "webhook-auth/username" (Basic)
-  passwordRef?: string;        // e.g., "webhook-auth/password" (Basic)
-  tokenRef?: string;           // e.g., "webhook-auth/token" (Bearer)
-  headerNameRef?: string;      // e.g., "webhook-auth/headerName" (ApiKey)
-  headerValueRef?: string;     // e.g., "webhook-auth/headerValue" (ApiKey)
-  tokenEndpointRef?: string;   // e.g., "webhook-auth/tokenEndpoint" (OAuth)
-  clientIdRef?: string;        // e.g., "webhook-auth/clientId" (OAuth)
-  clientSecretRef?: string;    // e.g., "webhook-auth/clientSecret" (OAuth)
+  username?: SecretRef;
+  password?: SecretRef;
+  token?: SecretRef;
+  headerName?: SecretRef;
+  headerValue?: SecretRef;
+  tokenEndpoint?: SecretRef;
+  clientId?: SecretRef;
+  clientSecret?: SecretRef;
 }
 
 // Event Route Configuration

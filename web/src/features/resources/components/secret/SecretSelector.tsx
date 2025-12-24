@@ -21,13 +21,13 @@ import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { SecretForm, SecretSettings } from "./SecretForm";
 import { useResources, useCreateResource } from "../../hooks/useResourceApi";
-import { getSecretType } from "../../types/secretTypes";
+import { getSecretType, SecretRef } from "../../types/secretTypes";
 import { toast } from "sonner";
 
 interface SecretSelectorProps {
   projectId: string;
-  value?: string; // The secret reference in format "secretName/keyName"
-  onChange: (secretReference: string) => void;
+  value?: SecretRef;
+  onChange: (secretReference?: SecretRef) => void;
   label?: string;
   description?: string;
   suggestedSecretType?: string; // Suggest a specific secret type for this field
@@ -57,11 +57,13 @@ export function SecretSelector({
     [allResources]
   );
 
-  // Parse current value (format: "secretName/keyName")
-  const [selectedSecret, selectedKey] = value?.split("/") || [
-    undefined,
-    undefined,
-  ];
+  // Parse current value (object format or legacy string)
+  let selectedSecret: string | undefined = undefined;
+  let selectedKey: string | undefined = undefined;
+  if (value && value.valueFrom?.secretKeyRef) {
+    selectedSecret = value.valueFrom.secretKeyRef.name;
+    selectedKey = value.valueFrom.secretKeyRef.key;
+  }
 
   // Get keys for selected secret using useProjectSecret
   const { data: fetchedSecret } = useProjectSecret(
@@ -101,7 +103,14 @@ export function SecretSelector({
       // Auto-select the first key from the new secret
       const firstKey = Object.keys(newSecretData.data)[0];
       if (firstKey) {
-        onChange(`${newSecretName}/${firstKey}`);
+        onChange({
+          valueFrom: {
+            secretKeyRef: {
+              name: newSecretName,
+              key: firstKey,
+            },
+          },
+        });
       }
 
       setShowCreateDialog(false);
@@ -131,7 +140,18 @@ export function SecretSelector({
                 ? Object.keys(secret.settings_json.data)
                 : [];
               const firstKey = keys[0];
-              onChange(firstKey ? `${secretName}/${firstKey}` : secretName);
+              if (firstKey) {
+                onChange({
+                  valueFrom: {
+                    secretKeyRef: {
+                      name: secretName,
+                      key: firstKey,
+                    },
+                  },
+                });
+              } else {
+                onChange(undefined);
+              }
             }}
           >
             <SelectTrigger>
@@ -158,8 +178,15 @@ export function SecretSelector({
           <Select
             value={selectedKey}
             onValueChange={(key) => {
-              if (selectedSecret) {
-                onChange(`${selectedSecret}/${key}`);
+              if (selectedSecret && key) {
+                onChange({
+                  valueFrom: {
+                    secretKeyRef: {
+                      name: selectedSecret,
+                      key,
+                    },
+                  },
+                });
               }
             }}
             disabled={!selectedSecret || availableKeys.length === 0}
@@ -193,7 +220,10 @@ export function SecretSelector({
       {value && (
         <p className="text-xs text-muted-foreground">
           Reference:{" "}
-          <code className="bg-muted px-1 py-0.5 rounded">{value}</code>
+          <code className="bg-muted px-1 py-0.5 rounded">
+            {value.valueFrom.secretKeyRef.name}/
+            {value.valueFrom.secretKeyRef.key}
+          </code>
         </p>
       )}
 

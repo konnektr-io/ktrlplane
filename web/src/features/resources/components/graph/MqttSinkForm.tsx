@@ -135,9 +135,9 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
           <h5 className="text-sm font-medium">Basic Credentials</h5>
           <SecretSelector
             projectId={projectId}
-            value={form.watch(`eventSinks.mqtt.${index}.usernameRef`)}
-            onChange={(ref: string) =>
-              form.setValue(`eventSinks.mqtt.${index}.usernameRef`, ref)
+            value={form.watch(`eventSinks.mqtt.${index}.username`)}
+            onChange={(val) =>
+              form.setValue(`eventSinks.mqtt.${index}.username`, val)
             }
             label="Username"
             suggestedSecretType="mqtt-credentials"
@@ -145,9 +145,9 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
 
           <SecretSelector
             projectId={projectId}
-            value={form.watch(`eventSinks.mqtt.${index}.passwordRef`)}
-            onChange={(ref: string) =>
-              form.setValue(`eventSinks.mqtt.${index}.passwordRef`, ref)
+            value={form.watch(`eventSinks.mqtt.${index}.password`)}
+            onChange={(val) =>
+              form.setValue(`eventSinks.mqtt.${index}.password`, val)
             }
             label="Password"
             suggestedSecretType="mqtt-credentials"
@@ -161,9 +161,9 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
           <div className="space-y-4">
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.mqtt.${index}.tokenEndpointRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.mqtt.${index}.tokenEndpointRef`, ref)
+              value={form.watch(`eventSinks.mqtt.${index}.tokenEndpoint`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.mqtt.${index}.tokenEndpoint`, val)
               }
               label="Token Endpoint"
               suggestedSecretType="oauth-client"
@@ -171,9 +171,9 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
 
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.mqtt.${index}.tenantIdRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.mqtt.${index}.tenantIdRef`, ref)
+              value={form.watch(`eventSinks.mqtt.${index}.tenantId`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.mqtt.${index}.tenantId`, val)
               }
               label="Tenant ID"
               suggestedSecretType="oauth-client"
@@ -181,9 +181,9 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
 
             <SecretSelector
               projectId={projectId}
-              value={form.watch(`eventSinks.mqtt.${index}.clientSecretRef`)}
-              onChange={(ref: string) =>
-                form.setValue(`eventSinks.mqtt.${index}.clientSecretRef`, ref)
+              value={form.watch(`eventSinks.mqtt.${index}.clientSecret`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.mqtt.${index}.clientSecret`, val)
               }
               label="Client Secret"
               suggestedSecretType="oauth-client"
