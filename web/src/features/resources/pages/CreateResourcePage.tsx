@@ -402,41 +402,40 @@ export default function CreateResourcePage() {
         )}
 
         {/* Navigation Buttons */}
-        {(flow.currentStep?.id !== "settings" ||
-          flow.state.resourceType === "Konnektr.Secret") &&
-          flow.currentStep?.id !== "access" && (
-            <div className="flex justify-between gap-3">
-              {/* Hide Back button on first step of global route (no meaningful place to go back to) */}
-              {flow.canGoBack && (
-                <Button variant="outline" onClick={handleBack}>
-                  Back
-                </Button>
-              )}
-              <div className="flex gap-3 ml-auto">
-                {!flow.currentStep?.required &&
-                  flow.currentStep?.id !== "project" && (
-                    <Button variant="ghost" onClick={flow.skipCurrentStep}>
-                      Skip
-                    </Button>
-                  )}
-                <Button
-                  onClick={handleNext}
-                  disabled={
-                    !flow.canGoNext ||
-                    isCreating ||
-                    (flow.currentStep?.id === "project" && projectsLoading) ||
-                    (flow.currentStep?.id === "tier" && !selectedProjectId)
-                  }
-                >
-                  {isCreating
-                    ? "Creating..."
-                    : flow.isLastStep
-                    ? "Create Resource"
-                    : `Continue to ${flow.getNextStepLabel()}`}
-                </Button>
-              </div>
+        {flow.currentStep?.id !== "access" && (
+          <div className="flex justify-between gap-3">
+            {/* Hide Back button on first step of global route (no meaningful place to go back to) */}
+            {flow.canGoBack && (
+              <Button variant="outline" onClick={handleBack}>
+                Back
+              </Button>
+            )}
+            <div className="flex gap-3 ml-auto">
+              {!flow.currentStep?.required &&
+                !flow.isLastStep &&
+                flow.currentStep?.id !== "project" && (
+                  <Button variant="ghost" onClick={flow.skipCurrentStep}>
+                    Skip
+                  </Button>
+                )}
+              <Button
+                onClick={handleNext}
+                disabled={
+                  !flow.canGoNext ||
+                  isCreating ||
+                  (flow.currentStep?.id === "project" && projectsLoading) ||
+                  (flow.currentStep?.id === "tier" && !selectedProjectId)
+                }
+              >
+                {isCreating
+                  ? "Creating..."
+                  : flow.isLastStep
+                  ? "Create Resource"
+                  : `Continue to ${flow.getNextStepLabel()}`}
+              </Button>
             </div>
-          )}
+          </div>
+        )}
 
         {/* Cancel Button */}
         {flow.currentStep?.id !== "settings" && (
