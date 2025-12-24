@@ -156,7 +156,7 @@ export function EventSinksTab({
     setExpandedSinks(new Set([...expandedSinks, sinkId]));
   };
 
-  const removeSink = (type: SinkType, index: number) => {
+  const removeSink = async (type: SinkType, index: number) => {
     const currentSinks = form.getValues(`eventSinks.${type}`) || [];
     form.setValue(
       `eventSinks.${type}` as any,
@@ -167,6 +167,7 @@ export function EventSinksTab({
     const newExpanded = new Set(expandedSinks);
     newExpanded.delete(sinkId);
     setExpandedSinks(newExpanded);
+    await onSave();
   };
 
   const getSinkTypeLabel = (type: SinkType): string => {

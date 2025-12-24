@@ -124,7 +124,7 @@ export function EventRoutesTab({
     setExpandedRoutes(new Set([...expandedRoutes, currentRoutes.length]));
   };
 
-  const removeRoute = (index: number) => {
+  const removeRoute = async (index: number) => {
     const currentRoutes = form.getValues("eventRoutes") || [];
     form.setValue(
       "eventRoutes",
@@ -134,6 +134,7 @@ export function EventRoutesTab({
     const newExpanded = new Set(expandedRoutes);
     newExpanded.delete(index);
     setExpandedRoutes(newExpanded);
+    await onSave();
   };
 
   const handleSaveRoute = async (routeIndex: number) => {
