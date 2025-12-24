@@ -88,9 +88,7 @@ export function WebhookSinkForm({
       />
 
       {/* Authentication Section */}
-      <div className="border-t pt-4">
-        <h4 className="text-sm font-medium mb-4">Authentication</h4>
-
+      <div>
         <FormField
           control={form.control}
           name={`eventSinks.webhook.${index}.authenticationType`}

@@ -277,24 +277,23 @@ export function EventRoutesTab({
                                 colSpan={6}
                                 className="bg-muted/30 p-6"
                               >
-                                <div className="space-y-4">
+                                <div className="space-y-6">
+                                  <FormField
+                                    control={form.control}
+                                    name={`eventRoutes.${routeIndex}.name`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Route Name</FormLabel>
+                                        <Input
+                                          {...field}
+                                          placeholder="Enter a name for this route"
+                                          disabled={disabled}
+                                        />
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
                                   <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                      control={form.control}
-                                      name={`eventRoutes.${routeIndex}.name`}
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>Route Name</FormLabel>
-                                          <Input
-                                            {...field}
-                                            placeholder="Enter a name for this route"
-                                            disabled={disabled}
-                                          />
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-
                                     <FormField
                                       control={form.control}
                                       name={`eventRoutes.${routeIndex}.sinkName`}
@@ -360,16 +359,11 @@ export function EventRoutesTab({
                                   </div>
 
                                   <div>
-                                    <div className="flex items-center justify-between mb-3">
+                                    <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <FormLabel>
                                           Event Type Mappings
                                         </FormLabel>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                          Optionally map event types to custom
-                                          values for Azure Digital Twins
-                                          compatibility
-                                        </p>
                                       </div>
                                       <div>
                                         <label className="flex items-center gap-2 cursor-pointer">

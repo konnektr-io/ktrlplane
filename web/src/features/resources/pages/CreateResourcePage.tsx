@@ -14,10 +14,12 @@ import { isPaidResource } from "@/features/billing/utils/isPaidResource";
 import { useBillingStatus } from "@/features/billing/hooks/useBillingApi";
 import { UnifiedBillingSetupModal } from "@/features/billing/components/BillingSetupModal";
 import type { CreateResourceData } from "../types/resource.types";
-import { defaultConfigurations } from "@/features/resources/schemas";
 import { generateDNSId } from "@/lib/dnsUtils";
 import { useProjects } from "@/features/projects/hooks/useProjectApi";
-import { resourceTypes as catalogResourceTypes, ResourceType } from "@/features/resources/catalog/resourceTypes";
+import {
+  resourceTypes as catalogResourceTypes,
+  ResourceType,
+} from "@/features/resources/catalog/resourceTypes";
 import { useResourceCreationFlow } from "../hooks/useResourceCreationFlow";
 import {
   CreationProgressBar,
@@ -250,9 +252,7 @@ export default function CreateResourcePage() {
       } else {
         // Skip billing, check if settings are needed
         const needsSettings =
-          selectedResourceType?.hasSettings &&
-          selectedResourceType?.settingsReady &&
-          !flow.state.skipSettings;
+          selectedResourceType?.hasSettings && !flow.state.skipSettings;
 
         if (needsSettings) {
           flow.goNext();

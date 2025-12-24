@@ -9,7 +9,12 @@ export interface ResourceTier {
 }
 
 export interface ResourceType {
-  id: "Konnektr.Graph" | "Konnektr.Flow" | "Konnektr.Assembler" | "Konnektr.Compass" | "Konnektr.Secret";
+  id:
+    | "Konnektr.Graph"
+    | "Konnektr.Flow"
+    | "Konnektr.Assembler"
+    | "Konnektr.Compass"
+    | "Konnektr.Secret";
   name: string;
   description: string;
   longDescription: string;
@@ -17,12 +22,8 @@ export interface ResourceType {
   category: string;
   features: string[];
   skus: ResourceTier[];
-  documentationUrl: string;
-  isPopular?: boolean;
-  isNew?: boolean;
   disable?: boolean;
   hasSettings?: boolean; // Does this resource type have configuration settings?
-  settingsReady?: boolean; // Are the settings UI/schema ready for production?
   requiresSettings?: boolean; // Are settings mandatory before creation?
 }
 
@@ -47,7 +48,6 @@ export const resourceTypes: ResourceType[] = [
       {
         sku: "free",
         name: "Free",
-        // price: "$0/mo",
         features: [
           "Development Only",
           "User Authentication",
@@ -57,13 +57,24 @@ export const resourceTypes: ResourceType[] = [
         limits: { Twins: "500", "Rate Limit": "1,000 QU/min" },
       },
     ],
-    documentationUrl: "https://docs.konnektr.io/graph",
-    isPopular: true,
     hasSettings: true,
-    settingsReady: true,
     requiresSettings: false,
   },
   {
+    id: "Konnektr.Secret",
+    name: "Secret",
+    description:
+      "Securely store sensitive information like passwords, tokens, and keys.",
+    longDescription:
+      "Kubernetes-backed secret storage for managing sensitive configuration data used by other resources.",
+    icon: Key,
+    category: "Security",
+    features: ["Secure storage", "RBAC controlled", "Kubernetes Native"],
+    skus: [],
+    hasSettings: true,
+    requiresSettings: true,
+  },
+  /* {
     id: "Konnektr.Flow",
     name: "Flow",
     description:
@@ -161,22 +172,5 @@ export const resourceTypes: ResourceType[] = [
     hasSettings: true,
     settingsReady: false, // Compass settings not ready yet
     requiresSettings: false,
-  },
-  {
-    id: "Konnektr.Secret",
-    name: "Secret",
-    description:
-      "Securely store sensitive information like passwords, tokens, and keys.",
-    longDescription:
-      "Kubernetes-backed secret storage for managing sensitive configuration data used by other resources.",
-    icon: Key,
-    category: "Security",
-    features: ["Secure storage", "RBAC controlled", "Kubernetes Native"],
-    skus: [],
-    documentationUrl: "https://docs.konnektr.io/secrets",
-    isNew: true,
-    hasSettings: true,
-    settingsReady: true,
-    requiresSettings: true,
-  },
+  }, */
 ];

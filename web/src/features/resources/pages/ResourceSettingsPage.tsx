@@ -87,7 +87,7 @@ export default function ResourceSettingsPage() {
 
   const type = currentResource?.type;
   const resourceTypeDef = resourceTypes.find((rt) => rt.id === type);
-  const hasSettings = resourceTypeDef?.settingsReady;
+  const hasSettings = resourceTypeDef?.hasSettings;
 
   // For Graph resources: always show the form directly (no edit toggle)
   // because each sink/route has its own save button

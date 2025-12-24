@@ -63,7 +63,7 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="1883"
+                  placeholder="8883"
                   {...field}
                   onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
                 />
@@ -128,9 +128,7 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
       </div>
 
       {/* Authentication Section */}
-      <div className="border-t pt-4">
-        <h4 className="text-sm font-medium mb-4">Authentication</h4>
-
+      <div>
         <div className="space-y-4">
           <h5 className="text-sm font-medium">Basic Credentials</h5>
           <SecretSelector
@@ -154,7 +152,7 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
           />
         </div>
 
-        <div className="border-t pt-4 mt-4">
+        {/* <div className="border-t pt-4 mt-4">
           <h5 className="text-sm font-medium mb-2">
             OAuth (Optional, for Azure IoT Hub)
           </h5>
@@ -189,7 +187,7 @@ export function MqttSinkForm({ form, index, projectId }: MqttSinkFormProps) {
               suggestedSecretType="oauth-client"
             />
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -120,9 +120,7 @@ export function KafkaSinkForm({ form, index, projectId }: KafkaSinkFormProps) {
       </div>
 
       {/* Authentication Section */}
-      <div className="border-t pt-4">
-        <h4 className="text-sm font-medium mb-4">Authentication</h4>
-
+      <div>
         {saslMechanism === "OAUTHBEARER" && (
           <div className="space-y-4">
             <SecretSelector

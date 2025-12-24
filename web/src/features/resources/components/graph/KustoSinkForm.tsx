@@ -114,8 +114,7 @@ export function KustoSinkForm({ form, index, projectId }: KustoSinkFormProps) {
       </div>
 
       {/* Authentication Section */}
-      <div className="border-t pt-4">
-        <h4 className="text-sm font-medium mb-4">Authentication</h4>
+      <div>
         <p className="text-sm text-muted-foreground mb-4">
           Configure Azure AD Service Principal credentials
         </p>
