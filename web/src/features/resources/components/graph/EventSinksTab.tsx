@@ -48,6 +48,7 @@ interface EventSinksTabProps {
   onSave: () => Promise<void>;
   disabled?: boolean;
   hideSaveButtons?: boolean;
+  resourceSku?: string;
 }
 
 type SinkType = "kafka" | "kusto" | "mqtt" | "webhook";
@@ -65,6 +66,7 @@ export function EventSinksTab({
   onSave,
   disabled,
   hideSaveButtons,
+  resourceSku,
 }: EventSinksTabProps) {
   const [expandedSinks, setExpandedSinks] = useState<Set<string>>(new Set());
   const [savingSink, setSavingSink] = useState<string | null>(null);
@@ -224,27 +226,29 @@ export function EventSinksTab({
             <div>
               <CardTitle>Event Sinks</CardTitle>
               <CardDescription>
-                Configure destinations where events will be sent
+                {resourceSku === 'free'
+                  ? 'Event sinks are disabled on the Free tier. Upgrade to enable premium event delivery.'
+                  : 'Configure destinations where events will be sent'}
               </CardDescription>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" disabled={resourceSku === 'free'}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Sink
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => addSink("kafka")}>
+                <DropdownMenuItem onClick={() => addSink("kafka")} disabled={resourceSku === 'free'}>
                   Kafka
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => addSink("kusto")}>
+                <DropdownMenuItem onClick={() => addSink("kusto")} disabled={resourceSku === 'free'}>
                   Kusto
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => addSink("mqtt")}>
+                <DropdownMenuItem onClick={() => addSink("mqtt")} disabled={resourceSku === 'free'}>
                   MQTT
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => addSink("webhook")}>
+                <DropdownMenuItem onClick={() => addSink("webhook")} disabled={resourceSku === 'free'}>
                   Webhook
                 </DropdownMenuItem>
               </DropdownMenuContent>

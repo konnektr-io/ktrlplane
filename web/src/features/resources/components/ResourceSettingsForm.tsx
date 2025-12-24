@@ -10,6 +10,7 @@ interface ResourceSettingsFormProps {
   onChange?: (values: GraphSettings | SecretSettings) => void;
   disabled?: boolean;
   hideSaveButton?: boolean;
+  resourceSku?: string;
 }
 
 export function ResourceSettingsForm({
@@ -20,6 +21,7 @@ export function ResourceSettingsForm({
   onChange,
   disabled,
   hideSaveButton,
+  resourceSku,
 }: ResourceSettingsFormProps) {
   if (resourceType === "Konnektr.Graph") {
     return (
@@ -29,6 +31,7 @@ export function ResourceSettingsForm({
         disabled={disabled}
         projectId={projectId || ""}
         hideSaveButtons={hideSaveButton}
+        resourceSku={resourceSku}
       />
     );
   }

@@ -46,6 +46,7 @@ interface EventRoutesTabProps {
   onSave: () => Promise<void>;
   disabled?: boolean;
   hideSaveButtons?: boolean;
+  resourceSku?: string;
 }
 
 // Supported event types for each format
@@ -82,6 +83,7 @@ export function EventRoutesTab({
   onSave,
   disabled,
   hideSaveButtons,
+  resourceSku,
 }: EventRoutesTabProps) {
   const [expandedRoutes, setExpandedRoutes] = useState<Set<number>>(new Set());
   const [savingRoute, setSavingRoute] = useState<number | null>(null);
@@ -156,11 +158,18 @@ export function EventRoutesTab({
             <div>
               <CardTitle>Event Routes</CardTitle>
               <CardDescription>
-                Configure how events are routed to your sinks
+                {resourceSku === 'free'
+                  ? 'Event routes are disabled on the Free tier. Upgrade to enable advanced event routing.'
+                  : 'Configure how events are routed to your sinks'}
               </CardDescription>
             </div>
             {allSinkNames.length > 0 && (
-              <Button onClick={addRoute} type="button" size="sm">
+              <Button
+                onClick={addRoute}
+                type="button"
+                size="sm"
+                disabled={resourceSku === "free"}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Route
               </Button>

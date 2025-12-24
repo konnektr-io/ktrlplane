@@ -11,6 +11,7 @@ interface GraphFormProps {
   disabled?: boolean;
   projectId: string;
   hideSaveButtons?: boolean;
+  resourceSku?: string;
 }
 
 const defaultGraphSettings: GraphSettings = {
@@ -29,6 +30,7 @@ export function GraphForm({
   disabled,
   projectId,
   hideSaveButtons,
+  resourceSku,
 }: GraphFormProps) {
   const form = useForm<GraphSettings>({
     defaultValues: initialValues ?? defaultGraphSettings,
@@ -53,8 +55,9 @@ export function GraphForm({
               form={form}
               projectId={projectId}
               onSave={handleSave}
-              disabled={disabled}
+              disabled={disabled || resourceSku === 'free'}
               hideSaveButtons={hideSaveButtons}
+              resourceSku={resourceSku}
             />
           </TabsContent>
 
@@ -62,8 +65,9 @@ export function GraphForm({
             <EventRoutesTab
               form={form}
               onSave={handleSave}
-              disabled={disabled}
+              disabled={disabled || resourceSku === 'free'}
               hideSaveButtons={hideSaveButtons}
+              resourceSku={resourceSku}
             />
           </TabsContent>
         </Tabs>

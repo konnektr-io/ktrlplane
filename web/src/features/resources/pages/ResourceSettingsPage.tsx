@@ -154,6 +154,7 @@ export default function ResourceSettingsPage() {
                       setEditing(false);
                     }}
                     disabled={saving}
+                    resourceSku={currentResource?.sku}
                   />
                 );
               }

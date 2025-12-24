@@ -380,7 +380,7 @@ export default function CreateResourcePage() {
           <SettingsConfigurationStep
             resourceType={selectedResourceType}
             resourceName={flow.state.resourceName}
-            tierName={selectedTier?.name}
+            tier={selectedTier}
             onSubmit={() => {}} // No-op for submission from form itself
             onChange={handleUpdateSettings}
             disabled={isCreating}
