@@ -45,6 +45,7 @@ interface EventRoutesTabProps {
   form: UseFormReturn<GraphSettings>;
   onSave: () => Promise<void>;
   disabled?: boolean;
+  hideSaveButtons?: boolean;
 }
 
 // Supported event types for each format
@@ -80,6 +81,7 @@ export function EventRoutesTab({
   form,
   onSave,
   disabled,
+  hideSaveButtons,
 }: EventRoutesTabProps) {
   const [expandedRoutes, setExpandedRoutes] = useState<Set<number>>(new Set());
   const [savingRoute, setSavingRoute] = useState<number | null>(null);
@@ -434,27 +436,29 @@ export function EventRoutesTab({
                                     )}
                                   </div>
                                 </div>
-                                <div className="flex justify-end pt-4 border-t mt-4">
-                                  <Button
-                                    type="button"
-                                    onClick={() => handleSaveRoute(routeIndex)}
-                                    disabled={
-                                      disabled || savingRoute === routeIndex
-                                    }
-                                  >
-                                    {savingRoute === routeIndex ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        Saving...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Save className="h-4 w-4 mr-2" />
-                                        Save Route
-                                      </>
-                                    )}
-                                  </Button>
-                                </div>
+                                {!hideSaveButtons && (
+                                  <div className="flex justify-end pt-4 border-t mt-4">
+                                    <Button
+                                      type="button"
+                                      onClick={() => handleSaveRoute(routeIndex)}
+                                      disabled={
+                                        disabled || savingRoute === routeIndex
+                                      }
+                                    >
+                                      {savingRoute === routeIndex ? (
+                                        <>
+                                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                          Saving...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Save className="h-4 w-4 mr-2" />
+                                          Save Route
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                )}
                               </TableCell>
                             </TableRow>
                           )}

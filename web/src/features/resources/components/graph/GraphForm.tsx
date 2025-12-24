@@ -10,6 +10,7 @@ interface GraphFormProps {
   onSave: (values: GraphSettings) => Promise<void>;
   disabled?: boolean;
   projectId: string;
+  hideSaveButtons?: boolean;
 }
 
 const defaultGraphSettings: GraphSettings = {
@@ -27,6 +28,7 @@ export function GraphForm({
   onSave,
   disabled,
   projectId,
+  hideSaveButtons,
 }: GraphFormProps) {
   const form = useForm<GraphSettings>({
     defaultValues: initialValues ?? defaultGraphSettings,
@@ -52,6 +54,7 @@ export function GraphForm({
               projectId={projectId}
               onSave={handleSave}
               disabled={disabled}
+              hideSaveButtons={hideSaveButtons}
             />
           </TabsContent>
 
@@ -60,6 +63,7 @@ export function GraphForm({
               form={form}
               onSave={handleSave}
               disabled={disabled}
+              hideSaveButtons={hideSaveButtons}
             />
           </TabsContent>
         </Tabs>

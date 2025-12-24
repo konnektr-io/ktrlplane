@@ -47,6 +47,7 @@ interface EventSinksTabProps {
   projectId: string;
   onSave: () => Promise<void>;
   disabled?: boolean;
+  hideSaveButtons?: boolean;
 }
 
 type SinkType = "kafka" | "kusto" | "mqtt" | "webhook";
@@ -63,6 +64,7 @@ export function EventSinksTab({
   projectId,
   onSave,
   disabled,
+  hideSaveButtons,
 }: EventSinksTabProps) {
   const [expandedSinks, setExpandedSinks] = useState<Set<string>>(new Set());
   const [savingSink, setSavingSink] = useState<string | null>(null);
@@ -314,25 +316,27 @@ export function EventSinksTab({
                           <TableCell colSpan={4} className="bg-muted/30 p-6">
                             <div className="space-y-4">
                               {renderSinkForm(sink)}
-                              <div className="flex justify-end pt-4 border-t">
-                                <Button
-                                  type="button"
-                                  onClick={() => handleSaveSink(sinkId)}
-                                  disabled={disabled || savingSink === sinkId}
-                                >
-                                  {savingSink === sinkId ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                      Saving...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Save className="h-4 w-4 mr-2" />
-                                      Save Sink
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
+                              {!hideSaveButtons && (
+                                <div className="flex justify-end pt-4 border-t">
+                                  <Button
+                                    type="button"
+                                    onClick={() => handleSaveSink(sinkId)}
+                                    disabled={disabled || savingSink === sinkId}
+                                  >
+                                    {savingSink === sinkId ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Saving...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Save className="h-4 w-4 mr-2" />
+                                        Save Sink
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>

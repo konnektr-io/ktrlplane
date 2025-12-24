@@ -28,6 +28,7 @@ export function ResourceSettingsForm({
         onSave={onSubmit as (values: GraphSettings) => Promise<void>}
         disabled={disabled}
         projectId={projectId || ""}
+        hideSaveButtons={hideSaveButton}
       />
     );
   }
