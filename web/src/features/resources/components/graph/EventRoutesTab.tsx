@@ -440,7 +440,9 @@ export function EventRoutesTab({
                                   <div className="flex justify-end pt-4 border-t mt-4">
                                     <Button
                                       type="button"
-                                      onClick={() => handleSaveRoute(routeIndex)}
+                                      onClick={() =>
+                                        handleSaveRoute(routeIndex)
+                                      }
                                       disabled={
                                         disabled || savingRoute === routeIndex
                                       }
