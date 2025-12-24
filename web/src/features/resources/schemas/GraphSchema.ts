@@ -8,9 +8,6 @@ export interface KafkaSink {
   topic: string;
   saslMechanism: "PLAIN" | "OAUTHBEARER";
   securityProtocol: "PLAINTEXT" | "SASL_PLAINTEXT" | "SASL_SSL";
-
-  // Secret references (required for authentication)
-  // Format: {secretName}/{keyName}
   tenantId?: SecretRef;
   clientId?: SecretRef;
   clientSecret?: SecretRef;
@@ -28,9 +25,6 @@ export interface KustoSink {
   propertyEventsTable?: string;
   twinLifeCycleEventsTable?: string;
   relationshipLifeCycleEventsTable?: string;
-
-  // Secret references (required for Azure AD auth)
-  // Format: {secretName}/{keyName}
   tenantId?: SecretRef;
   clientId?: SecretRef;
   clientSecret?: SecretRef;
@@ -45,9 +39,6 @@ export interface MqttSink {
   topic: string;
   clientId: string;
   protocolVersion: "3.1.0" | "3.1.1" | "5.0.0";
-
-  // Secret references (for authentication)
-  // Format: {secretName}/{keyName}
   username?: SecretRef;
   password?: SecretRef;
   tokenEndpoint?: SecretRef;
@@ -57,14 +48,10 @@ export interface MqttSink {
 
 // Webhook Sink Configuration
 export interface WebhookSink {
-  id?: string;
   name: string;
   url: string;
   method: "POST" | "PUT";
   authenticationType: "None" | "Basic" | "Bearer" | "ApiKey" | "OAuth";
-
-  // Secret references (for authentication)
-  // Format: {secretName}/{keyName}
   username?: SecretRef;
   password?: SecretRef;
   token?: SecretRef;
@@ -77,7 +64,7 @@ export interface WebhookSink {
 
 // Event Route Configuration
 export interface EventRoute {
-  id?: string;
+  name: string;
   sinkName: string;
   eventFormat: "EventNotification" | "DataHistory" | "Telemetry";
   typeMappings?: Record<string, string>; // Map of SinkEventType to table/topic names

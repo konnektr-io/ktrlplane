@@ -38,7 +38,7 @@ import {
   Save,
   Loader2,
 } from "lucide-react";
-import type { GraphSettings } from "../../schemas/GraphSchema";
+import type { EventRoute, GraphSettings } from "../../schemas/GraphSchema";
 import { useState, Fragment } from "react";
 
 interface EventRoutesTabProps {
@@ -46,6 +46,35 @@ interface EventRoutesTabProps {
   onSave: () => Promise<void>;
   disabled?: boolean;
 }
+
+// Supported event types for each format
+const eventTypeOptions: Record<
+  EventRoute["eventFormat"],
+  { key: string; label: string }[]
+> = {
+  EventNotification: [
+    { key: "TwinCreate", label: "Twin Create" },
+    { key: "TwinUpdate", label: "Twin Update" },
+    { key: "TwinDelete", label: "Twin Delete" },
+    { key: "RelationshipCreate", label: "Relationship Create" },
+    { key: "RelationshipUpdate", label: "Relationship Update" },
+    { key: "RelationshipDelete", label: "Relationship Delete" },
+  ],
+  Telemetry: [
+    { key: "TwinCreate", label: "Twin Create" },
+    { key: "TwinUpdate", label: "Twin Update" },
+    { key: "TwinDelete", label: "Twin Delete" },
+    { key: "RelationshipCreate", label: "Relationship Create" },
+    { key: "RelationshipUpdate", label: "Relationship Update" },
+    { key: "RelationshipDelete", label: "Relationship Delete" },
+    { key: "Telemetry", label: "Telemetry" },
+  ],
+  DataHistory: [
+    { key: "PropertyEvent", label: "Property Event" },
+    { key: "TwinLifecycle", label: "Twin Lifecycle" },
+    { key: "RelationshipLifecycle", label: "Relationship Lifecycle" },
+  ],
+};
 
 export function EventRoutesTab({
   form,
@@ -86,9 +115,9 @@ export function EventRoutesTab({
     form.setValue("eventRoutes", [
       ...currentRoutes,
       {
+        name: `Route #${currentRoutes.length + 1}`,
         sinkName: "",
         eventFormat: "EventNotification" as const,
-        typeMappings: {},
       },
     ]);
     // Auto-expand the new route
@@ -105,51 +134,6 @@ export function EventRoutesTab({
     const newExpanded = new Set(expandedRoutes);
     newExpanded.delete(index);
     setExpandedRoutes(newExpanded);
-  };
-
-  const addTypeMapping = (routeIndex: number) => {
-    const currentMappings =
-      form.getValues(`eventRoutes.${routeIndex}.typeMappings`) || {};
-    const newKey = `EventType${Object.keys(currentMappings).length + 1}`;
-    form.setValue(`eventRoutes.${routeIndex}.typeMappings`, {
-      ...currentMappings,
-      [newKey]: "",
-    });
-  };
-
-  const removeTypeMapping = (routeIndex: number, key: string) => {
-    const currentMappings =
-      form.getValues(`eventRoutes.${routeIndex}.typeMappings`) || {};
-    const { [key]: _, ...rest } = currentMappings;
-    form.setValue(`eventRoutes.${routeIndex}.typeMappings`, rest);
-  };
-
-  const updateTypeMappingKey = (
-    routeIndex: number,
-    oldKey: string,
-    newKey: string
-  ) => {
-    const currentMappings =
-      form.getValues(`eventRoutes.${routeIndex}.typeMappings`) || {};
-    const value = currentMappings[oldKey];
-    const { [oldKey]: _, ...rest } = currentMappings;
-    form.setValue(`eventRoutes.${routeIndex}.typeMappings`, {
-      ...rest,
-      [newKey]: value,
-    });
-  };
-
-  const updateTypeMappingValue = (
-    routeIndex: number,
-    key: string,
-    value: string
-  ) => {
-    const currentMappings =
-      form.getValues(`eventRoutes.${routeIndex}.typeMappings`) || {};
-    form.setValue(`eventRoutes.${routeIndex}.typeMappings`, {
-      ...currentMappings,
-      [key]: value,
-    });
   };
 
   const handleSaveRoute = async (routeIndex: number) => {
@@ -217,10 +201,13 @@ export function EventRoutesTab({
                   <TableBody>
                     {eventRoutes.map((route, routeIndex) => {
                       const isExpanded = expandedRoutes.has(routeIndex);
-                      const typeMappings =
-                        form.watch(`eventRoutes.${routeIndex}.typeMappings`) ||
-                        {};
-                      const mappingCount = Object.keys(typeMappings).length;
+                      const typeMappings = form.watch(
+                        `eventRoutes.${routeIndex}.typeMappings`
+                      );
+                      const mappingCount =
+                        (typeof typeMappings === "object" &&
+                          Object.keys(typeMappings).length) ||
+                        0;
 
                       return (
                         <Fragment key={routeIndex}>
@@ -237,7 +224,9 @@ export function EventRoutesTab({
                             <TableCell
                               onClick={() => toggleExpanded(routeIndex)}
                             >
-                              Route #{routeIndex + 1}
+                              {route.name || (
+                                <span>Route #{routeIndex + 1}</span>
+                              )}
                             </TableCell>
                             <TableCell
                               onClick={() => toggleExpanded(routeIndex)}
@@ -291,6 +280,22 @@ export function EventRoutesTab({
                                   <div className="grid grid-cols-2 gap-4">
                                     <FormField
                                       control={form.control}
+                                      name={`eventRoutes.${routeIndex}.name`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Route Name</FormLabel>
+                                          <Input
+                                            {...field}
+                                            placeholder="Enter a name for this route"
+                                            disabled={disabled}
+                                          />
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+
+                                    <FormField
+                                      control={form.control}
                                       name={`eventRoutes.${routeIndex}.sinkName`}
                                       render={({ field }) => (
                                         <FormItem>
@@ -339,8 +344,11 @@ export function EventRoutesTab({
                                               <SelectItem value="EventNotification">
                                                 Event Notification
                                               </SelectItem>
-                                              <SelectItem value="CloudEvent">
-                                                Cloud Event
+                                              <SelectItem value="DataHistory">
+                                                Data History
+                                              </SelectItem>
+                                              <SelectItem value="Telemetry">
+                                                Telemetry
                                               </SelectItem>
                                             </SelectContent>
                                           </Select>
@@ -357,76 +365,76 @@ export function EventRoutesTab({
                                           Event Type Mappings
                                         </FormLabel>
                                         <p className="text-sm text-muted-foreground mt-1">
-                                          Map event types to specific topics or
-                                          categories
+                                          Optionally map event types to custom
+                                          values for Azure Digital Twins
+                                          compatibility
                                         </p>
                                       </div>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={() =>
-                                          addTypeMapping(routeIndex)
-                                        }
-                                      >
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Add Mapping
-                                      </Button>
+                                      <div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={!!typeMappings}
+                                            onChange={(e) => {
+                                              if (e.target.checked) {
+                                                form.setValue(
+                                                  `eventRoutes.${routeIndex}.typeMappings`,
+                                                  {}
+                                                );
+                                              } else {
+                                                form.setValue(
+                                                  `eventRoutes.${routeIndex}.typeMappings`,
+                                                  undefined
+                                                );
+                                              }
+                                            }}
+                                            disabled={disabled}
+                                          />
+                                          <span className="text-sm">
+                                            Enable custom event type mappings
+                                          </span>
+                                        </label>
+                                      </div>
                                     </div>
 
-                                    {Object.keys(typeMappings).length === 0 ? (
-                                      <div className="text-center py-6 text-muted-foreground text-sm border rounded-lg bg-muted/20">
-                                        No type mappings configured
-                                      </div>
-                                    ) : (
+                                    {!!typeMappings && (
                                       <div className="space-y-2 border rounded-lg p-3">
-                                        {Object.entries(typeMappings).map(
-                                          ([key, value]) => (
-                                            <div
-                                              key={key}
-                                              className="flex gap-2 items-center"
-                                            >
-                                              <Input
-                                                placeholder="Event Type"
-                                                value={key}
-                                                onChange={(e) =>
-                                                  updateTypeMappingKey(
-                                                    routeIndex,
-                                                    key,
-                                                    e.target.value
-                                                  )
-                                                }
-                                              />
-                                              <span className="text-muted-foreground">
-                                                →
-                                              </span>
-                                              <Input
-                                                placeholder="Mapped Value"
-                                                value={value as string}
-                                                onChange={(e) =>
-                                                  updateTypeMappingValue(
-                                                    routeIndex,
-                                                    key,
-                                                    e.target.value
-                                                  )
-                                                }
-                                              />
-                                              <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                  removeTypeMapping(
-                                                    routeIndex,
-                                                    key
-                                                  )
-                                                }
-                                                className="flex-shrink-0 text-destructive hover:text-destructive"
-                                              >
-                                                <Trash2 className="h-4 w-4" />
-                                              </Button>
-                                            </div>
-                                          )
-                                        )}
+                                        {eventTypeOptions[
+                                          route.eventFormat ||
+                                            "EventNotification"
+                                        ].map(({ key, label }) => (
+                                          <div
+                                            key={key}
+                                            className="flex gap-2 items-center"
+                                          >
+                                            <span className="w-40 text-sm font-medium text-muted-foreground">
+                                              {label}
+                                            </span>
+                                            <span className="text-muted-foreground">
+                                              →
+                                            </span>
+                                            <Input
+                                              placeholder="Mapped Value (optional)"
+                                              value={typeMappings[key] || ""}
+                                              onChange={(e) => {
+                                                const newMappings = {
+                                                  ...typeMappings,
+                                                  [key]: e.target.value,
+                                                };
+                                                form.setValue(
+                                                  `eventRoutes.${routeIndex}.typeMappings`,
+                                                  newMappings
+                                                );
+                                              }}
+                                              className="flex-1"
+                                              disabled={disabled}
+                                            />
+                                          </div>
+                                        ))}
+                                        <div className="text-muted-foreground text-xs mt-2">
+                                          Leave blank to use backend defaults
+                                          for each event type.
+                                        </div>
                                       </div>
                                     )}
                                   </div>
