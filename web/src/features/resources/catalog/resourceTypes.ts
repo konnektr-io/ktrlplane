@@ -1,4 +1,4 @@
-import { Database, Workflow, Key } from "lucide-react";
+import { Database, Key } from "lucide-react";
 
 export interface ResourceTier {
   sku: string;
