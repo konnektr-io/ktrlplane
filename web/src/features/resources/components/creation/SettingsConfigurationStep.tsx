@@ -5,26 +5,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ResourceType } from "../../catalog/resourceTypes";
+import type { ResourceTier, ResourceType } from "../../catalog/resourceTypes";
 import type { GraphSettings } from "../../schemas/GraphSchema";
-import type { FlowSettings } from "../../schemas/FlowSchema";
 import type { SecretSettings } from "../../components/secret/SecretForm";
 
 interface SettingsConfigurationStepProps {
   resourceType: ResourceType | undefined;
   resourceName: string;
-  tierName?: string;
-  initialValues?: GraphSettings | FlowSettings | SecretSettings;
-  onSubmit: (settings: GraphSettings | FlowSettings | SecretSettings) => void;
-  onChange?: (settings: GraphSettings | FlowSettings | SecretSettings) => void;
+  tier?: ResourceTier;
+  onSubmit: (settings: GraphSettings | SecretSettings) => void;
+  onChange?: (settings: GraphSettings | SecretSettings) => void;
   disabled?: boolean;
 }
 
 export function SettingsConfigurationStep({
   resourceType,
   resourceName,
-  tierName,
-  initialValues,
+  tier,
   onSubmit,
   onChange,
   disabled,
@@ -43,10 +40,10 @@ export function SettingsConfigurationStep({
           <CardDescription>
             <span className="font-medium">Name:</span> {resourceName}
             <span className="font-medium">ID:</span> {resourceType.id}
-            {tierName && (
+            {tier?.name && (
               <>
                 <br />
-                <span className="font-medium">Tier:</span> {tierName}
+                <span className="font-medium">Tier:</span> {tier.name}
               </>
             )}
             <br />
@@ -58,7 +55,7 @@ export function SettingsConfigurationStep({
       {/* Configuration Form */}
       <ResourceSettingsForm
         resourceType={resourceType.id}
-        initialValues={initialValues}
+        resourceSku={tier?.sku}
         onSubmit={onSubmit}
         onChange={onChange}
         disabled={disabled}

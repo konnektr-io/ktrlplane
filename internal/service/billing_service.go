@@ -183,13 +183,27 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 		return nil, errors.New("no resources found to create subscription items")
 	}
 
+	// List existing payment methods for customer
+	pmParams := &stripe.CustomerListPaymentMethodsParams{
+		Customer: stripe.String(*account.StripeCustomerID),
+	}
+	pmParams.Limit = stripe.Int64(3)
+	pmIter := customer.ListPaymentMethods(pmParams)
+
+	var paymentMethods []*stripe.PaymentMethod
+	for pmIter.Next() {
+		paymentMethods = append(paymentMethods, pmIter.PaymentMethod())
+	}
+
+	if len(paymentMethods) == 0 {
+		fmt.Printf("Warning: No payment methods found for customer %s\n", *account.StripeCustomerID)
+	}
+
 	// Create Stripe subscription
 	params := &stripe.SubscriptionParams{
 		Customer: stripe.String(*account.StripeCustomerID),
 		Items:    items,
-		BillingMode: &stripe.SubscriptionBillingModeParams{
-			Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
-		},
+		DefaultPaymentMethod: stripe.String(paymentMethods[0].ID),
 	}
 
 	stripeSubscription, err := subscription.New(params)
@@ -350,7 +364,7 @@ func (s *BillingService) GetBillingInfo(scopeType, scopeID string) (*models.Bill
 			stripePaymentMethod := models.StripePaymentMethod{
 				ID:   pm.ID,
 				Type: string(pm.Type),
-			}
+			}					
 
 			if pm.Card != nil {
 				stripePaymentMethod.Card = &struct {
@@ -462,6 +476,9 @@ func (s *BillingService) CreateStripeSetupIntent(scopeType, scopeID string) (str
 	params := &stripe.SetupIntentParams{
 		Customer: stripe.String(*account.StripeCustomerID),
 		Usage:    stripe.String("off_session"),
+		AutomaticPaymentMethods: &stripe.SetupIntentAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		},
 	}
 	intent, err := setupintent.New(params)
 	if err != nil {
@@ -625,12 +642,27 @@ func (s *BillingService) createSubscriptionWithResources(customerID string, reso
 		return subscription.New(subParams)
 	}
 
+	// List existing payment methods for customer
+	pmParams := &stripe.CustomerListPaymentMethodsParams{
+		Customer: stripe.String(customerID),
+	}
+	pmParams.Limit = stripe.Int64(3)
+	pmIter := customer.ListPaymentMethods(pmParams)
+
+	var paymentMethods []*stripe.PaymentMethod
+	for pmIter.Next() {
+		paymentMethods = append(paymentMethods, pmIter.PaymentMethod())
+	}
+
+	if len(paymentMethods) == 0 {
+		fmt.Printf("Warning: No payment methods found for customer %s\n", customerID)
+	}
+
 	// Create the subscription with items
 	subParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(customerID),
 		Items:    subscriptionItems,
-		// Default payment behavior - customer will need to add payment method
-		PaymentBehavior: stripe.String("default_incomplete"),
+		DefaultPaymentMethod: stripe.String(paymentMethods[0].ID),
 	}
 
 	subscription, err := subscription.New(subParams)

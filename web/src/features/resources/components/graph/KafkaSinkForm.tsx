@@ -1,0 +1,194 @@
+import { UseFormReturn } from "react-hook-form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SecretSelector } from "../secret/SecretSelector";
+import type { GraphSettings } from "../../schemas/GraphSchema";
+
+interface KafkaSinkFormProps {
+  form: UseFormReturn<GraphSettings>;
+  index: number;
+  projectId: string;
+}
+
+export function KafkaSinkForm({ form, index, projectId }: KafkaSinkFormProps) {
+  const saslMechanism = form.watch(
+    `eventSinks.kafka.${index}.saslMechanism`
+  ) as string;
+
+  return (
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name={`eventSinks.kafka.${index}.name`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Sink Name *</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g., kafka-prod" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name={`eventSinks.kafka.${index}.brokerList`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Broker List *</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g., broker1:9092,broker2:9092" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name={`eventSinks.kafka.${index}.topic`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Topic *</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g., twin-events" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name={`eventSinks.kafka.${index}.securityProtocol`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Security Protocol</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="PLAINTEXT">PLAINTEXT</SelectItem>
+                  <SelectItem value="SASL_PLAINTEXT">SASL_PLAINTEXT</SelectItem>
+                  <SelectItem value="SASL_SSL">SASL_SSL</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name={`eventSinks.kafka.${index}.saslMechanism`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>SASL Mechanism</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="OAUTHBEARER">OAUTHBEARER</SelectItem>
+                  <SelectItem value="PLAIN">PLAIN</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Authentication Section */}
+      <div>
+        {saslMechanism === "OAUTHBEARER" && (
+          <div className="space-y-4">
+            <SecretSelector
+              projectId={projectId}
+              value={form.watch(`eventSinks.kafka.${index}.tenantId`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.tenantId`, val)
+              }
+              label="Tenant ID"
+              suggestedSecretType="oauth-client"
+            />
+
+            <SecretSelector
+              projectId={projectId}
+              value={form.watch(`eventSinks.kafka.${index}.clientId`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.clientId`, val)
+              }
+              label="Client ID"
+              suggestedSecretType="oauth-client"
+            />
+
+            <SecretSelector
+              projectId={projectId}
+              value={form.watch(`eventSinks.kafka.${index}.clientSecret`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.clientSecret`, val)
+              }
+              label="Client Secret"
+              suggestedSecretType="oauth-client"
+            />
+
+            <SecretSelector
+              projectId={projectId}
+              value={form.watch(`eventSinks.kafka.${index}.tokenEndpoint`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.tokenEndpoint`, val)
+              }
+              label="Token Endpoint"
+              suggestedSecretType="oauth-client"
+            />
+          </div>
+        )}
+
+        {saslMechanism === "PLAIN" && (
+          <div className="space-y-4">
+            <SecretSelector
+              projectId={projectId}
+              value={form.watch(`eventSinks.kafka.${index}.saslUsername`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.saslUsername`, val)
+              }
+              label="SASL Username"
+              suggestedSecretType="kafka-plain"
+            />
+
+            <SecretSelector
+              projectId={projectId}
+              value={form.watch(`eventSinks.kafka.${index}.saslPassword`)}
+              onChange={(val) =>
+                form.setValue(`eventSinks.kafka.${index}.saslPassword`, val)
+              }
+              label="SASL Password"
+              suggestedSecretType="kafka-plain"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

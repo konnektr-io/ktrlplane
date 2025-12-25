@@ -1,16 +1,15 @@
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
+import { useState, useEffect } from "react";
 import { useUserPermissions } from "@/features/access/hooks/useAccessApi";
 import { ResourceSettingsForm } from "../components/ResourceSettingsForm";
-import { resourceSchemas, ResourceType } from "../schemas";
-import { ZodObject, ZodRawShape } from "zod";
 import { Button } from "@/components/ui/button";
+import { resourceTypes } from "../catalog/resourceTypes";
 import { useResource, useUpdateResource } from "../hooks/useResourceApi";
 import type { UpdateResourceData } from "../types/resource.types";
+import type { GraphSettings } from "../schemas/GraphSchema";
 
 export default function ResourceSettingsPage() {
-  // ...existing code...
   const { projectId, resourceId } = useParams<{
     projectId: string;
     resourceId: string;
@@ -31,13 +30,16 @@ export default function ResourceSettingsPage() {
     projectId ?? ""
   );
   const [editing, setEditing] = useState(false);
-  const [settingsJson, setSettingsJson] = useState(
-    currentResource?.settings_json
-      ? JSON.stringify(currentResource.settings_json, null, 2)
-      : "{}"
-  );
+  const [settingsJson, setSettingsJson] = useState("{}");
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Update settingsJson when resource data loads
+  useEffect(() => {
+    if (currentResource?.settings_json) {
+      setSettingsJson(JSON.stringify(currentResource.settings_json, null, 2));
+    }
+  }, [currentResource?.settings_json]);
 
   const handleSave = async () => {
     // Validate JSON
@@ -57,6 +59,16 @@ export default function ResourceSettingsPage() {
     setEditing(false);
   };
 
+  // Handler for structured form saves (used by GraphForm per-item saves)
+  const handleFormSave = async (
+    values: GraphSettings | Record<string, unknown>
+  ) => {
+    const payload: UpdateResourceData = {
+      settings_json: values as Record<string, unknown>,
+    };
+    await updateResourceMutation.mutateAsync(payload);
+  };
+
   // Only allow editing if user has 'write' on resource or project
   const canEdit =
     resourcePermissions?.includes("write") ||
@@ -73,6 +85,38 @@ export default function ResourceSettingsPage() {
     );
   }
 
+  const type = currentResource?.type;
+  const resourceTypeDef = resourceTypes.find((rt) => rt.id === type);
+  const hasSettings = resourceTypeDef?.hasSettings;
+
+  // For Graph resources: always show the form directly (no edit toggle)
+  // because each sink/route has its own save button
+  if (type === "Konnektr.Graph" && hasSettings) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Event Routing Configuration</h1>
+          <p className="text-muted-foreground">
+            Configure event sinks and routing for your Graph resource
+          </p>
+        </div>
+        <ResourceSettingsForm
+          resourceType={type}
+          projectId={projectId}
+          initialValues={currentResource?.settings_json as GraphSettings}
+          onSubmit={handleFormSave}
+          disabled={!canEdit}
+        />
+        {!canEdit && (
+          <p className="text-sm text-muted-foreground">
+            You do not have permission to edit this resource.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // For other resource types: show with edit toggle
   return (
     <div className="space-y-6">
       <div>
@@ -90,93 +134,42 @@ export default function ResourceSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Show dynamic form if schema exists and has fields, else fallback */}
             {(() => {
-              const type = currentResource?.type;
-              const isKnownType =
-                type && Object.keys(resourceSchemas).includes(type);
-              const schema = isKnownType
-                ? resourceSchemas[type as ResourceType]
-                : undefined;
-              const shape =
-                schema && "shape" in schema
-                  ? (schema as ZodObject<ZodRawShape>).shape
-                  : undefined;
-              // Show dynamic form if schema exists and has fields
-              if (editing && schema && shape && Object.keys(shape).length > 0) {
+              // Show form when editing and settings are available
+              if (editing && hasSettings) {
                 return (
                   <ResourceSettingsForm
                     resourceType={type as string}
+                    projectId={projectId}
                     initialValues={
-                      currentResource &&
-                      typeof currentResource.settings_json === "string"
-                        ? JSON.parse(currentResource.settings_json)
-                        : currentResource?.settings_json || {}
+                      currentResource?.settings_json as Record<string, unknown>
                     }
                     onSubmit={async (values) => {
                       setSaving(true);
                       const payload: UpdateResourceData = {
-                        settings_json: values,
+                        settings_json: values as Record<string, unknown>,
                       };
                       await updateResourceMutation.mutateAsync(payload);
                       setSaving(false);
                       setEditing(false);
                     }}
                     disabled={saving}
+                    resourceSku={currentResource?.sku}
                   />
                 );
               }
-              // Show summary if not editing and schema exists
-              if (
-                !editing &&
-                schema &&
-                shape &&
-                Object.keys(shape).length > 0
-              ) {
+
+              // Show summary when not editing and settings are available
+              if (!editing && hasSettings) {
                 return (
-                  <div>
-                    {Object.keys(shape).map((field) => {
-                      let val = currentResource?.settings_json;
-                      if (typeof val === "string") {
-                        try {
-                          val = JSON.parse(val);
-                        } catch {
-                          return (
-                            <div key={field}>
-                              <label className="text-sm font-medium">
-                                {field}
-                              </label>
-                              <p className="text-sm font-mono mt-1">-</p>
-                            </div>
-                          );
-                        }
-                      }
-                      return (
-                        <div key={field}>
-                          <label className="text-sm font-medium">{field}</label>
-                          <p className="text-sm font-mono mt-1">
-                            {val && typeof val === "object" && field in val
-                              ? typeof val[field] === "object"
-                                ? JSON.stringify(val[field], null, 2)
-                                : String(val[field])
-                              : "-"}
-                          </p>
-                        </div>
-                      );
-                    })}
+                  <div className="text-sm text-muted-foreground">
+                    Settings configured. Click Edit to modify.
                   </div>
                 );
               }
-              // If schema exists but has no fields (e.g. Flow), show message
-              if (schema && shape && Object.keys(shape).length === 0) {
-                return (
-                  <div className="text-muted-foreground text-sm">
-                    No configurable settings for this resource type.
-                  </div>
-                );
-              }
-              // Fallback for unknown types: show raw JSON
-              if (currentResource && (!type || !isKnownType)) {
+
+              // No settings UI available - show raw JSON fallback
+              if (!hasSettings && currentResource) {
                 return (
                   <div>
                     <label className="text-sm font-medium">
@@ -197,24 +190,12 @@ export default function ResourceSettingsPage() {
                   </div>
                 );
               }
+
               return null;
             })()}
             <div className="flex gap-2 mt-2">
               {(() => {
-                const type = currentResource?.type;
-                const isKnownType =
-                  type && Object.keys(resourceSchemas).includes(type);
-                const schema = isKnownType
-                  ? resourceSchemas[type as ResourceType]
-                  : undefined;
-                const shape =
-                  schema && "shape" in schema
-                    ? (schema as ZodObject<ZodRawShape>).shape
-                    : undefined;
-                const hasFormSchema =
-                  schema && shape && Object.keys(shape).length > 0;
-
-                if (editing && !hasFormSchema) {
+                if (editing && !hasSettings) {
                   return (
                     <>
                       <Button
@@ -259,3 +240,4 @@ export default function ResourceSettingsPage() {
     </div>
   );
 }
+

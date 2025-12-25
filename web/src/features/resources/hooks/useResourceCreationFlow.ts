@@ -121,7 +121,6 @@ UseResourceCreationFlowParams) {
     if (
       selectedResourceType &&
       selectedResourceType.hasSettings &&
-      selectedResourceType.settingsReady &&
       !state.skipSettings
     ) {
       calculatedSteps.push({

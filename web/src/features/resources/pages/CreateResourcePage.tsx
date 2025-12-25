@@ -14,10 +14,12 @@ import { isPaidResource } from "@/features/billing/utils/isPaidResource";
 import { useBillingStatus } from "@/features/billing/hooks/useBillingApi";
 import { UnifiedBillingSetupModal } from "@/features/billing/components/BillingSetupModal";
 import type { CreateResourceData } from "../types/resource.types";
-import { defaultConfigurations } from "@/features/resources/schemas";
 import { generateDNSId } from "@/lib/dnsUtils";
 import { useProjects } from "@/features/projects/hooks/useProjectApi";
-import { resourceTypes as catalogResourceTypes, ResourceType } from "@/features/resources/catalog/resourceTypes";
+import {
+  resourceTypes as catalogResourceTypes,
+  ResourceType,
+} from "@/features/resources/catalog/resourceTypes";
 import { useResourceCreationFlow } from "../hooks/useResourceCreationFlow";
 import {
   CreationProgressBar,
@@ -250,9 +252,7 @@ export default function CreateResourcePage() {
       } else {
         // Skip billing, check if settings are needed
         const needsSettings =
-          selectedResourceType?.hasSettings &&
-          selectedResourceType?.settingsReady &&
-          !flow.state.skipSettings;
+          selectedResourceType?.hasSettings && !flow.state.skipSettings;
 
         if (needsSettings) {
           flow.goNext();
@@ -380,18 +380,7 @@ export default function CreateResourcePage() {
           <SettingsConfigurationStep
             resourceType={selectedResourceType}
             resourceName={flow.state.resourceName}
-            tierName={selectedTier?.name}
-            initialValues={
-              flow.state.resourceType === "Konnektr.Graph"
-                ? (defaultConfigurations[
-                    "Konnektr.Graph"
-                  ] as import("@/features/resources/schemas/GraphSchema").GraphSettings)
-                : flow.state.resourceType === "Konnektr.Flow"
-                ? (defaultConfigurations[
-                    "Konnektr.Flow"
-                  ] as import("@/features/resources/schemas/FlowSchema").FlowSettings)
-                : undefined
-            }
+            tier={selectedTier}
             onSubmit={() => {}} // No-op for submission from form itself
             onChange={handleUpdateSettings}
             disabled={isCreating}
@@ -413,41 +402,40 @@ export default function CreateResourcePage() {
         )}
 
         {/* Navigation Buttons */}
-        {(flow.currentStep?.id !== "settings" ||
-          flow.state.resourceType === "Konnektr.Secret") &&
-          flow.currentStep?.id !== "access" && (
-            <div className="flex justify-between gap-3">
-              {/* Hide Back button on first step of global route (no meaningful place to go back to) */}
-              {flow.canGoBack && (
-                <Button variant="outline" onClick={handleBack}>
-                  Back
-                </Button>
-              )}
-              <div className="flex gap-3 ml-auto">
-                {!flow.currentStep?.required &&
-                  flow.currentStep?.id !== "project" && (
-                    <Button variant="ghost" onClick={flow.skipCurrentStep}>
-                      Skip
-                    </Button>
-                  )}
-                <Button
-                  onClick={handleNext}
-                  disabled={
-                    !flow.canGoNext ||
-                    isCreating ||
-                    (flow.currentStep?.id === "project" && projectsLoading) ||
-                    (flow.currentStep?.id === "tier" && !selectedProjectId)
-                  }
-                >
-                  {isCreating
-                    ? "Creating..."
-                    : flow.isLastStep
-                    ? "Create Resource"
-                    : `Continue to ${flow.getNextStepLabel()}`}
-                </Button>
-              </div>
+        {flow.currentStep?.id !== "access" && (
+          <div className="flex justify-between gap-3">
+            {/* Hide Back button on first step of global route (no meaningful place to go back to) */}
+            {flow.canGoBack && (
+              <Button variant="outline" onClick={handleBack}>
+                Back
+              </Button>
+            )}
+            <div className="flex gap-3 ml-auto">
+              {!flow.currentStep?.required &&
+                !flow.isLastStep &&
+                flow.currentStep?.id !== "project" && (
+                  <Button variant="ghost" onClick={flow.skipCurrentStep}>
+                    Skip
+                  </Button>
+                )}
+              <Button
+                onClick={handleNext}
+                disabled={
+                  !flow.canGoNext ||
+                  isCreating ||
+                  (flow.currentStep?.id === "project" && projectsLoading) ||
+                  (flow.currentStep?.id === "tier" && !selectedProjectId)
+                }
+              >
+                {isCreating
+                  ? "Creating..."
+                  : flow.isLastStep
+                  ? "Create Resource"
+                  : `Continue to ${flow.getNextStepLabel()}`}
+              </Button>
             </div>
-          )}
+          </div>
+        )}
 
         {/* Cancel Button */}
         {flow.currentStep?.id !== "settings" && (

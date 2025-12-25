@@ -1,38 +1,82 @@
-import { z } from "zod";
+import { SecretRef } from "../types/secretTypes";
 
-// Kafka sink (federated credentials, OAUTHBEARER only)
-const kafkaSinkConfig = z.object({
-  name: z.string().min(1),
-  brokerList: z.string().min(1),
-  topic: z.string().min(1),
-  saslMechanism: z.literal('OAUTHBEARER'),
-});
+// Kafka Sink Configuration
+export interface KafkaSink {
+  id?: string;
+  name: string;
+  brokerList: string;
+  topic: string;
+  saslMechanism: "PLAIN" | "OAUTHBEARER";
+  securityProtocol: "PLAINTEXT" | "SASL_PLAINTEXT" | "SASL_SSL";
+  tenantId?: SecretRef;
+  clientId?: SecretRef;
+  clientSecret?: SecretRef;
+  tokenEndpoint?: SecretRef;
+  saslUsername?: SecretRef;
+  saslPassword?: SecretRef;
+}
 
-// Kusto sink (federated credentials)
-const kustoSinkConfig = z.object({
-  name: z.string().min(1),
-  ingestionUri: z.string().url(),
-  database: z.string().min(1),
-});
+// Kusto Sink Configuration
+export interface KustoSink {
+  id?: string;
+  name: string;
+  ingestionUri: string;
+  database: string;
+  propertyEventsTable?: string;
+  twinLifeCycleEventsTable?: string;
+  relationshipLifeCycleEventsTable?: string;
+  tenantId?: SecretRef;
+  clientId?: SecretRef;
+  clientSecret?: SecretRef;
+}
 
-export const eventSinksSchema = z.object({
-  kafka: z.array(kafkaSinkConfig).default([]),
-  kusto: z.array(kustoSinkConfig).default([]),
-});
+// MQTT Sink Configuration
+export interface MqttSink {
+  id?: string;
+  name: string;
+  broker: string;
+  port: number;
+  topic: string;
+  clientId: string;
+  protocolVersion: "3.1.0" | "3.1.1" | "5.0.0";
+  username?: SecretRef;
+  password?: SecretRef;
+  tokenEndpoint?: SecretRef;
+  tenantId?: SecretRef;
+  clientSecret?: SecretRef;
+}
 
-export const eventRouteSchema = z.object({
-  sinkName: z.string().min(1, 'Sink selection is required'),
-  eventFormat: z.enum(['EventNotification', 'DataHistory']),
-});
+// Webhook Sink Configuration
+export interface WebhookSink {
+  name: string;
+  url: string;
+  method: "POST" | "PUT";
+  authenticationType: "None" | "Basic" | "Bearer" | "ApiKey" | "OAuth";
+  username?: SecretRef;
+  password?: SecretRef;
+  token?: SecretRef;
+  headerName?: SecretRef;
+  headerValue?: SecretRef;
+  tokenEndpoint?: SecretRef;
+  clientId?: SecretRef;
+  clientSecret?: SecretRef;
+}
 
-export const GraphSchema = z.object({
-  eventSinks: eventSinksSchema,
-  eventRoutes: z.array(eventRouteSchema).default([]),
-});
+// Event Route Configuration
+export interface EventRoute {
+  name: string;
+  sinkName: string;
+  eventFormat: "EventNotification" | "DataHistory" | "Telemetry";
+  typeMappings?: Record<string, string>; // Map of SinkEventType to table/topic names
+}
 
-export type GraphSettings = z.infer<typeof GraphSchema>;
-export type EventSinksConfig = z.infer<typeof eventSinksSchema>;
-export type EventRouteConfig = z.infer<typeof eventRouteSchema>;
-export type KafkaSinkConfig = z.infer<typeof kafkaSinkConfig>;
-export type KustoSinkConfig = z.infer<typeof kustoSinkConfig>;
-export type SinkConfig = KafkaSinkConfig | KustoSinkConfig;
+// Main Graph Settings
+export interface GraphSettings {
+  eventSinks: {
+    kafka: KafkaSink[];
+    kusto: KustoSink[];
+    mqtt: MqttSink[];
+    webhook: WebhookSink[];
+  };
+  eventRoutes: EventRoute[];
+}

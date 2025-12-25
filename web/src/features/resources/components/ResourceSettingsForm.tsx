@@ -1,43 +1,37 @@
 import { GraphForm } from "./graph/GraphForm";
-import { FlowForm } from "./flow/FlowForm";
 import { SecretForm, SecretSettings } from "./secret/SecretForm";
 import type { GraphSettings } from "@/features/resources/schemas/GraphSchema";
-import type { FlowSettings } from "@/features/resources/schemas/FlowSchema";
 
 interface ResourceSettingsFormProps {
   resourceType: string;
-  initialValues?: GraphSettings | FlowSettings | SecretSettings;
-  onSubmit: (values: GraphSettings | FlowSettings | SecretSettings) => void;
-  onChange?: (values: GraphSettings | FlowSettings | SecretSettings) => void;
+  projectId?: string;
+  initialValues?: GraphSettings | SecretSettings | Record<string, unknown>;
+  onSubmit: (values: GraphSettings | SecretSettings) => void | Promise<void>;
+  onChange?: (values: GraphSettings | SecretSettings) => void;
   disabled?: boolean;
   hideSaveButton?: boolean;
+  resourceSku?: string;
 }
 
 export function ResourceSettingsForm({
   resourceType,
+  projectId,
   initialValues,
   onSubmit,
   onChange,
   disabled,
   hideSaveButton,
+  resourceSku,
 }: ResourceSettingsFormProps) {
-  // Type guards for initialValues and onSubmit
   if (resourceType === "Konnektr.Graph") {
     return (
       <GraphForm
         initialValues={initialValues as GraphSettings | undefined}
-        onSubmit={onSubmit as (values: GraphSettings) => void}
+        onSave={onSubmit as (values: GraphSettings) => Promise<void>}
         disabled={disabled}
-      />
-    );
-  }
-
-  if (resourceType === "Konnektr.Flow") {
-    return (
-      <FlowForm
-        initialValues={initialValues as FlowSettings | undefined}
-        onSubmit={onSubmit as (values: FlowSettings) => void}
-        disabled={disabled}
+        projectId={projectId || ""}
+        hideSaveButtons={hideSaveButton}
+        resourceSku={resourceSku}
       />
     );
   }
@@ -45,7 +39,6 @@ export function ResourceSettingsForm({
   if (resourceType === "Konnektr.Secret") {
     return (
       <SecretForm
-        initialValues={initialValues as SecretSettings | undefined}
         onSubmit={onSubmit as (values: SecretSettings) => void}
         onChange={onChange as (values: SecretSettings) => void}
         disabled={disabled}
