@@ -211,8 +211,10 @@ func TestAssignRoleToInvalidEmail(t *testing.T) {
 	// Clean up
 	defer func() {
 		pool := db.GetDB()
-		pool.Exec(ctx, "DELETE FROM ktrlplane.users WHERE user_id = $1", assignerID)
-		pool.Exec(ctx, "DELETE FROM ktrlplane.organizations WHERE org_id = $1", organizationID)
+		_, err := pool.Exec(ctx, "DELETE FROM ktrlplane.users WHERE user_id = $1", assignerID)
+		require.NoError(t, err)
+		_, err = pool.Exec(ctx, "DELETE FROM ktrlplane.organizations WHERE org_id = $1", organizationID)
+		require.NoError(t, err)
 	}()
 
 	// Setup
@@ -247,9 +249,12 @@ func TestAssignRoleToExistingUser(t *testing.T) {
 	// Clean up
 	defer func() {
 		pool := db.GetDB()
-		pool.Exec(ctx, "DELETE FROM ktrlplane.role_assignments WHERE user_id = $1", existingUserID)
-		pool.Exec(ctx, "DELETE FROM ktrlplane.users WHERE user_id = $1 OR user_id = $2", existingUserID, assignerID)
-		pool.Exec(ctx, "DELETE FROM ktrlplane.organizations WHERE org_id = $1", organizationID)
+		_, err := pool.Exec(ctx, "DELETE FROM ktrlplane.role_assignments WHERE user_id = $1", existingUserID)
+		require.NoError(t, err)
+		_, err = pool.Exec(ctx, "DELETE FROM ktrlplane.users WHERE user_id = $1 OR user_id = $2", existingUserID, assignerID)
+		require.NoError(t, err)
+		_, err = pool.Exec(ctx, "DELETE FROM ktrlplane.organizations WHERE org_id = $1", organizationID)
+		require.NoError(t, err)
 	}()
 
 	// Setup: Create existing user

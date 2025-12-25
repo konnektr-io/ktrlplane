@@ -15,9 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SecretSelector } from "../secret/SecretSelector";
+import { GraphSettings } from "../../schemas/GraphSchema";
 
 interface MqttSinkFormProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<GraphSettings>;
   index: number;
   projectId: string;
 }

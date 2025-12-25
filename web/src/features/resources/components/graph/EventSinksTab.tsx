@@ -169,8 +169,12 @@ export function EventSinksTab({
   const removeSink = async (type: SinkType, index: number) => {
     const currentSinks = form.getValues(`eventSinks.${type}`) || [];
     form.setValue(
-      `eventSinks.${type}` as any,
-      currentSinks.filter((_: unknown, i: number) => i !== index)
+      `eventSinks.${type}`,
+      currentSinks.filter((_: unknown, i: number) => i !== index) as
+        | KafkaSink[]
+        | KustoSink[]
+        | MqttSink[]
+        | WebhookSink[]
     );
     // Remove from expanded set
     const sinkId = `${type}-${index}`;

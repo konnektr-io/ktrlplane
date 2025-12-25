@@ -98,10 +98,10 @@ export function EventRoutesTab({
 
   // Get all sink names
   const allSinkNames = [
-    ...eventSinks.kafka?.map((s) => s.name),
-    ...eventSinks.kusto?.map((s) => s.name),
-    ...eventSinks.mqtt?.map((s) => s.name),
-    ...eventSinks.webhook?.map((s) => s.name),
+    ...eventSinks.kafka.map((s) => s.name),
+    ...eventSinks.kusto.map((s) => s.name),
+    ...eventSinks.mqtt.map((s) => s.name),
+    ...eventSinks.webhook.map((s) => s.name),
   ].filter(Boolean);
 
   const toggleExpanded = (index: number) => {
