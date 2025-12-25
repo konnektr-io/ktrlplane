@@ -11,9 +11,9 @@ export interface ResourceTier {
 export interface ResourceType {
   id:
     | "Konnektr.Graph"
-    | "Konnektr.Flow"
-    | "Konnektr.Assembler"
-    | "Konnektr.Compass"
+    // | "Konnektr.Flow"
+    // | "Konnektr.Assembler"
+    // | "Konnektr.Compass"
     | "Konnektr.Secret";
   name: string;
   description: string;
