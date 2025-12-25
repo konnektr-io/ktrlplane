@@ -106,6 +106,7 @@ export default function ResourceSettingsPage() {
           initialValues={currentResource?.settings_json as GraphSettings}
           onSubmit={handleFormSave}
           disabled={!canEdit}
+          resourceSku={currentResource?.sku}
         />
         {!canEdit && (
           <p className="text-sm text-muted-foreground">
