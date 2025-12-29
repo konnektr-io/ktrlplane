@@ -154,27 +154,20 @@ func (s *BillingService) CreateStripeSubscription(scopeType, scopeID string, req
 		return nil, errors.New("no resources found to create subscription items")
 	}
 
-	// List existing payment methods for customer
-	pmParams := &stripe.CustomerListPaymentMethodsParams{
-		Customer: stripe.String(*account.StripeCustomerID),
-	}
-	pmParams.Limit = stripe.Int64(3)
-	pmIter := customer.ListPaymentMethods(pmParams)
-
-	var paymentMethods []*stripe.PaymentMethod
-	for pmIter.Next() {
-		paymentMethods = append(paymentMethods, pmIter.PaymentMethod())
-	}
-
-	if len(paymentMethods) == 0 {
-		fmt.Printf("Warning: No payment methods found for customer %s\n", *account.StripeCustomerID)
+	// Get default payment method
+	defaultPM, err := s.GetDefaultPaymentMethod(*account.StripeCustomerID)
+	if err != nil {
+		fmt.Printf("Warning: Failed to get default payment method for customer %s: %v\n", *account.StripeCustomerID, err)
 	}
 
 	// Create Stripe subscription
 	params := &stripe.SubscriptionParams{
 		Customer: stripe.String(*account.StripeCustomerID),
 		Items:    items,
-		DefaultPaymentMethod: stripe.String(paymentMethods[0].ID),
+	}
+
+	if defaultPM != "" {
+		params.DefaultPaymentMethod = stripe.String(defaultPM)
 	}
 
 	stripeSubscription, err := subscription.New(params)
@@ -605,20 +598,10 @@ func (s *BillingService) createSubscriptionWithResources(customerID string, reso
 		return nil, fmt.Errorf("cannot create subscription: no subscription items found for customer %s", customerID)
 	}
 
-	// List existing payment methods for customer
-	pmParams := &stripe.CustomerListPaymentMethodsParams{
-		Customer: stripe.String(customerID),
-	}
-	pmParams.Limit = stripe.Int64(3)
-	pmIter := customer.ListPaymentMethods(pmParams)
-
-	var paymentMethods []*stripe.PaymentMethod
-	for pmIter.Next() {
-		paymentMethods = append(paymentMethods, pmIter.PaymentMethod())
-	}
-
-	if len(paymentMethods) == 0 {
-		fmt.Printf("Warning: No payment methods found for customer %s\n", customerID)
+	// Get default payment method
+	defaultPM, err := s.GetDefaultPaymentMethod(customerID)
+	if err != nil {
+		fmt.Printf("Warning: Failed to get default payment method for customer %s: %v\n", customerID, err)
 	}
 
 	// Create the subscription with items
@@ -628,7 +611,11 @@ func (s *BillingService) createSubscriptionWithResources(customerID string, reso
 		BillingMode: &stripe.SubscriptionBillingModeParams{
 			Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
 		},
-		DefaultPaymentMethod: stripe.String(paymentMethods[0].ID),
+		PaymentBehavior: stripe.String("allow_incomplete"),
+	}
+
+	if defaultPM != "" {
+		subParams.DefaultPaymentMethod = stripe.String(defaultPM)
 	}
 
 	subscription, err := subscription.New(subParams)
@@ -637,4 +624,18 @@ func (s *BillingService) createSubscriptionWithResources(customerID string, reso
 	}
 
 	return subscription, nil
+}
+// GetDefaultPaymentMethod retrieves the first active payment method for a customer
+func (s *BillingService) GetDefaultPaymentMethod(customerID string) (string, error) {
+	params := &stripe.PaymentMethodListParams{
+		Customer: stripe.String(customerID),
+	}
+	iter := paymentmethod.List(params)
+	if iter.Next() {
+		return iter.PaymentMethod().ID, nil
+	}
+	if err := iter.Err(); err != nil {
+		return "", err
+	}
+	return "", nil
 }

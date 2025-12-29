@@ -66,6 +66,12 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 
 		// If no subscription exists, create one with this resource as the first item
 		if billingAccount.StripeSubscriptionID == nil {
+			// Get default payment method
+			defaultPM, pmErr := billingSvc.GetDefaultPaymentMethod(*billingAccount.StripeCustomerID)
+			if pmErr != nil {
+				fmt.Printf("Warning: Failed to get default payment method for customer %s: %v\n", *billingAccount.StripeCustomerID, pmErr)
+			}
+
 			// Create subscription with this resource as the first item
 			subParams := &stripe.SubscriptionParams{
 				Customer: stripe.String(*billingAccount.StripeCustomerID),
@@ -78,7 +84,11 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 				BillingMode: &stripe.SubscriptionBillingModeParams{
 					Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
 				},
-				PaymentBehavior: stripe.String("default_incomplete"),
+				PaymentBehavior: stripe.String("allow_incomplete"),
+			}
+
+			if defaultPM != "" {
+				subParams.DefaultPaymentMethod = stripe.String(defaultPM)
 			}
 			sub, err := subscription.New(subParams)
 			if err != nil {
@@ -111,6 +121,12 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 			if sub.Status == stripe.SubscriptionStatusCanceled || 
 			   sub.Status == stripe.SubscriptionStatusIncompleteExpired ||
 			   sub.Status == stripe.SubscriptionStatusUnpaid {
+				// Get default payment method
+				defaultPM, pmErr := billingSvc.GetDefaultPaymentMethod(*billingAccount.StripeCustomerID)
+				if pmErr != nil {
+					fmt.Printf("Warning: Failed to get default payment method for customer %s: %v\n", *billingAccount.StripeCustomerID, pmErr)
+				}
+
 				// Create a new subscription instead
 				subParams := &stripe.SubscriptionParams{
 					Customer: stripe.String(*billingAccount.StripeCustomerID),
@@ -123,7 +139,11 @@ func (s *ResourceService) CreateResource(ctx context.Context, projectID string, 
 					BillingMode: &stripe.SubscriptionBillingModeParams{
 						Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
 					},
-					PaymentBehavior: stripe.String("default_incomplete"),
+					PaymentBehavior: stripe.String("allow_incomplete"),
+				}
+
+				if defaultPM != "" {
+					subParams.DefaultPaymentMethod = stripe.String(defaultPM)
 				}
 				newSub, err := subscription.New(subParams)
 				if err != nil {
