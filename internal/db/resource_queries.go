@@ -23,8 +23,8 @@ const (
 	// ListAllUserResourcesQuery returns all resources the user has access to across all projects
 	// with permission inheritance (organization -> project -> resource)
 	ListAllUserResourcesQuery = `
-			SELECT DISTINCT r.resource_id, r.project_id, r.name, r.type, r.status, r.sku, r.stripe_price_id, r.settings_json, r.error_message, r.created_at, r.updated_at
-			FROM ktrlplane.resources r
+		SELECT DISTINCT r.resource_id, r.project_id, r.name, r.type, r.status, r.sku, r.stripe_price_id, r.settings_json, r.error_message, r.created_at, r.updated_at
+		FROM ktrlplane.resources r
 		JOIN ktrlplane.projects p ON r.project_id = p.project_id
 		WHERE EXISTS (
 			-- User has direct permission on the resource
