@@ -49,6 +49,11 @@ export default function BillingPage() {
     refetch,
   } = useBilling(scopeType, scopeId);
 
+  // Always refetch billing info on page load
+  React.useEffect(() => {
+    refetch();
+  }, []);
+
   // Track if we should trigger subscription creation after billing setup
   const [pendingSubscriptionCheck, setPendingSubscriptionCheck] =
     useState(false);
@@ -431,8 +436,14 @@ export default function BillingPage() {
                     >
                       <div className="flex items-center gap-3">
                         <CreditCard className="h-4 w-4" />
-                        <span className="capitalize">{pm.card?.brand}</span>
-                        <span>•••• {pm.card?.last4}</span>
+                        {pm.card ? (
+                          <>
+                            <span className="capitalize">{pm.card?.brand}</span>
+                            <span>•••• {pm.card?.last4}</span>
+                          </>
+                        ) : (
+                          <span>{pm.type}</span>
+                        )}
                       </div>
                       <span className="text-sm text-muted-foreground">
                         {pm.card?.exp_month}/{pm.card?.exp_year}
