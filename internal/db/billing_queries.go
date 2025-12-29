@@ -48,18 +48,3 @@ WHERE scope_type = $1 AND scope_id = $2
 RETURNING billing_account_id, scope_type, scope_id, stripe_customer_id, 
           stripe_subscription_id, created_at, updated_at
 `
-
-const GetResourceCountsOrgQuery = `
-SELECT r.type, COALESCE(r.sku, 'free') as sku, COUNT(*) as count
-FROM ktrlplane.resources r
-JOIN ktrlplane.projects p ON r.project_id = p.project_id
-WHERE p.org_id = $1
-GROUP BY r.type, COALESCE(r.sku, 'free')
-`
-
-const GetResourceCountsProjectQuery = `
-SELECT r.type, COALESCE(r.sku, 'free') as sku, COUNT(*) as count
-FROM ktrlplane.resources r
-WHERE r.project_id = $1
-GROUP BY r.type, COALESCE(r.sku, 'free')
-`

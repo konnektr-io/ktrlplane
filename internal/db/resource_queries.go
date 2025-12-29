@@ -62,4 +62,19 @@ const (
 		)
 		AND ($2 = '' OR r.type = $2)
 		ORDER BY r.created_at DESC`
+
+	GetResourceCountsOrgQuery = `
+		SELECT r.type, COALESCE(r.sku, 'free') as sku, COUNT(*) as count
+		FROM ktrlplane.resources r
+		JOIN ktrlplane.projects p ON r.project_id = p.project_id
+		WHERE p.org_id = $1
+		GROUP BY r.type, COALESCE(r.sku, 'free')
+		`
+
+	GetResourceCountsProjectQuery = `
+		SELECT r.type, COALESCE(r.sku, 'free') as sku, COUNT(*) as count
+		FROM ktrlplane.resources r
+		WHERE r.project_id = $1
+		GROUP BY r.type, COALESCE(r.sku, 'free')
+		`
 )
