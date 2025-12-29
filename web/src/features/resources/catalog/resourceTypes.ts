@@ -42,7 +42,13 @@ export const resourceTypes: ResourceType[] = [
       {
         sku: "standard",
         name: "Standard",
-        features: ["Events", "M2M Authentication", "Email support"],
+        features: [
+          "Events",
+          "Data History",
+          "MCP Server",
+          "M2M Authentication",
+          "Email support",
+        ],
         limits: { Twins: "1M" },
       },
       {
