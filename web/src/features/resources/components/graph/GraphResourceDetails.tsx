@@ -23,6 +23,8 @@ export default function GraphResourceDetails({
   const explorerUrl = `https://explorer.graph.konnektr.io?x-adt-host=${apiHost}`;
   const [copied, setCopied] = useState<string | null>(null);
 
+  const mcpHost = `${resource.resource_id}.mcp.graph.konnektr.io`;
+
   // Check if M2M credentials exist
   const secretName = `auth0-client-${resource.project_id}`;
   const { data: m2mSecret, isLoading: isLoadingSecret } = useProjectSecret(
@@ -481,6 +483,26 @@ Console.WriteLine(await queryResp.Content.ReadAsStringAsync());`,
               />
             </Button>
           </div>
+          {resource.sku === "standard" && (
+            <div className="flex items-center gap-2">
+              <span className="font-medium min-w-[100px]">MCP URL:</span>
+              <code className="flex-1 text-sm bg-muted rounded px-2 py-1">
+                https://{mcpHost}
+              </code>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleCopy(`https://${mcpHost}`, "mcpUrl")}
+                title="Copy MCP URL"
+              >
+                <Copy
+                  className={`h-4 w-4 ${
+                    copied === "mcpUrl" ? "text-green-600" : ""
+                  }`}
+                />
+              </Button>
+            </div>
+          )}
           <div className="flex items-center gap-2 pt-2">
             <Button
               variant="outline"
