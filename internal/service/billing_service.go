@@ -629,17 +629,9 @@ func (s *BillingService) createSubscriptionWithResources(customerID string, reso
 		})
 	}
 
-	// If no mapped resources found, create an empty subscription that items can be added to later
+	// If no mapped resources found, return an error (empty subscripions not allowed in stripe)
 	if len(subscriptionItems) == 0 {
-		fmt.Printf("No subscription items found, creating empty subscription for future use\n")
-		subParams := &stripe.SubscriptionParams{
-			Customer: stripe.String(customerID),
-			Items:    []*stripe.SubscriptionItemsParams{},
-			BillingMode: &stripe.SubscriptionBillingModeParams{
-				Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
-			},
-		}
-		return subscription.New(subParams)
+		return nil, fmt.Errorf("cannot create subscription: no subscription items found for customer %s", customerID)
 	}
 
 	// List existing payment methods for customer
@@ -662,6 +654,9 @@ func (s *BillingService) createSubscriptionWithResources(customerID string, reso
 	subParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(customerID),
 		Items:    subscriptionItems,
+		BillingMode: &stripe.SubscriptionBillingModeParams{
+			Type: stripe.String(stripe.SubscriptionBillingModeTypeFlexible),
+		},
 		DefaultPaymentMethod: stripe.String(paymentMethods[0].ID),
 	}
 
