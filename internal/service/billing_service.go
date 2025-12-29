@@ -31,7 +31,8 @@ func NewBillingService(cfg *config.Config) *BillingService {
 	}
 }
 
-// GetBillingAccount retrieves billing information for a scope (organization or project)
+// GetBillingAccount retrieves billing information for a scope (organization or project), 
+// only used in other services, not exposed through API
 func (s *BillingService) GetBillingAccount(scopeType, scopeID string) (*models.BillingAccount, error) {
 	query := db.GetBillingAccountQuery
 
@@ -49,37 +50,7 @@ func (s *BillingService) GetBillingAccount(scopeType, scopeID string) (*models.B
 	)
 
 	if err != nil {
-		if err.Error() == "no rows in result set" {
-			// Create billing account if it doesn't exist
-			return s.createBillingAccount(scopeType, scopeID)
-		}
 		return nil, fmt.Errorf("failed to get billing account: %w", err)
-	}
-
-	return &account, nil
-}
-
-// createBillingAccount creates a new billing account for a scope
-func (s *BillingService) createBillingAccount(scopeType, scopeID string) (*models.BillingAccount, error) {
-	billingAccountID := fmt.Sprintf("bill_%s", scopeID)
-
-	query := db.CreateBillingAccountQuery
-
-	var account models.BillingAccount
-	row := db.GetDB().QueryRow(context.Background(), query, billingAccountID, scopeType, scopeID)
-
-	err := row.Scan(
-		&account.BillingAccountID,
-		&account.ScopeType,
-		&account.ScopeID,
-		&account.StripeCustomerID,
-		&account.StripeSubscriptionID,
-		&account.CreatedAt,
-		&account.UpdatedAt,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to create billing account: %w", err)
 	}
 
 	return &account, nil
