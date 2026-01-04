@@ -23,7 +23,7 @@ export default function GraphResourceDetails({
   const explorerUrl = `https://explorer.graph.konnektr.io?x-adt-host=${apiHost}`;
   const [copied, setCopied] = useState<string | null>(null);
 
-  const mcpHost = `${resource.resource_id}.mcp.graph.konnektr.io`;
+  const mcpHost = `https://mcp.graph.konnektr.io/mcp?resource_id=${resource.resource_id}`;
 
   // Check if M2M credentials exist
   const secretName = `auth0-client-${resource.project_id}`;
