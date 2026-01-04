@@ -349,41 +349,41 @@ func (s *ResourceService) UpdateResource(ctx context.Context, projectID string, 
 			}
 		}
 
-		// Increment new price ID (if not free tier)
-		if *req.SKU != "free" {
-			// Find or create subscription item for new price
-			var newItemID string
-			var currentQty int64
-			for _, item := range sub.Items.Data {
-				if item.Price != nil && item.Price.ID == newPriceID {
-					newItemID = item.ID
-					currentQty = item.Quantity
-					break
-				}
-			}
-
-			if newItemID != "" {
-				// Item exists, increment quantity
-				params := &stripe.SubscriptionItemParams{
-					Quantity: stripe.Int64(currentQty + 1),
-				}
-				_, err := subscriptionitem.Update(newItemID, params)
-				if err != nil {
-					return nil, fmt.Errorf("failed to increment new tier subscription item: %w", err)
-				}
-			} else {
-				// Item does not exist, create it
-				params := &stripe.SubscriptionItemParams{
-					Subscription: stripe.String(subID),
-					Price:        stripe.String(newPriceID),
-					Quantity:     stripe.Int64(1),
-				}
-				_, err := subscriptionitem.New(params)
-				if err != nil {
-					return nil, fmt.Errorf("failed to add new tier subscription item: %w", err)
-				}
+		// Increment new price ID
+		
+		// Find or create subscription item for new price
+		var newItemID string
+		var currentQty int64
+		for _, item := range sub.Items.Data {
+			if item.Price != nil && item.Price.ID == newPriceID {
+				newItemID = item.ID
+				currentQty = item.Quantity
+				break
 			}
 		}
+
+		if newItemID != "" {
+			// Item exists, increment quantity
+			params := &stripe.SubscriptionItemParams{
+				Quantity: stripe.Int64(currentQty + 1),
+			}
+			_, err := subscriptionitem.Update(newItemID, params)
+			if err != nil {
+				return nil, fmt.Errorf("failed to increment new tier subscription item: %w", err)
+			}
+		} else {
+			// Item does not exist, create it
+			params := &stripe.SubscriptionItemParams{
+				Subscription: stripe.String(subID),
+				Price:        stripe.String(newPriceID),
+				Quantity:     stripe.Int64(1),
+			}
+			_, err := subscriptionitem.New(params)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add new tier subscription item: %w", err)
+			}
+		}
+		
 	}
 
 	// Determine final SKU and price ID for database update
