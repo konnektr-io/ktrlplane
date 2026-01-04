@@ -323,33 +323,7 @@ func (s *ResourceService) UpdateResource(ctx context.Context, projectID string, 
 			return nil, fmt.Errorf("failed to fetch Stripe subscription: %w", err)
 		}
 
-		// Decrement old price ID (if not free tier)
-		if currentResource.SKU != "free" && currentResource.StripePriceID != nil {
-			oldPriceID := *currentResource.StripePriceID
-			for _, item := range sub.Items.Data {
-				if item.Price != nil && item.Price.ID == oldPriceID {
-					if item.Quantity > 1 {
-						// Decrement quantity
-						params := &stripe.SubscriptionItemParams{
-							Quantity: stripe.Int64(item.Quantity - 1),
-						}
-						_, err := subscriptionitem.Update(item.ID, params)
-						if err != nil {
-							return nil, fmt.Errorf("failed to decrement old tier subscription item: %w", err)
-						}
-					} else {
-						// Remove item entirely if quantity would be 0
-						_, err := subscriptionitem.Del(item.ID, nil)
-						if err != nil {
-							return nil, fmt.Errorf("failed to remove old tier subscription item: %w", err)
-						}
-					}
-					break
-				}
-			}
-		}
-
-		// Increment new price ID
+		// Increment new price ID (needs to be done before decrementing old to avoid zero-quantity subscriptions)
 		
 		// Find or create subscription item for new price
 		var newItemID string
@@ -381,6 +355,32 @@ func (s *ResourceService) UpdateResource(ctx context.Context, projectID string, 
 			_, err := subscriptionitem.New(params)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add new tier subscription item: %w", err)
+			}
+		}
+
+		// Decrement old price ID (if price id is set)
+		if currentResource.StripePriceID != nil {
+			oldPriceID := *currentResource.StripePriceID
+			for _, item := range sub.Items.Data {
+				if item.Price != nil && item.Price.ID == oldPriceID {
+					if item.Quantity > 1 {
+						// Decrement quantity
+						params := &stripe.SubscriptionItemParams{
+							Quantity: stripe.Int64(item.Quantity - 1),
+						}
+						_, err := subscriptionitem.Update(item.ID, params)
+						if err != nil {
+							return nil, fmt.Errorf("failed to decrement old tier subscription item: %w", err)
+						}
+					} else {
+						// Remove item entirely if quantity would be 0
+						_, err := subscriptionitem.Del(item.ID, nil)
+						if err != nil {
+							return nil, fmt.Errorf("failed to remove old tier subscription item: %w", err)
+						}
+					}
+					break
+				}
 			}
 		}
 		
